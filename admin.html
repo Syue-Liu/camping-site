@@ -307,8 +307,8 @@ textarea.form-input{resize:vertical;min-height:90px;}
       <input type="file" id="f-img-file" accept="image/*" style="display:none" onchange="handleImg(this)">
     </div>
     <div class="form-group">
-      <label class="form-label">或貼上圖片網址</label>
-      <input class="form-input" type="text" id="f-img-url" placeholder="https://..." oninput="handleUrlImg(this)">
+      <label class="form-label">或貼上 Google 雲端硬碟分享連結（自動轉換）</label>
+      <input class="form-input" type="text" id="f-img-url" placeholder="貼上 Google 雲端硬碟連結，系統自動轉換格式" oninput="handleUrlImg(this)">
     </div>
 
     <div class="modal-footer">
@@ -504,10 +504,19 @@ function handleImg(input){
   };
   reader.readAsDataURL(file);
 }
+function convertDriveUrl(url){
+  const m1=url.match(/\/file\/d\/([a-zA-Z0-9_-]+)/);
+  if(m1)return'https://drive.google.com/uc?export=view&id='+m1[1];
+  const m2=url.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+  if(m2)return'https://drive.google.com/uc?export=view&id='+m2[1];
+  return url;
+}
 function handleUrlImg(input){
-  const url=input.value.trim();
-  if(url){setImgPreview(url);imgData=null;}
-  else{resetImgZone();}
+  const raw=input.value.trim();
+  if(!raw){resetImgZone();return;}
+  const url=convertDriveUrl(raw);
+  if(url!==raw)input.value=url;
+  setImgPreview(url);imgData=null;
 }
 function setImgPreview(src){
   const z=document.getElementById('upload-zone');
