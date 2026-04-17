@@ -6,150 +6,144 @@
 <title>後台管理 · Syue & Lynn</title>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;700&display=swap" rel="stylesheet">
 <style>
-  :root {
-    --bg: #0f1410;
-    --surface: #1a1f1b;
-    --surface2: #222820;
-    --border: #2e352c;
-    --text: #e8e4dc;
-    --muted: #8a9088;
-    --accent: #7eb87a;
-    --accent2: #c4a35a;
-    --danger: #e05c5c;
-    --danger-bg: rgba(224,92,92,0.1);
-    --radius: 10px;
-  }
-  * { margin:0; padding:0; box-sizing:border-box; }
-  body { font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif; background: var(--bg); color: var(--text); font-size: 15px; line-height: 1.6; }
+:root {
+  --bg:#0f1410; --surface:#1a1f1b; --surface2:#222820; --border:#2e352c;
+  --text:#e8e4dc; --muted:#8a9088; --accent:#7eb87a; --accent2:#c4a35a;
+  --danger:#e05c5c; --danger-bg:rgba(224,92,92,0.1); --radius:10px;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:-apple-system,BlinkMacSystemFont,"Helvetica Neue",Arial,sans-serif;background:var(--bg);color:var(--text);font-size:15px;line-height:1.6;}
 
-  /* Login */
-  #login-screen { min-height:100vh; display:flex; align-items:center; justify-content:center; }
-  .login-card { background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:2.5rem 2rem; width:340px; }
-  .login-logo { font-family:'Playfair Display',serif; font-size:20px; color:var(--accent2); margin-bottom:0.25rem; }
-  .login-card p { font-size:13px; color:var(--muted); margin-bottom:1.75rem; }
-  .login-card input { width:100%; padding:10px 14px; border:1px solid var(--border); border-radius:var(--radius); font-size:15px; margin-bottom:1rem; background:var(--bg); color:var(--text); }
-  .login-card input:focus { outline:none; border-color:var(--accent); }
-  .btn-primary { width:100%; padding:11px; background:var(--accent); color:#0f1410; border:none; border-radius:var(--radius); font-size:15px; font-weight:600; cursor:pointer; }
-  .login-error { color:var(--danger); font-size:13px; margin-top:0.75rem; display:none; }
+#login-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;}
+.login-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:2.5rem 2rem;width:340px;}
+.login-logo{font-family:'Playfair Display',serif;font-size:20px;color:var(--accent2);margin-bottom:0.25rem;}
+.login-sub{font-size:13px;color:var(--muted);margin-bottom:1.75rem;}
+.login-card input{width:100%;padding:10px 14px;border:1px solid var(--border);border-radius:var(--radius);font-size:15px;margin-bottom:1rem;background:var(--bg);color:var(--text);}
+.login-card input:focus{outline:none;border-color:var(--accent);}
+.btn-primary{width:100%;padding:11px;background:var(--accent);color:#0f1410;border:none;border-radius:var(--radius);font-size:15px;font-weight:600;cursor:pointer;}
+.login-error{color:var(--danger);font-size:13px;margin-top:0.75rem;display:none;}
 
-  /* Admin layout */
-  #admin-screen { display:none; min-height:100vh; }
-  .topbar { display:flex; align-items:center; justify-content:space-between; padding:0 2rem; height:56px; border-bottom:1px solid var(--border); background:rgba(15,20,16,0.95); position:sticky; top:0; z-index:100; }
-  .topbar-logo { font-family:'Playfair Display',serif; font-size:16px; color:var(--accent2); }
-  .topbar-right { display:flex; gap:1rem; align-items:center; }
-  .btn-sm { padding:6px 14px; border-radius:8px; font-size:13px; font-weight:500; border:1px solid var(--border); background:transparent; color:var(--muted); cursor:pointer; }
-  .btn-sm:hover { color:var(--text); border-color:#4a5448; }
-  .btn-danger-sm { padding:6px 14px; border-radius:8px; font-size:13px; font-weight:500; border:1px solid var(--danger); background:var(--danger-bg); color:var(--danger); cursor:pointer; }
+#admin-screen{display:none;min-height:100vh;}
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:0 2rem;height:56px;border-bottom:1px solid var(--border);background:rgba(15,20,16,0.95);position:sticky;top:0;z-index:100;}
+.topbar-logo{font-family:'Playfair Display',serif;font-size:16px;color:var(--accent2);}
+.topbar-right{display:flex;gap:1rem;align-items:center;}
+.btn-sm{padding:6px 14px;border-radius:8px;font-size:13px;border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;}
+.btn-sm:hover{color:var(--text);}
+.btn-danger-sm{padding:6px 14px;border-radius:8px;font-size:13px;border:1px solid var(--danger);background:var(--danger-bg);color:var(--danger);cursor:pointer;}
 
-  .main { display:flex; }
-  .sidebar { width:200px; min-height:calc(100vh - 56px); background:var(--surface); border-right:1px solid var(--border); padding:1.5rem 0; flex-shrink:0; }
-  .sidebar-label { font-size:10px; letter-spacing:0.15em; text-transform:uppercase; color:#4a5448; padding:1.25rem 1.5rem 0.5rem; }
-  .sidebar-item { display:flex; align-items:center; gap:10px; padding:10px 1.5rem; font-size:14px; color:var(--muted); cursor:pointer; border-left:2px solid transparent; }
-  .sidebar-item:hover { color:var(--text); }
-  .sidebar-item.active { color:var(--accent); border-left-color:var(--accent); background:rgba(126,184,122,0.06); }
+.main{display:flex;}
+.sidebar{width:200px;min-height:calc(100vh - 56px);background:var(--surface);border-right:1px solid var(--border);padding:1.5rem 0;flex-shrink:0;}
+.sidebar-label{font-size:10px;letter-spacing:0.15em;text-transform:uppercase;color:#4a5448;padding:1.25rem 1.5rem 0.5rem;}
+.sidebar-item{display:flex;align-items:center;gap:10px;padding:10px 1.5rem;font-size:14px;color:var(--muted);cursor:pointer;border-left:2px solid transparent;}
+.sidebar-item:hover{color:var(--text);}
+.sidebar-item.active{color:var(--accent);border-left-color:var(--accent);background:rgba(126,184,122,0.06);}
 
-  .content { flex:1; padding:2rem; max-width:900px; }
-  .page { display:none; }
-  .page.active { display:block; }
-  .page-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:1.75rem; }
-  .page-header h2 { font-size:22px; font-weight:500; }
-  .btn-add { padding:9px 18px; background:var(--accent); color:#0f1410; border:none; border-radius:var(--radius); font-size:14px; font-weight:600; cursor:pointer; }
-  .btn-add.gold { background:var(--accent2); }
+.content{flex:1;padding:2rem;max-width:900px;}
+.page{display:none;}.page.active{display:block;}
+.page-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.75rem;}
+.page-header h2{font-size:22px;font-weight:500;}
+.btn-add{padding:9px 18px;background:var(--accent);color:#0f1410;border:none;border-radius:var(--radius);font-size:14px;font-weight:600;cursor:pointer;}
+.btn-add.gold{background:var(--accent2);}
 
-  /* Stats */
-  .stats-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:1rem; margin-bottom:2rem; }
-  .stat-card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:1.25rem; }
-  .stat-num { font-size:28px; font-weight:600; color:var(--accent); margin-bottom:4px; }
-  .stat-label { font-size:13px; color:var(--muted); }
+.stats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;margin-bottom:2rem;}
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:1.25rem;}
+.stat-num{font-size:28px;font-weight:600;color:var(--accent);margin-bottom:4px;}
+.stat-label{font-size:13px;color:var(--muted);}
 
-  /* Place cards */
-  .place-card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:1.25rem 1.5rem; margin-bottom:1rem; display:flex; align-items:flex-start; gap:1rem; }
-  .place-thumb { width:72px; height:72px; border-radius:8px; flex-shrink:0; background:var(--surface2); display:flex; align-items:center; justify-content:center; font-size:24px; border:1px solid var(--border); overflow:hidden; }
-  .place-thumb img { width:100%; height:100%; object-fit:cover; }
-  .place-info { flex:1; }
-  .place-name { font-size:16px; font-weight:500; margin-bottom:3px; }
-  .place-meta { font-size:12px; color:var(--muted); margin-bottom:6px; }
-  .place-desc { font-size:13px; color:var(--muted); line-height:1.5; }
-  .place-actions { display:flex; gap:8px; flex-shrink:0; }
-  .badge-tag { display:inline-block; font-size:11px; padding:2px 8px; border-radius:20px; margin-right:4px; background:rgba(126,184,122,0.1); color:var(--accent); border:1px solid rgba(126,184,122,0.2); }
-  .badge-tag.gold { background:rgba(196,163,90,0.1); color:var(--accent2); border-color:rgba(196,163,90,0.2); }
+.place-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:1.25rem 1.5rem;margin-bottom:1rem;display:flex;align-items:flex-start;gap:1rem;}
+.place-thumb{width:72px;height:72px;border-radius:8px;flex-shrink:0;background:var(--surface2);display:flex;align-items:center;justify-content:center;font-size:24px;border:1px solid var(--border);overflow:hidden;}
+.place-thumb img{width:100%;height:100%;object-fit:cover;}
+.place-info{flex:1;}
+.place-name{font-size:16px;font-weight:500;margin-bottom:3px;}
+.place-meta{font-size:12px;color:var(--muted);margin-bottom:6px;}
+.place-desc{font-size:13px;color:var(--muted);line-height:1.5;}
+.place-actions{display:flex;gap:8px;flex-shrink:0;}
+.badge-tag{display:inline-block;font-size:11px;padding:2px 8px;border-radius:20px;margin-right:4px;background:rgba(126,184,122,0.1);color:var(--accent);border:1px solid rgba(126,184,122,0.2);}
+.badge-tag.gold{background:rgba(196,163,90,0.1);color:var(--accent2);border-color:rgba(196,163,90,0.2);}
 
-  /* Modal */
-  .modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:200; align-items:center; justify-content:center; }
-  .modal-overlay.open { display:flex; }
-  .modal { background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:2rem; width:580px; max-width:95vw; max-height:90vh; overflow-y:auto; }
-  .modal-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:1.5rem; }
-  .modal-header h3 { font-size:18px; font-weight:500; }
-  .modal-close { background:none; border:none; font-size:22px; cursor:pointer; color:var(--muted); }
-  .form-group { margin-bottom:1.25rem; }
-  .form-group label { display:block; font-size:12px; font-weight:500; margin-bottom:6px; color:var(--muted); letter-spacing:0.05em; text-transform:uppercase; }
-  .form-group input, .form-group textarea { width:100%; padding:10px 14px; border:1px solid var(--border); border-radius:var(--radius); font-size:14px; background:var(--bg); color:var(--text); font-family:inherit; }
-  .form-group input:focus, .form-group textarea:focus { outline:none; border-color:var(--accent); }
-  .form-group textarea { resize:vertical; min-height:90px; }
-  .form-row { display:grid; grid-template-columns:1fr 1fr; gap:1rem; }
-  .modal-footer { display:flex; justify-content:flex-end; gap:10px; margin-top:1.5rem; }
-  .btn-cancel { padding:9px 20px; border-radius:var(--radius); font-size:14px; border:1px solid var(--border); background:transparent; color:var(--muted); cursor:pointer; }
-  .btn-save { padding:9px 20px; border-radius:var(--radius); font-size:14px; font-weight:600; background:var(--accent); color:#0f1410; border:none; cursor:pointer; }
-  .btn-save.gold { background:var(--accent2); }
+/* Modal */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:200;align-items:center;justify-content:center;}
+.modal-overlay.open{display:flex;}
+.modal{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:2rem;width:600px;max-width:95vw;max-height:92vh;overflow-y:auto;}
+.modal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem;}
+.modal-header h3{font-size:18px;font-weight:500;}
+.modal-close{background:none;border:none;font-size:22px;cursor:pointer;color:var(--muted);line-height:1;}
+.form-group{margin-bottom:1.25rem;}
+.form-label{display:block;font-size:12px;font-weight:500;margin-bottom:6px;color:var(--muted);letter-spacing:0.05em;text-transform:uppercase;}
+.form-input{width:100%;padding:10px 14px;border:1px solid var(--border);border-radius:var(--radius);font-size:14px;background:var(--bg);color:var(--text);font-family:inherit;}
+.form-input:focus{outline:none;border-color:var(--accent);}
+textarea.form-input{resize:vertical;min-height:90px;}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:1rem;}
+.modal-footer{display:flex;justify-content:flex-end;gap:10px;margin-top:1.5rem;padding-top:1.5rem;border-top:1px solid var(--border);}
+.btn-cancel{padding:9px 20px;border-radius:var(--radius);font-size:14px;border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;}
+.btn-save{padding:9px 24px;border-radius:var(--radius);font-size:14px;font-weight:600;background:var(--accent);color:#0f1410;border:none;cursor:pointer;}
+.btn-save.gold{background:var(--accent2);}
 
-  /* Upload */
-  .upload-area { border:1px dashed var(--border); border-radius:var(--radius); padding:1.5rem; text-align:center; cursor:pointer; background:var(--bg); }
-  .upload-area:hover { border-color:var(--accent); }
-  .upload-area p { font-size:13px; color:var(--muted); margin-top:6px; }
-  .upload-preview { width:100%; max-height:180px; object-fit:cover; border-radius:8px; margin-top:10px; display:none; }
+/* ── 照片上傳 ── */
+.upload-zone{border:1.5px dashed var(--border);border-radius:var(--radius);padding:1.5rem;text-align:center;cursor:pointer;background:var(--bg);transition:border-color 0.2s;}
+.upload-zone:hover{border-color:var(--accent);}
+.upload-zone .icon{font-size:28px;margin-bottom:8px;}
+.upload-zone p{font-size:13px;color:var(--muted);}
+.upload-zone.has-img{padding:0;border-color:var(--accent);}
+.upload-zone.has-img img{width:100%;max-height:200px;object-fit:cover;border-radius:var(--radius);display:block;}
+.upload-replace{font-size:12px;color:var(--muted);text-align:center;margin-top:6px;cursor:pointer;}
+.upload-replace:hover{color:var(--accent);}
 
-  /* ── 萬年曆 ── */
-  .date-input-wrap { position:relative; }
-  .date-display { width:100%; padding:10px 14px; border:1px solid var(--border); border-radius:var(--radius); font-size:14px; background:var(--bg); color:var(--text); cursor:pointer; text-align:left; display:flex; align-items:center; justify-content:space-between; }
-  .date-display:hover { border-color:#4a5448; }
-  .date-display .placeholder { color:var(--muted); }
-  .calendar-popup { display:none; position:absolute; top:calc(100% + 8px); left:0; z-index:500; background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:1rem; width:320px; box-shadow:0 8px 32px rgba(0,0,0,0.4); }
-  .calendar-popup.open { display:block; }
-  .cal-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:0.75rem; }
-  .cal-nav { background:none; border:none; color:var(--muted); cursor:pointer; font-size:18px; padding:4px 8px; border-radius:6px; }
-  .cal-nav:hover { background:var(--surface2); color:var(--text); }
-  .cal-title { font-size:14px; font-weight:500; color:var(--text); cursor:pointer; }
-  .cal-title:hover { color:var(--accent); }
-  .cal-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:2px; }
-  .cal-dow { font-size:11px; color:var(--muted); text-align:center; padding:4px 0; }
-  .cal-day { font-size:13px; text-align:center; padding:6px 2px; border-radius:6px; cursor:pointer; color:var(--text); }
-  .cal-day:hover { background:var(--surface2); }
-  .cal-day.other-month { color:#3e4a3c; }
-  .cal-day.today { color:var(--accent); font-weight:600; }
-  .cal-day.selected { background:var(--accent); color:#0f1410; font-weight:600; }
-  .cal-day.in-range { background:rgba(126,184,122,0.15); }
-  .cal-day.range-start { background:var(--accent); color:#0f1410; border-radius:6px 0 0 6px; }
-  .cal-day.range-end { background:var(--accent); color:#0f1410; border-radius:0 6px 6px 0; }
-  .cal-day.disabled { color:#2e352c; cursor:default; pointer-events:none; }
-  .cal-months, .cal-years { display:grid; grid-template-columns:repeat(3,1fr); gap:6px; }
-  .cal-month-item, .cal-year-item { font-size:13px; text-align:center; padding:8px 4px; border-radius:6px; cursor:pointer; color:var(--text); }
-  .cal-month-item:hover, .cal-year-item:hover { background:var(--surface2); }
-  .cal-month-item.active, .cal-year-item.active { background:var(--accent); color:#0f1410; font-weight:600; }
-  .cal-range-hint { font-size:11px; color:var(--muted); text-align:center; margin-bottom:0.5rem; letter-spacing:0.05em; }
-  .cal-actions { display:flex; justify-content:flex-end; gap:8px; margin-top:0.75rem; border-top:1px solid var(--border); padding-top:0.75rem; }
-  .cal-btn { font-size:12px; padding:5px 12px; border-radius:6px; cursor:pointer; border:1px solid var(--border); background:transparent; color:var(--muted); }
-  .cal-btn.confirm { background:var(--accent); color:#0f1410; border-color:var(--accent); font-weight:600; }
+/* ── 萬年曆 ── */
+.cal-trigger{width:100%;padding:10px 14px;border:1px solid var(--border);border-radius:var(--radius);font-size:14px;background:var(--bg);color:var(--text);cursor:pointer;text-align:left;display:flex;align-items:center;justify-content:space-between;}
+.cal-trigger:hover{border-color:#4a5448;}
+.cal-trigger .cal-val{color:var(--text);}
+.cal-trigger .cal-placeholder{color:var(--muted);}
+.cal-trigger .cal-icon{font-size:16px;}
 
-  /* ── 帳號設定頁 ── */
-  .settings-card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:1.5rem; margin-bottom:1.5rem; }
-  .settings-card h3 { font-size:16px; font-weight:500; margin-bottom:1.25rem; color:var(--text); }
-  .settings-row { display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-bottom:1rem; }
-  .input-with-toggle { position:relative; }
-  .input-with-toggle input { width:100%; padding:10px 40px 10px 14px; border:1px solid var(--border); border-radius:var(--radius); font-size:14px; background:var(--bg); color:var(--text); }
-  .input-with-toggle input:focus { outline:none; border-color:var(--accent); }
-  .toggle-pw { position:absolute; right:12px; top:50%; transform:translateY(-50%); background:none; border:none; color:var(--muted); cursor:pointer; font-size:14px; }
-  .btn-save-settings { padding:10px 24px; background:var(--accent); color:#0f1410; border:none; border-radius:var(--radius); font-size:14px; font-weight:600; cursor:pointer; }
-  .settings-hint { font-size:12px; color:var(--muted); margin-top:0.5rem; }
-  .current-account { font-size:13px; color:var(--muted); margin-bottom:1rem; padding:10px 14px; background:var(--surface2); border-radius:8px; }
-  .current-account span { color:var(--accent); font-weight:500; }
+.cal-modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:300;align-items:center;justify-content:center;}
+.cal-modal-overlay.open{display:flex;}
+.cal-modal{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:1.5rem;width:340px;max-width:95vw;}
 
-  /* Misc */
-  .empty-state { text-align:center; padding:3rem; color:var(--muted); font-size:14px; }
-  .saving-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:300; align-items:center; justify-content:center; font-size:14px; color:var(--text); letter-spacing:0.1em; }
-  .saving-overlay.show { display:flex; }
-  .toast { position:fixed; bottom:2rem; right:2rem; background:var(--accent); color:#0f1410; padding:12px 20px; border-radius:var(--radius); font-size:14px; font-weight:600; z-index:999; transform:translateY(100px); opacity:0; transition:all 0.3s; }
-  .toast.show { transform:translateY(0); opacity:1; }
-  .toast.error { background:var(--danger); color:#fff; }
+.cal-nav-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;}
+.cal-nav-btn{background:none;border:1px solid var(--border);color:var(--muted);cursor:pointer;font-size:16px;width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;}
+.cal-nav-btn:hover{background:var(--surface2);color:var(--text);}
+.cal-month-year{display:flex;gap:8px;align-items:center;}
+.cal-month-select,.cal-year-select{background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:5px 10px;border-radius:8px;font-size:14px;cursor:pointer;}
+.cal-month-select:focus,.cal-year-select:focus{outline:none;border-color:var(--accent);}
+
+.cal-dow-row{display:grid;grid-template-columns:repeat(7,1fr);margin-bottom:4px;}
+.cal-dow{text-align:center;font-size:11px;color:var(--muted);padding:4px 0;}
+.cal-days{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;}
+.cal-day{text-align:center;padding:7px 2px;border-radius:6px;cursor:pointer;font-size:13px;color:var(--text);user-select:none;}
+.cal-day:hover{background:var(--surface2);}
+.cal-day.empty{cursor:default;}
+.cal-day.other{color:#3e4a3c;}
+.cal-day.today{color:var(--accent);font-weight:600;}
+.cal-day.sel-start,.cal-day.sel-end{background:var(--accent);color:#0f1410;font-weight:600;}
+.cal-day.sel-start{border-radius:6px 0 0 6px;}
+.cal-day.sel-end{border-radius:0 6px 6px 0;}
+.cal-day.sel-start.sel-end{border-radius:6px;}
+.cal-day.in-range{background:rgba(126,184,122,0.18);border-radius:0;}
+
+.cal-hint{font-size:12px;color:var(--muted);text-align:center;margin:0.75rem 0 0.25rem;min-height:18px;}
+.cal-result{font-size:13px;color:var(--accent);text-align:center;font-weight:500;min-height:20px;margin-bottom:0.75rem;}
+.cal-footer{display:flex;gap:8px;justify-content:flex-end;border-top:1px solid var(--border);padding-top:1rem;margin-top:0.5rem;}
+.cal-clear{padding:8px 16px;border-radius:8px;font-size:13px;border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;}
+.cal-confirm{padding:8px 20px;border-radius:8px;font-size:13px;font-weight:600;background:var(--accent);color:#0f1410;border:none;cursor:pointer;}
+
+/* 帳號設定 */
+.settings-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:1.5rem;margin-bottom:1.5rem;}
+.settings-card h3{font-size:16px;font-weight:500;margin-bottom:1.25rem;}
+.input-eye{position:relative;}
+.input-eye input{width:100%;padding:10px 40px 10px 14px;border:1px solid var(--border);border-radius:var(--radius);font-size:14px;background:var(--bg);color:var(--text);}
+.input-eye input:focus{outline:none;border-color:var(--accent);}
+.eye-btn{position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--muted);cursor:pointer;font-size:15px;}
+.current-info{font-size:13px;color:var(--muted);padding:10px 14px;background:var(--surface2);border-radius:8px;margin-bottom:1rem;}
+.current-info span{color:var(--accent);font-weight:500;}
+.btn-save-set{padding:10px 24px;background:var(--accent);color:#0f1410;border:none;border-radius:var(--radius);font-size:14px;font-weight:600;cursor:pointer;margin-top:0.5rem;}
+
+.empty-state{text-align:center;padding:3rem;color:var(--muted);font-size:14px;}
+.saving-mask{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:400;align-items:center;justify-content:center;font-size:14px;color:var(--text);letter-spacing:0.1em;}
+.saving-mask.show{display:flex;}
+.toast{position:fixed;bottom:2rem;right:2rem;background:var(--accent);color:#0f1410;padding:12px 20px;border-radius:var(--radius);font-size:14px;font-weight:600;z-index:999;transform:translateY(80px);opacity:0;transition:all 0.25s;}
+.toast.show{transform:translateY(0);opacity:1;}
+.toast.err{background:var(--danger);color:#fff;}
 </style>
 </head>
 <body>
@@ -158,11 +152,11 @@
 <div id="login-screen">
   <div class="login-card">
     <div class="login-logo">Syue & Lynn</div>
-    <p>後台管理系統</p>
-    <input type="text" id="login-user" placeholder="帳號" onkeydown="if(event.key==='Enter')doLogin()">
-    <input type="password" id="login-pw" placeholder="密碼" onkeydown="if(event.key==='Enter')doLogin()">
+    <p class="login-sub">後台管理系統</p>
+    <input type="text" id="l-user" placeholder="帳號">
+    <input type="password" id="l-pw" placeholder="密碼" onkeydown="if(event.key==='Enter')doLogin()">
     <button class="btn-primary" onclick="doLogin()">登入</button>
-    <p class="login-error" id="login-error">帳號或密碼錯誤</p>
+    <p class="login-error" id="l-err">帳號或密碼錯誤</p>
   </div>
 </div>
 
@@ -178,24 +172,23 @@
   <div class="main">
     <div class="sidebar">
       <div class="sidebar-label">管理</div>
-      <div class="sidebar-item active" onclick="showPage('dashboard')"><span>◈</span> 總覽</div>
-      <div class="sidebar-item" onclick="showPage('camping')"><span>▲</span> 露營地點</div>
-      <div class="sidebar-item" onclick="showPage('moto')"><span>◎</span> 重機地點</div>
+      <div class="sidebar-item active" onclick="showPage('dashboard')">◈ 總覽</div>
+      <div class="sidebar-item" onclick="showPage('camping')">▲ 露營地點</div>
+      <div class="sidebar-item" onclick="showPage('moto')">◎ 重機地點</div>
       <div class="sidebar-label">設定</div>
-      <div class="sidebar-item" onclick="showPage('settings')"><span>⚙</span> 帳號設定</div>
+      <div class="sidebar-item" onclick="showPage('settings')">⚙ 帳號設定</div>
     </div>
     <div class="content">
 
-      <!-- 總覽 -->
       <div class="page active" id="page-dashboard">
         <div class="page-header"><h2>總覽</h2></div>
         <div class="stats-grid">
-          <div class="stat-card"><div class="stat-num" id="stat-camp">-</div><div class="stat-label">露營地點</div></div>
-          <div class="stat-card"><div class="stat-num" id="stat-moto">-</div><div class="stat-label">重機地點</div></div>
-          <div class="stat-card"><div class="stat-num" id="stat-360">-</div><div class="stat-label">360 環景</div></div>
+          <div class="stat-card"><div class="stat-num" id="s-camp">-</div><div class="stat-label">露營地點</div></div>
+          <div class="stat-card"><div class="stat-num" id="s-moto">-</div><div class="stat-label">重機地點</div></div>
+          <div class="stat-card"><div class="stat-num" id="s-360">-</div><div class="stat-label">360 環景</div></div>
         </div>
         <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:1.5rem;">
-          <p style="font-size:13px;color:var(--muted);margin-bottom:1rem;letter-spacing:0.05em;text-transform:uppercase;">快速新增</p>
+          <p style="font-size:12px;color:var(--muted);margin-bottom:1rem;letter-spacing:0.08em;text-transform:uppercase;">快速新增</p>
           <div style="display:flex;gap:1rem;">
             <button class="btn-add" onclick="showPage('camping');openModal('camping')">+ 露營地點</button>
             <button class="btn-add gold" onclick="showPage('moto');openModal('moto')">+ 重機地點</button>
@@ -203,63 +196,56 @@
         </div>
       </div>
 
-      <!-- 露營 -->
       <div class="page" id="page-camping">
         <div class="page-header"><h2>露營地點</h2><button class="btn-add" onclick="openModal('camping')">+ 新增地點</button></div>
         <div id="camping-list"></div>
       </div>
 
-      <!-- 重機 -->
       <div class="page" id="page-moto">
         <div class="page-header"><h2>重機地點</h2><button class="btn-add gold" onclick="openModal('moto')">+ 新增地點</button></div>
         <div id="moto-list"></div>
       </div>
 
-      <!-- 帳號設定 -->
       <div class="page" id="page-settings">
         <div class="page-header"><h2>帳號設定</h2></div>
-
         <div class="settings-card">
           <h3>目前帳號</h3>
-          <div class="current-account">帳號：<span id="display-username"></span></div>
-          <p class="settings-hint">修改後需要重新登入</p>
+          <div class="current-info">帳號：<span id="disp-user"></span></div>
         </div>
-
         <div class="settings-card">
           <h3>修改帳號</h3>
           <div class="form-group">
-            <label>新帳號</label>
-            <input type="text" id="new-username" placeholder="輸入新帳號">
+            <label class="form-label">新帳號</label>
+            <input class="form-input" type="text" id="new-user" placeholder="輸入新帳號">
           </div>
-          <button class="btn-save-settings" onclick="saveUsername()">儲存帳號</button>
+          <button class="btn-save-set" onclick="saveUser()">儲存帳號</button>
         </div>
-
         <div class="settings-card">
           <h3>修改密碼</h3>
           <div class="form-group">
-            <label>目前密碼</label>
-            <div class="input-with-toggle">
-              <input type="password" id="current-pw" placeholder="輸入目前密碼">
-              <button class="toggle-pw" onclick="togglePw('current-pw')">👁</button>
+            <label class="form-label">目前密碼</label>
+            <div class="input-eye">
+              <input type="password" id="cur-pw" placeholder="輸入目前密碼">
+              <button class="eye-btn" onclick="toggleEye('cur-pw')">👁</button>
             </div>
           </div>
-          <div class="settings-row">
+          <div class="form-row" style="margin-bottom:0.5rem;">
             <div class="form-group">
-              <label>新密碼</label>
-              <div class="input-with-toggle">
+              <label class="form-label">新密碼</label>
+              <div class="input-eye">
                 <input type="password" id="new-pw" placeholder="至少 6 個字元">
-                <button class="toggle-pw" onclick="togglePw('new-pw')">👁</button>
+                <button class="eye-btn" onclick="toggleEye('new-pw')">👁</button>
               </div>
             </div>
             <div class="form-group">
-              <label>確認新密碼</label>
-              <div class="input-with-toggle">
-                <input type="password" id="confirm-pw" placeholder="再輸入一次">
-                <button class="toggle-pw" onclick="togglePw('confirm-pw')">👁</button>
+              <label class="form-label">確認新密碼</label>
+              <div class="input-eye">
+                <input type="password" id="cf-pw" placeholder="再輸入一次">
+                <button class="eye-btn" onclick="toggleEye('cf-pw')">👁</button>
               </div>
             </div>
           </div>
-          <button class="btn-save-settings" onclick="savePassword()">修改密碼</button>
+          <button class="btn-save-set" onclick="savePw()">修改密碼</button>
         </div>
       </div>
 
@@ -267,76 +253,64 @@
   </div>
 </div>
 
-<!-- 新增／編輯 Modal -->
+<!-- 地點 Modal -->
 <div class="modal-overlay" id="modal-overlay">
   <div class="modal">
     <div class="modal-header">
       <h3 id="modal-title">新增地點</h3>
       <button class="modal-close" onclick="closeModal()">×</button>
     </div>
-    <input type="hidden" id="edit-idx">
-    <input type="hidden" id="edit-type">
+    <input type="hidden" id="e-idx">
+    <input type="hidden" id="e-type">
+
     <div class="form-row">
       <div class="form-group">
-        <label>地點名稱 *</label>
-        <input type="text" id="f-name" placeholder="例：台北高級露營區">
+        <label class="form-label">地點名稱 *</label>
+        <input class="form-input" type="text" id="f-name" placeholder="例：台北高級露營區">
       </div>
       <div class="form-group">
-        <label>地區</label>
-        <input type="text" id="f-location" placeholder="例：台北市">
+        <label class="form-label">地區</label>
+        <input class="form-input" type="text" id="f-loc" placeholder="例：台北市">
       </div>
     </div>
 
-    <!-- 萬年曆日期區間 -->
     <div class="form-group">
-      <label>旅遊日期</label>
-      <div class="date-input-wrap">
-        <div class="date-display" id="date-display" onclick="toggleCalendar()">
-          <span id="date-display-text" class="placeholder">選擇日期或區間</span>
-          <span style="color:var(--muted);font-size:12px;">📅</span>
-        </div>
-        <div class="calendar-popup" id="calendar-popup">
-          <div class="cal-range-hint" id="cal-hint">點選開始日期</div>
-          <div class="cal-header">
-            <button class="cal-nav" onclick="calNav(-1)">‹</button>
-            <span class="cal-title" onclick="toggleCalView()" id="cal-title">2025年 4月</span>
-            <button class="cal-nav" onclick="calNav(1)">›</button>
-          </div>
-          <div id="cal-body"></div>
-          <div class="cal-actions">
-            <button class="cal-btn" onclick="clearDate()">清除</button>
-            <button class="cal-btn confirm" onclick="confirmDate()">確認</button>
-          </div>
-        </div>
-      </div>
+      <label class="form-label">旅遊日期</label>
+      <button type="button" class="cal-trigger" id="cal-trigger" onclick="openCal()">
+        <span id="cal-trigger-text" class="cal-placeholder">點擊選擇日期或區間</span>
+        <span class="cal-icon">📅</span>
+      </button>
       <input type="hidden" id="f-date">
     </div>
 
     <div class="form-group">
-      <label>標籤（逗號分隔）</label>
-      <input type="text" id="f-tags" placeholder="例：山景,親子,需預約">
+      <label class="form-label">標籤（逗號分隔）</label>
+      <input class="form-input" type="text" id="f-tags" placeholder="例：山景,親子,需預約">
     </div>
     <div class="form-group">
-      <label>介紹文字</label>
-      <textarea id="f-desc" placeholder="寫下這個地點的特色、心得、注意事項..."></textarea>
+      <label class="form-label">介紹文字</label>
+      <textarea class="form-input" id="f-desc" placeholder="寫下這個地點的特色、心得、注意事項..."></textarea>
     </div>
     <div class="form-group">
-      <label>Kuula 360 嵌入碼</label>
-      <textarea id="f-kuula" placeholder="貼上 Kuula 的 <script> 嵌入碼..." style="min-height:70px;font-size:12px;font-family:monospace;"></textarea>
+      <label class="form-label">Kuula 360 嵌入碼</label>
+      <textarea class="form-input" id="f-kuula" placeholder="貼上 Kuula 的 <script> 嵌入碼..." style="min-height:70px;font-size:12px;font-family:monospace;"></textarea>
     </div>
+
     <div class="form-group">
-      <label>封面照片網址</label>
-      <input type="text" id="f-img-url" placeholder="貼上圖片網址（Google 雲端硬碟等）">
-    </div>
-    <div class="form-group">
-      <label>或直接上傳照片</label>
-      <div class="upload-area" onclick="document.getElementById('f-img-input').click()">
-        <div style="font-size:24px;">📷</div>
-        <p>點擊選擇照片</p>
-        <input type="file" id="f-img-input" accept="image/*" style="display:none" onchange="previewImg(this)">
-        <img id="f-img-preview" class="upload-preview">
+      <label class="form-label">封面照片</label>
+      <div class="upload-zone" id="upload-zone" onclick="document.getElementById('f-img-file').click()">
+        <div class="icon">📷</div>
+        <p>點擊上傳照片（JPG / PNG）</p>
+        <p style="font-size:11px;margin-top:4px;">自動壓縮，不限大小</p>
       </div>
+      <div class="upload-replace" id="upload-replace" style="display:none" onclick="document.getElementById('f-img-file').click()">點擊更換照片</div>
+      <input type="file" id="f-img-file" accept="image/*" style="display:none" onchange="handleImg(this)">
     </div>
+    <div class="form-group">
+      <label class="form-label">或貼上圖片網址</label>
+      <input class="form-input" type="text" id="f-img-url" placeholder="https://..." oninput="handleUrlImg(this)">
+    </div>
+
     <div class="modal-footer">
       <button class="btn-cancel" onclick="closeModal()">取消</button>
       <button class="btn-save" id="btn-save" onclick="savePlace()">儲存</button>
@@ -344,339 +318,329 @@
   </div>
 </div>
 
-<div class="saving-overlay" id="saving-overlay">儲存中，請稍候...</div>
+<!-- 萬年曆 Modal -->
+<div class="cal-modal-overlay" id="cal-modal-overlay">
+  <div class="cal-modal">
+    <div class="cal-nav-row">
+      <button class="cal-nav-btn" onclick="calMove(-1)">‹</button>
+      <div class="cal-month-year">
+        <select class="cal-month-select" id="cal-month-sel" onchange="calGoTo()"></select>
+        <select class="cal-year-select" id="cal-year-sel" onchange="calGoTo()"></select>
+      </div>
+      <button class="cal-nav-btn" onclick="calMove(1)">›</button>
+    </div>
+    <div class="cal-dow-row">
+      <div class="cal-dow">日</div><div class="cal-dow">一</div><div class="cal-dow">二</div>
+      <div class="cal-dow">三</div><div class="cal-dow">四</div><div class="cal-dow">五</div><div class="cal-dow">六</div>
+    </div>
+    <div class="cal-days" id="cal-days"></div>
+    <div class="cal-hint" id="cal-hint">點選開始日期</div>
+    <div class="cal-result" id="cal-result"></div>
+    <div class="cal-footer">
+      <button class="cal-clear" onclick="calClear()">清除</button>
+      <button class="cal-confirm" onclick="calConfirm()">確認</button>
+    </div>
+  </div>
+</div>
+
+<div class="saving-mask" id="saving-mask">儲存中，請稍候...</div>
 <div class="toast" id="toast"></div>
 
 <script>
 const API = 'https://script.google.com/macros/s/AKfycbzPguC2eh8JP1x1GAOaqodo9r4nb1BPEE4JayJoQxBF-31jZTLl02pIj1ADQ8SGyHxcDw/exec';
-const ACCOUNT_KEY = 'sl_account';
 
-// ── 帳號管理 ──
-function getAccount() {
-  const saved = localStorage.getItem(ACCOUNT_KEY);
-  if (saved) return JSON.parse(saved);
-  return { username: 'syuelynn', password: 'syuelynn2025' };
-}
-function saveAccount(obj) { localStorage.setItem(ACCOUNT_KEY, JSON.stringify(obj)); }
-
-function doLogin() {
-  const acc = getAccount();
-  const u = document.getElementById('login-user').value.trim();
-  const p = document.getElementById('login-pw').value;
-  if (u === acc.username && p === acc.password) {
-    document.getElementById('login-screen').style.display = 'none';
-    document.getElementById('admin-screen').style.display = 'block';
-    document.getElementById('display-username').textContent = acc.username;
+// ── 帳號 ──
+function getAcc(){const s=localStorage.getItem('sl_acc');return s?JSON.parse(s):{username:'syuelynn',password:'syuelynn2025'};}
+function setAcc(o){localStorage.setItem('sl_acc',JSON.stringify(o));}
+function doLogin(){
+  const acc=getAcc();
+  if(document.getElementById('l-user').value.trim()===acc.username&&document.getElementById('l-pw').value===acc.password){
+    document.getElementById('login-screen').style.display='none';
+    document.getElementById('admin-screen').style.display='block';
+    document.getElementById('disp-user').textContent=acc.username;
     loadAll();
-  } else {
-    document.getElementById('login-error').style.display = 'block';
-  }
+  }else{document.getElementById('l-err').style.display='block';}
 }
-function doLogout() {
-  document.getElementById('login-screen').style.display = 'flex';
-  document.getElementById('admin-screen').style.display = 'none';
-  document.getElementById('login-user').value = '';
-  document.getElementById('login-pw').value = '';
+function doLogout(){
+  document.getElementById('login-screen').style.display='flex';
+  document.getElementById('admin-screen').style.display='none';
+  document.getElementById('l-user').value='';
+  document.getElementById('l-pw').value='';
 }
-function saveUsername() {
-  const newU = document.getElementById('new-username').value.trim();
-  if (!newU) { showToast('請輸入新帳號', true); return; }
-  const acc = getAccount();
-  acc.username = newU;
-  saveAccount(acc);
-  document.getElementById('display-username').textContent = newU;
-  document.getElementById('new-username').value = '';
-  showToast('帳號已更新，請重新登入');
-  setTimeout(doLogout, 1500);
+function saveUser(){
+  const u=document.getElementById('new-user').value.trim();
+  if(!u){toast('請輸入新帳號',1);return;}
+  const acc=getAcc();acc.username=u;setAcc(acc);
+  document.getElementById('new-user').value='';
+  toast('帳號已更新，請重新登入');
+  setTimeout(doLogout,1500);
 }
-function savePassword() {
-  const cur = document.getElementById('current-pw').value;
-  const nw = document.getElementById('new-pw').value;
-  const cf = document.getElementById('confirm-pw').value;
-  const acc = getAccount();
-  if (cur !== acc.password) { showToast('目前密碼錯誤', true); return; }
-  if (nw.length < 6) { showToast('新密碼至少需要 6 個字元', true); return; }
-  if (nw !== cf) { showToast('兩次密碼不一致', true); return; }
-  acc.password = nw;
-  saveAccount(acc);
-  ['current-pw','new-pw','confirm-pw'].forEach(id => document.getElementById(id).value = '');
-  showToast('密碼已更新，請重新登入');
-  setTimeout(doLogout, 1500);
+function savePw(){
+  const acc=getAcc();
+  const cur=document.getElementById('cur-pw').value;
+  const nw=document.getElementById('new-pw').value;
+  const cf=document.getElementById('cf-pw').value;
+  if(cur!==acc.password){toast('目前密碼錯誤',1);return;}
+  if(nw.length<6){toast('新密碼至少 6 個字元',1);return;}
+  if(nw!==cf){toast('兩次密碼不一致',1);return;}
+  acc.password=nw;setAcc(acc);
+  ['cur-pw','new-pw','cf-pw'].forEach(id=>document.getElementById(id).value='');
+  toast('密碼已更新，請重新登入');
+  setTimeout(doLogout,1500);
 }
-function togglePw(id) {
-  const el = document.getElementById(id);
-  el.type = el.type === 'password' ? 'text' : 'password';
+function toggleEye(id){const el=document.getElementById(id);el.type=el.type==='password'?'text':'password';}
+
+// ── 頁面切換 ──
+function showPage(name){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.sidebar-item').forEach(s=>s.classList.remove('active'));
+  document.getElementById('page-'+name).classList.add('active');
+  document.querySelectorAll('.sidebar-item')[['dashboard','camping','moto','settings'].indexOf(name)].classList.add('active');
+  if(name==='camping')renderList('camping');
+  if(name==='moto')renderList('moto');
+  if(name==='settings')document.getElementById('disp-user').textContent=getAcc().username;
 }
 
-// ── 萬年曆 ──
-const MONTHS = ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
-const DOWS = ['日','一','二','三','四','五','六'];
-let calYear, calMonth, calView = 'days';
-let rangeStart = null, rangeEnd = null, selecting = false;
-
-function initCal() {
-  const now = new Date();
-  calYear = now.getFullYear();
-  calMonth = now.getMonth();
-}
-function toggleCalendar() {
-  const popup = document.getElementById('calendar-popup');
-  if (popup.classList.contains('open')) {
-    popup.classList.remove('open');
-  } else {
-    initCal();
-    calView = 'days';
-    renderCal();
-    popup.classList.add('open');
-  }
-}
-function toggleCalView() {
-  calView = calView === 'days' ? 'months' : 'days';
-  renderCal();
-}
-function calNav(dir) {
-  if (calView === 'days') {
-    calMonth += dir;
-    if (calMonth > 11) { calMonth = 0; calYear++; }
-    if (calMonth < 0) { calMonth = 11; calYear--; }
-  } else {
-    calYear += dir;
-  }
-  renderCal();
-}
-function renderCal() {
-  const body = document.getElementById('cal-body');
-  document.getElementById('cal-title').textContent = calYear + '年 ' + MONTHS[calMonth];
-  if (calView === 'months') {
-    body.innerHTML = `<div class="cal-months">${MONTHS.map((m,i)=>`<div class="cal-month-item${i===calMonth?' active':''}" onclick="selectMonth(${i})">${m}</div>`).join('')}</div>`;
-    return;
-  }
-  const first = new Date(calYear, calMonth, 1).getDay();
-  const days = new Date(calYear, calMonth+1, 0).getDate();
-  const prevDays = new Date(calYear, calMonth, 0).getDate();
-  const today = new Date(); today.setHours(0,0,0,0);
-  let html = DOWS.map(d=>`<div class="cal-dow">${d}</div>`).join('');
-  for (let i=0; i<first; i++) {
-    const d = prevDays - first + 1 + i;
-    html += `<div class="cal-day other-month">${d}</div>`;
-  }
-  for (let d=1; d<=days; d++) {
-    const dt = new Date(calYear, calMonth, d);
-    let cls = 'cal-day';
-    if (dt.getTime() === today.getTime()) cls += ' today';
-    if (rangeStart && rangeEnd) {
-      const s = new Date(rangeStart); s.setHours(0,0,0,0);
-      const e = new Date(rangeEnd); e.setHours(0,0,0,0);
-      if (dt.getTime() === s.getTime()) cls += ' range-start';
-      else if (dt.getTime() === e.getTime()) cls += ' range-end';
-      else if (dt > s && dt < e) cls += ' in-range';
-    } else if (rangeStart) {
-      const s = new Date(rangeStart); s.setHours(0,0,0,0);
-      if (dt.getTime() === s.getTime()) cls += ' selected';
-    }
-    html += `<div class="${cls}" onclick="selectDay(${calYear},${calMonth},${d})">${d}</div>`;
-  }
-  const remaining = 42 - first - days;
-  for (let d=1; d<=remaining; d++) html += `<div class="cal-day other-month">${d}</div>`;
-  body.innerHTML = html;
-  const hint = document.getElementById('cal-hint');
-  if (!rangeStart) hint.textContent = '點選開始日期';
-  else if (!rangeEnd) hint.textContent = '再點選結束日期（或同一天表示單日）';
-  else hint.textContent = formatDateRange(rangeStart, rangeEnd);
-}
-function selectMonth(m) { calMonth = m; calView = 'days'; renderCal(); }
-function selectDay(y, m, d) {
-  const dt = new Date(y, m, d);
-  if (!rangeStart || (rangeStart && rangeEnd)) {
-    rangeStart = dt; rangeEnd = null;
-  } else {
-    if (dt < rangeStart) { rangeEnd = rangeStart; rangeStart = dt; }
-    else if (dt.getTime() === rangeStart.getTime()) { rangeEnd = dt; }
-    else { rangeEnd = dt; }
-  }
-  renderCal();
-}
-function formatDate(dt) {
-  return dt.getFullYear() + '年' + (dt.getMonth()+1) + '月' + dt.getDate() + '日';
-}
-function formatDateRange(s, e) {
-  if (!e || s.getTime() === e.getTime()) return formatDate(s);
-  return formatDate(s) + ' ~ ' + formatDate(e);
-}
-function confirmDate() {
-  if (!rangeStart) { showToast('請先選擇日期', true); return; }
-  const val = formatDateRange(rangeStart, rangeEnd || rangeStart);
-  document.getElementById('f-date').value = val;
-  const display = document.getElementById('date-display-text');
-  display.textContent = val;
-  display.classList.remove('placeholder');
-  document.getElementById('calendar-popup').classList.remove('open');
-}
-function clearDate() {
-  rangeStart = null; rangeEnd = null;
-  document.getElementById('f-date').value = '';
-  const display = document.getElementById('date-display-text');
-  display.textContent = '選擇日期或區間';
-  display.classList.add('placeholder');
-  document.getElementById('calendar-popup').classList.remove('open');
-}
-document.addEventListener('click', e => {
-  const wrap = document.querySelector('.date-input-wrap');
-  if (wrap && !wrap.contains(e.target)) {
-    document.getElementById('calendar-popup').classList.remove('open');
-  }
-});
-
-// ── 資料管理 ──
-let campingData = [], motoData = [];
-let currentType = 'camping', editingIdx = null, imgData = null;
-
-function showPage(name) {
-  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-  document.querySelectorAll('.sidebar-item').forEach(s => s.classList.remove('active'));
-  document.getElementById('page-' + name).classList.add('active');
-  const idx = ['dashboard','camping','moto','settings'].indexOf(name);
-  document.querySelectorAll('.sidebar-item')[idx].classList.add('active');
-  if (name === 'camping') renderList('camping');
-  if (name === 'moto') renderList('moto');
-  if (name === 'settings') document.getElementById('display-username').textContent = getAccount().username;
-}
-
-async function loadAll() {
-  try {
-    const [c, m] = await Promise.all([
-      fetch(API + '?sheet=camping').then(r => r.json()),
-      fetch(API + '?sheet=moto').then(r => r.json())
+// ── 資料 ──
+let campingData=[],motoData=[],curType='camping',editIdx=null,imgData=null;
+async function loadAll(){
+  try{
+    const [c,m]=await Promise.all([
+      fetch(API+'?sheet=camping').then(r=>r.json()),
+      fetch(API+'?sheet=moto').then(r=>r.json())
     ]);
-    campingData = c; motoData = m;
-    updateStats(); renderList('camping'); renderList('moto');
-  } catch(e) { showToast('載入失敗，請重新整理', true); }
+    campingData=c;motoData=m;updateStats();renderList('camping');renderList('moto');
+  }catch(e){toast('載入失敗，請重新整理',1);}
 }
-
-function updateStats() {
-  document.getElementById('stat-camp').textContent = campingData.length;
-  document.getElementById('stat-moto').textContent = motoData.length;
-  document.getElementById('stat-360').textContent = [...campingData,...motoData].filter(p=>p.kuula).length;
+function updateStats(){
+  document.getElementById('s-camp').textContent=campingData.length;
+  document.getElementById('s-moto').textContent=motoData.length;
+  document.getElementById('s-360').textContent=[...campingData,...motoData].filter(p=>p.kuula).length;
 }
-
-function renderList(type) {
-  const list = type === 'camping' ? campingData : motoData;
-  const el = document.getElementById(type + '-list');
-  const isGold = type === 'moto';
-  if (!list.length) { el.innerHTML = `<div class="empty-state">還沒有${type==='camping'?'露營':'重機'}地點，點上方按鈕新增！</div>`; return; }
-  el.innerHTML = list.map((p,i) => `
+function renderList(type){
+  const list=type==='camping'?campingData:motoData;
+  const el=document.getElementById(type+'-list');
+  if(!list.length){el.innerHTML=`<div class="empty-state">還沒有地點，點上方按鈕新增！</div>`;return;}
+  el.innerHTML=list.map((p,i)=>`
     <div class="place-card">
-      <div class="place-thumb">${p.img?`<img src="${p.img}" alt="${p.name}">`:(type==='camping'?'▲':'◎')}</div>
+      <div class="place-thumb">${p.img?`<img src="${p.img}" alt="">`:(type==='camping'?'▲':'◎')}</div>
       <div class="place-info">
         <div class="place-name">${p.name}</div>
         <div class="place-meta">${p.location||''}${p.date?' · '+p.date:''}${p.kuula?' · <span style="color:var(--accent)">360°</span>':''}</div>
-        ${p.tags?p.tags.split(',').map(t=>`<span class="badge-tag ${isGold?'gold':''}">${t.trim()}</span>`).join(''):''}
+        ${p.tags?p.tags.split(',').map(t=>`<span class="badge-tag ${type==='moto'?'gold':''}">${t.trim()}</span>`).join(''):''}
         <div class="place-desc">${p.desc||''}</div>
       </div>
       <div class="place-actions">
         <button class="btn-sm" onclick="editPlace('${type}',${i})">編輯</button>
-        <button class="btn-danger-sm" onclick="deletePlace('${type}',${i})">刪除</button>
+        <button class="btn-danger-sm" onclick="delPlace('${type}',${i})">刪除</button>
       </div>
     </div>`).join('');
 }
 
-function openModal(type, idx) {
-  currentType = type; editingIdx = idx !== undefined ? idx : null;
-  document.getElementById('modal-title').textContent = (idx!==undefined?'編輯':'新增')+(type==='camping'?'露營':'重機')+'地點';
-  document.getElementById('edit-type').value = type;
-  document.getElementById('btn-save').className = 'btn-save'+(type==='moto'?' gold':'');
-  rangeStart = null; rangeEnd = null;
-  clearFormFields();
-  if (idx !== undefined) {
-    const p = (type==='camping'?campingData:motoData)[idx];
-    document.getElementById('f-name').value = p.name||'';
-    document.getElementById('f-location').value = p.location||'';
-    document.getElementById('f-date').value = p.date||'';
-    if (p.date) {
-      const dt = document.getElementById('date-display-text');
-      dt.textContent = p.date; dt.classList.remove('placeholder');
+// ── Modal ──
+function openModal(type,idx){
+  curType=type;editIdx=idx!==undefined?idx:null;
+  document.getElementById('modal-title').textContent=(idx!==undefined?'編輯':'新增')+(type==='camping'?'露營':'重機')+'地點';
+  document.getElementById('e-type').value=type;
+  document.getElementById('btn-save').className='btn-save'+(type==='moto'?' gold':'');
+  resetForm();
+  if(idx!==undefined){
+    const p=(type==='camping'?campingData:motoData)[idx];
+    document.getElementById('f-name').value=p.name||'';
+    document.getElementById('f-loc').value=p.location||'';
+    document.getElementById('f-date').value=p.date||'';
+    document.getElementById('f-tags').value=p.tags||'';
+    document.getElementById('f-desc').value=p.desc||'';
+    document.getElementById('f-kuula').value=p.kuula||'';
+    if(p.date){
+      const t=document.getElementById('cal-trigger-text');
+      t.textContent=p.date;t.className='cal-val';
     }
-    document.getElementById('f-tags').value = p.tags||'';
-    document.getElementById('f-desc').value = p.desc||'';
-    document.getElementById('f-kuula').value = p.kuula||'';
-    document.getElementById('f-img-url').value = (!p.img||p.img.startsWith('data:'))?'':p.img;
-    if (p.img && p.img.startsWith('data:')) {
-      document.getElementById('f-img-preview').src = p.img;
-      document.getElementById('f-img-preview').style.display = 'block';
-      imgData = p.img;
+    if(p.img){
+      if(p.img.startsWith('data:')||p.img.startsWith('http')){
+        setImgPreview(p.img);
+        if(!p.img.startsWith('data:'))document.getElementById('f-img-url').value=p.img;
+        else imgData=p.img;
+      }
     }
   }
   document.getElementById('modal-overlay').classList.add('open');
 }
-function editPlace(type, idx) { showPage(type); openModal(type, idx); }
-async function deletePlace(type, idx) {
-  if (!confirm('確定要刪除？')) return;
-  if (type==='camping') campingData.splice(idx,1); else motoData.splice(idx,1);
-  await saveToSheets(type); renderList(type); updateStats();
+function editPlace(type,idx){showPage(type);openModal(type,idx);}
+async function delPlace(type,idx){
+  if(!confirm('確定要刪除？'))return;
+  if(type==='camping')campingData.splice(idx,1);else motoData.splice(idx,1);
+  await pushToSheets(type);renderList(type);updateStats();
 }
-function closeModal() { document.getElementById('modal-overlay').classList.remove('open'); clearFormFields(); }
-function clearFormFields() {
-  ['f-name','f-location','f-tags','f-desc','f-kuula','f-img-url','f-date'].forEach(id => document.getElementById(id).value='');
-  const dt = document.getElementById('date-display-text');
-  dt.textContent='選擇日期或區間'; dt.classList.add('placeholder');
-  document.getElementById('f-img-preview').style.display='none';
-  imgData=null; rangeStart=null; rangeEnd=null;
+function closeModal(){document.getElementById('modal-overlay').classList.remove('open');resetForm();}
+function resetForm(){
+  ['f-name','f-loc','f-date','f-tags','f-desc','f-kuula','f-img-url'].forEach(id=>document.getElementById(id).value='');
+  const t=document.getElementById('cal-trigger-text');t.textContent='點擊選擇日期或區間';t.className='cal-placeholder';
+  const z=document.getElementById('upload-zone');
+  z.className='upload-zone';
+  z.innerHTML='<div class="icon">📷</div><p>點擊上傳照片（JPG / PNG）</p><p style="font-size:11px;margin-top:4px;">自動壓縮，不限大小</p>';
+  document.getElementById('upload-replace').style.display='none';
+  document.getElementById('f-img-file').value='';
+  imgData=null;calR1=null;calR2=null;
 }
-function previewImg(input) {
-  const file = input.files[0]; if (!file) return;
-  const reader = new FileReader();
-  reader.onload = e => {
-    const img = new Image();
-    img.onload = () => {
-      const canvas = document.createElement('canvas');
-      const MAX=800; let w=img.width,h=img.height;
-      if(w>h){if(w>MAX){h=h*MAX/w;w=MAX;}}else{if(h>MAX){w=w*MAX/h;h=MAX;}}
-      canvas.width=w; canvas.height=h;
-      canvas.getContext('2d').drawImage(img,0,0,w,h);
-      imgData=canvas.toDataURL('image/jpeg',0.75);
-      document.getElementById('f-img-preview').src=imgData;
-      document.getElementById('f-img-preview').style.display='block';
+
+// ── 照片上傳 ──
+function handleImg(input){
+  const file=input.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    const img=new Image();
+    img.onload=()=>{
+      const MAX=900;let w=img.width,h=img.height;
+      if(w>h){if(w>MAX){h=Math.round(h*MAX/w);w=MAX;}}
+      else{if(h>MAX){w=Math.round(w*MAX/h);h=MAX;}}
+      const c=document.createElement('canvas');c.width=w;c.height=h;
+      c.getContext('2d').drawImage(img,0,0,w,h);
+      imgData=c.toDataURL('image/jpeg',0.82);
+      setImgPreview(imgData);
       document.getElementById('f-img-url').value='';
     };
     img.src=e.target.result;
   };
   reader.readAsDataURL(file);
 }
-async function savePlace() {
-  const name = document.getElementById('f-name').value.trim();
-  if (!name) { alert('請填寫地點名稱'); return; }
-  const type = document.getElementById('edit-type').value || currentType;
-  const urlImg = document.getElementById('f-img-url').value.trim();
-  const place = {
-    name, location:document.getElementById('f-location').value.trim(),
+function handleUrlImg(input){
+  const url=input.value.trim();
+  if(url){setImgPreview(url);imgData=null;}
+  else{resetImgZone();}
+}
+function setImgPreview(src){
+  const z=document.getElementById('upload-zone');
+  z.className='upload-zone has-img';
+  z.innerHTML=`<img src="${src}" alt="封面預覽">`;
+  document.getElementById('upload-replace').style.display='block';
+}
+function resetImgZone(){
+  const z=document.getElementById('upload-zone');
+  z.className='upload-zone';
+  z.innerHTML='<div class="icon">📷</div><p>點擊上傳照片（JPG / PNG）</p><p style="font-size:11px;margin-top:4px;">自動壓縮，不限大小</p>';
+  document.getElementById('upload-replace').style.display='none';
+  imgData=null;
+}
+
+async function savePlace(){
+  const name=document.getElementById('f-name').value.trim();
+  if(!name){toast('請填寫地點名稱',1);return;}
+  const type=document.getElementById('e-type').value||curType;
+  const urlImg=document.getElementById('f-img-url').value.trim();
+  const place={
+    name,
+    location:document.getElementById('f-loc').value.trim(),
     date:document.getElementById('f-date').value.trim(),
     tags:document.getElementById('f-tags').value.trim(),
     desc:document.getElementById('f-desc').value.trim(),
     kuula:document.getElementById('f-kuula').value.trim(),
     img:imgData||urlImg||'',
   };
-  const arr = type==='camping'?campingData:motoData;
-  if (editingIdx!==null) arr[editingIdx]=place; else arr.push(place);
-  await saveToSheets(type); renderList(type); updateStats(); closeModal();
+  const arr=type==='camping'?campingData:motoData;
+  if(editIdx!==null)arr[editIdx]=place;else arr.push(place);
+  await pushToSheets(type);renderList(type);updateStats();closeModal();
 }
-async function saveToSheets(type) {
-  document.getElementById('saving-overlay').classList.add('show');
-  try {
-    const data = type==='camping'?campingData:motoData;
-    await fetch(API, { method:'POST', body:JSON.stringify({sheet:type,data}) });
-    showToast('已儲存！');
-  } catch(e) { showToast('儲存失敗，請檢查網路',true); }
-  finally { document.getElementById('saving-overlay').classList.remove('show'); }
+async function pushToSheets(type){
+  document.getElementById('saving-mask').classList.add('show');
+  try{
+    const data=type==='camping'?campingData:motoData;
+    await fetch(API,{method:'POST',body:JSON.stringify({sheet:type,data})});
+    toast('已儲存！');
+  }catch(e){toast('儲存失敗，請檢查網路',1);}
+  finally{document.getElementById('saving-mask').classList.remove('show');}
 }
-function showToast(msg,isError) {
-  const t=document.getElementById('toast');
-  t.textContent=msg; t.className='toast'+(isError?' error':'')+' show';
-  setTimeout(()=>t.classList.remove('show'),2500);
+
+// ── 萬年曆 ──
+let calY=new Date().getFullYear(),calM=new Date().getMonth();
+let calR1=null,calR2=null;
+const MNAMES=['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
+
+function openCal(){
+  const now=new Date();
+  if(!calR1){calY=now.getFullYear();calM=now.getMonth();}
+  buildSelects();renderCalDays();
+  document.getElementById('cal-modal-overlay').classList.add('open');
 }
-document.getElementById('modal-overlay').addEventListener('click',e=>{
-  if(e.target===document.getElementById('modal-overlay'))closeModal();
-});
-document.getElementById('login-pw').addEventListener('keydown',e=>{ if(e.key==='Enter')doLogin(); });
+function buildSelects(){
+  const ms=document.getElementById('cal-month-sel');
+  const ys=document.getElementById('cal-year-sel');
+  ms.innerHTML=MNAMES.map((m,i)=>`<option value="${i}"${i===calM?' selected':''}>${m}</option>`).join('');
+  const curYear=new Date().getFullYear();
+  let yHTML='';
+  for(let y=curYear-5;y<=curYear+5;y++)yHTML+=`<option value="${y}"${y===calY?' selected':''}>${y}年</option>`;
+  ys.innerHTML=yHTML;
+}
+function calGoTo(){
+  calM=parseInt(document.getElementById('cal-month-sel').value);
+  calY=parseInt(document.getElementById('cal-year-sel').value);
+  renderCalDays();
+}
+function calMove(d){
+  calM+=d;
+  if(calM>11){calM=0;calY++;}
+  if(calM<0){calM=11;calY--;}
+  buildSelects();renderCalDays();
+}
+function renderCalDays(){
+  const el=document.getElementById('cal-days');
+  const first=new Date(calY,calM,1).getDay();
+  const total=new Date(calY,calM+1,0).getDate();
+  const today=new Date();today.setHours(0,0,0,0);
+  let html='';
+  for(let i=0;i<first;i++)html+=`<div class="cal-day empty"></div>`;
+  for(let d=1;d<=total;d++){
+    const dt=new Date(calY,calM,d);dt.setHours(0,0,0,0);
+    let cls='cal-day';
+    if(dt.getTime()===today.getTime())cls+=' today';
+    if(calR1&&calR2){
+      const s=calR1.getTime(),e=calR2.getTime(),t=dt.getTime();
+      if(t===s&&t===e)cls+=' sel-start sel-end';
+      else if(t===s)cls+=' sel-start';
+      else if(t===e)cls+=' sel-end';
+      else if(t>s&&t<e)cls+=' in-range';
+    }else if(calR1&&dt.getTime()===calR1.getTime()){cls+=' sel-start sel-end';}
+    html+=`<div class="${cls}" data-y="${calY}" data-m="${calM}" data-d="${d}" onclick="calClick(this)">${d}</div>`;
+  }
+  el.innerHTML=html;
+  updateCalHint();
+}
+function calClick(el){
+  const dt=new Date(parseInt(el.dataset.y),parseInt(el.dataset.m),parseInt(el.dataset.d));
+  dt.setHours(0,0,0,0);
+  if(!calR1||calR2){calR1=dt;calR2=null;}
+  else{
+    if(dt<calR1){calR2=calR1;calR1=dt;}
+    else{calR2=dt;}
+  }
+  renderCalDays();
+}
+function updateCalHint(){
+  const hint=document.getElementById('cal-hint');
+  const res=document.getElementById('cal-result');
+  if(!calR1){hint.textContent='點選開始日期';res.textContent='';}
+  else if(!calR2){hint.textContent='再點選結束日期（單日旅遊可直接確認）';res.textContent=fmtDate(calR1);}
+  else{hint.textContent='已選取區間';res.textContent=fmtDate(calR1)+' ～ '+fmtDate(calR2);}
+}
+function fmtDate(d){return d.getFullYear()+'年'+(d.getMonth()+1)+'月'+d.getDate()+'日';}
+function calClear(){calR1=null;calR2=null;renderCalDays();document.getElementById('f-date').value='';const t=document.getElementById('cal-trigger-text');t.textContent='點擊選擇日期或區間';t.className='cal-placeholder';document.getElementById('cal-modal-overlay').classList.remove('open');}
+function calConfirm(){
+  if(!calR1){toast('請先選擇日期',1);return;}
+  const val=calR2?fmtDate(calR1)+' ～ '+fmtDate(calR2):fmtDate(calR1);
+  document.getElementById('f-date').value=val;
+  const t=document.getElementById('cal-trigger-text');t.textContent=val;t.className='cal-val';
+  document.getElementById('cal-modal-overlay').classList.remove('open');
+}
+
+// ── Toast ──
+function toast(msg,err){
+  const el=document.getElementById('toast');
+  el.textContent=msg;el.className='toast'+(err?' err':'')+' show';
+  setTimeout(()=>el.classList.remove('show'),2500);
+}
+
+document.getElementById('modal-overlay').addEventListener('click',e=>{if(e.target===document.getElementById('modal-overlay'))closeModal();});
+document.getElementById('l-pw').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
 </script>
 </body>
 </html>
