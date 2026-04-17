@@ -4,139 +4,234 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Syue & Lynn 旅遊足跡</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;700&family=Noto+Serif+TC:wght@400;500&display=swap" rel="stylesheet">
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
-      color: #1a1a1a; background: #ffffff; line-height: 1.7;
+    :root {
+      --bg: #0f1410;
+      --surface: #1a1f1b;
+      --surface2: #222820;
+      --border: #2e352c;
+      --text: #e8e4dc;
+      --muted: #8a9088;
+      --accent: #7eb87a;
+      --accent2: #c4a35a;
+      --radius: 12px;
     }
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body {
+      font-family: 'Noto Serif TC', serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.8;
+    }
+
+    /* Nav */
     nav {
       display: flex; align-items: center; justify-content: space-between;
-      padding: 1rem 2rem; border-bottom: 1px solid #e8e8e8;
-      position: sticky; top: 0; background: #fff; z-index: 100;
+      padding: 1.25rem 2.5rem;
+      border-bottom: 1px solid var(--border);
+      position: sticky; top: 0; z-index: 100;
+      background: rgba(15,20,16,0.92);
+      backdrop-filter: blur(12px);
     }
-    .nav-logo { font-size: 18px; font-weight: 600; }
+    .nav-logo {
+      font-family: 'Playfair Display', serif;
+      font-size: 18px; font-weight: 700;
+      color: var(--accent2);
+      letter-spacing: 0.04em;
+    }
     .nav-links { display: flex; gap: 2rem; }
-    .nav-links a { font-size: 14px; color: #666; text-decoration: none; }
-    .nav-links a:hover { color: #1a1a1a; }
+    .nav-links a {
+      font-size: 13px; color: var(--muted); text-decoration: none;
+      letter-spacing: 0.1em; text-transform: uppercase;
+      transition: color 0.2s;
+    }
+    .nav-links a:hover { color: var(--text); }
+
+    /* Hero */
     .hero {
-      padding: 5rem 2rem 4rem; text-align: center; border-bottom: 1px solid #e8e8e8;
+      padding: 7rem 2.5rem 6rem;
+      text-align: center;
+      border-bottom: 1px solid var(--border);
+      position: relative;
+      overflow: hidden;
     }
-    .hero h1 { font-size: 36px; font-weight: 600; margin-bottom: 1rem; }
-    .hero p { font-size: 16px; color: #666; }
-    .section { padding: 4rem 2rem; max-width: 960px; margin: 0 auto; }
-    .section-label {
-      display: inline-block; font-size: 12px; font-weight: 600;
-      letter-spacing: 0.08em; text-transform: uppercase; color: #888;
-      background: #f4f4f4; padding: 4px 12px; border-radius: 20px; margin-bottom: 0.75rem;
+    .hero::before {
+      content: '';
+      position: absolute; inset: 0;
+      background: radial-gradient(ellipse at center, rgba(126,184,122,0.06) 0%, transparent 70%);
+      pointer-events: none;
     }
-    .section h2 { font-size: 26px; font-weight: 600; margin-bottom: 2rem; }
-    hr.divider { border: none; border-top: 1px solid #e8e8e8; }
+    .hero-eyebrow {
+      font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase;
+      color: var(--accent); margin-bottom: 1.25rem;
+    }
+    .hero h1 {
+      font-family: 'Playfair Display', serif;
+      font-size: 52px; font-weight: 700;
+      color: var(--text);
+      line-height: 1.2;
+      margin-bottom: 1.25rem;
+    }
+    .hero p { font-size: 16px; color: var(--muted); }
+
+    /* Section */
+    .section { padding: 5rem 2.5rem; max-width: 1000px; margin: 0 auto; }
+    .section-header { display: flex; align-items: baseline; gap: 1rem; margin-bottom: 3rem; }
+    .section-eyebrow {
+      font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase;
+      color: var(--accent); white-space: nowrap;
+    }
+    .section h2 {
+      font-family: 'Playfair Display', serif;
+      font-size: 32px; font-weight: 500; color: var(--text);
+    }
+    .section-line { flex: 1; height: 1px; background: var(--border); margin-left: 1rem; }
+
+    hr.divider { border: none; border-top: 1px solid var(--border); }
+
+    /* Card */
     .card {
-      background: #fff; border: 1px solid #e8e8e8;
-      border-radius: 12px; overflow: hidden; margin-bottom: 2rem;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      margin-bottom: 2rem;
+      transition: border-color 0.2s;
     }
-    .card-img { width: 100%; height: 220px; object-fit: cover; display: block; }
+    .card:hover { border-color: #3e4a3c; }
+    .card-img { width: 100%; height: 260px; object-fit: cover; display: block; }
     .card-img-placeholder {
-      width: 100%; height: 220px; background: #f4f4f4;
-      display: flex; align-items: center; justify-content: center; font-size: 14px; color: #aaa;
+      width: 100%; height: 260px;
+      background: var(--surface2);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 14px; color: var(--muted);
     }
-    .card-body { padding: 1.5rem; }
-    .card-title { font-size: 20px; font-weight: 600; margin-bottom: 4px; }
-    .card-meta { font-size: 13px; color: #888; margin-bottom: 1rem; }
+    .card-body { padding: 1.75rem; }
+    .card-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 22px; font-weight: 500;
+      color: var(--text); margin-bottom: 6px;
+    }
+    .card-meta { font-size: 12px; color: var(--muted); margin-bottom: 1rem; letter-spacing: 0.05em; }
     .badge {
-      display: inline-block; font-size: 12px; padding: 3px 10px;
-      border-radius: 20px; margin-right: 6px; margin-bottom: 8px;
+      display: inline-block; font-size: 11px; padding: 3px 10px;
+      border-radius: 20px; margin-right: 6px; margin-bottom: 6px;
+      letter-spacing: 0.05em;
     }
-    .badge-green { background: #e6f4ea; color: #2d7a3a; }
-    .badge-blue  { background: #e8f0fe; color: #1a56a0; }
-    .card-desc { font-size: 15px; color: #444; margin-top: 0.75rem; margin-bottom: 1.5rem; }
+    .badge-green { background: rgba(126,184,122,0.12); color: var(--accent); border: 1px solid rgba(126,184,122,0.25); }
+    .badge-gold  { background: rgba(196,163,90,0.12); color: var(--accent2); border: 1px solid rgba(196,163,90,0.25); }
+    .card-desc { font-size: 14px; color: var(--muted); margin-top: 1rem; margin-bottom: 1.5rem; line-height: 1.8; }
+
     .kuula-wrap { border-radius: 8px; overflow: hidden; margin-bottom: 0.5rem; }
     .kuula-wrap iframe { display: block; border: none; }
-    .kuula-caption { font-size: 12px; color: #aaa; text-align: center; margin-bottom: 0.5rem; }
-    .card-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem; }
+    .kuula-caption { font-size: 11px; color: var(--muted); text-align: center; margin-bottom: 0.5rem; letter-spacing: 0.08em; }
+
+    .card-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem; }
+
+    .loading {
+      text-align: center; padding: 3rem;
+      font-size: 13px; color: var(--muted); letter-spacing: 0.1em;
+    }
     .empty-msg {
-      font-size: 14px; color: #aaa; padding: 2rem; text-align: center;
-      border: 1px dashed #e8e8e8; border-radius: 12px;
+      font-size: 14px; color: var(--muted); padding: 2.5rem;
+      text-align: center; border: 1px dashed var(--border); border-radius: var(--radius);
     }
+
     footer {
-      padding: 2.5rem; text-align: center; font-size: 13px;
-      color: #aaa; border-top: 1px solid #e8e8e8;
+      padding: 3rem 2.5rem; text-align: center;
+      font-size: 12px; color: var(--muted);
+      border-top: 1px solid var(--border);
+      letter-spacing: 0.1em;
     }
+
     @media (max-width: 600px) {
-      .hero h1 { font-size: 26px; }
-      nav { padding: 1rem; }
-      .nav-links { gap: 1rem; }
+      .hero h1 { font-size: 34px; }
+      nav { padding: 1rem 1.25rem; }
+      .nav-links { gap: 1.25rem; }
+      .section { padding: 3rem 1.25rem; }
     }
   </style>
 </head>
 <body>
 
   <nav>
-    <div class="nav-logo">Syue & Lynn 旅遊足跡</div>
+    <div class="nav-logo">Syue & Lynn</div>
     <div class="nav-links">
-      <a href="#moto">重機地點</a>
-      <a href="#camping">露營地點</a>
+      <a href="#moto">重機</a>
+      <a href="#camping">露營</a>
     </div>
   </nav>
 
   <div class="hero">
-    <h1>Syue & Lynn 旅遊足跡</h1>
+    <div class="hero-eyebrow">Travel Journal</div>
+    <h1>旅遊足跡</h1>
     <p>記錄我們騎過的山路、住過的營地<br>每一個地點都是一段故事</p>
   </div>
 
   <div class="section" id="moto">
-    <div class="section-label">重機地點</div>
-    <h2>騎過的路</h2>
-    <div class="card-grid" id="moto-container"></div>
+    <div class="section-header">
+      <span class="section-eyebrow">Motorcycle</span>
+      <h2>重機地點</h2>
+      <div class="section-line"></div>
+    </div>
+    <div class="card-grid" id="moto-container">
+      <div class="loading">載入中...</div>
+    </div>
   </div>
 
   <hr class="divider">
 
   <div class="section" id="camping">
-    <div class="section-label">露營地點</div>
-    <h2>住過的營地</h2>
-    <div id="camping-container"></div>
+    <div class="section-header">
+      <span class="section-eyebrow">Camping</span>
+      <h2>露營地點</h2>
+      <div class="section-line"></div>
+    </div>
+    <div id="camping-container">
+      <div class="loading">載入中...</div>
+    </div>
   </div>
 
   <footer>
-    © Syue & Lynn · 用 Osmo 360 記錄每一個足跡
+    © SYUE & LYNN · 用 Osmo 360 記錄每一個足跡
   </footer>
 
   <script>
-    function getData(type) {
-      return JSON.parse(localStorage.getItem('sl_' + type) || '[]');
-    }
+    const API = 'https://script.google.com/macros/s/AKfycbzPguC2eh8JP1x1GAOaqodo9r4nb1BPEE4JayJoQxBF-31jZTLl02pIj1ADQ8SGyHxcDw/exec';
 
     function extractKuulaUrl(code) {
+      if (!code) return null;
       const match = code.match(/data-kuula="([^"]+)"/);
       return match ? match[1] : null;
     }
 
-    function renderCamping() {
-      const list = getData('camping');
+    async function loadData(sheet) {
+      const res = await fetch(`${API}?sheet=${sheet}`);
+      return res.json();
+    }
+
+    function renderCamping(list) {
       const el = document.getElementById('camping-container');
-      if (list.length === 0) {
-        el.innerHTML = '<div class="empty-msg">還沒有露營地點，到後台新增吧！</div>';
+      if (!list.length) {
+        el.innerHTML = '<div class="empty-msg">還沒有露營地點</div>';
         return;
       }
       el.innerHTML = list.map(p => {
-        const kuulaUrl = p.kuula ? extractKuulaUrl(p.kuula) : null;
+        const kuulaUrl = extractKuulaUrl(p.kuula);
         return `
           <div class="card">
-            ${p.img
-              ? `<img class="card-img" src="${p.img}" alt="${p.name}">`
-              : '<div class="card-img-placeholder">📷 封面照片</div>'}
+            ${p.img ? `<img class="card-img" src="${p.img}" alt="${p.name}">` : '<div class="card-img-placeholder">露營地點封面</div>'}
             <div class="card-body">
               <div class="card-title">${p.name}</div>
-              <div class="card-meta">${p.location || ''}${p.date ? ' · ' + p.date : ''}</div>
+              <div class="card-meta">${p.location || ''}${p.date ? '　·　' + p.date : ''}</div>
               ${p.tags ? p.tags.split(',').map(t => `<span class="badge badge-green">${t.trim()}</span>`).join('') : ''}
               ${p.desc ? `<p class="card-desc">${p.desc}</p>` : ''}
               ${kuulaUrl ? `
                 <div class="kuula-wrap">
-                  <iframe src="${kuulaUrl}" width="100%" height="500" allowfullscreen allow="vr"></iframe>
+                  <iframe src="${kuulaUrl}" width="100%" height="480" allowfullscreen allow="vr"></iframe>
                 </div>
-                <p class="kuula-caption">360° 環景 — 拖動滑鼠探索現場環境</p>
+                <p class="kuula-caption">360° 環景　—　拖動探索現場環境</p>
               ` : ''}
             </div>
           </div>
@@ -144,30 +239,46 @@
       }).join('');
     }
 
-    function renderMoto() {
-      const list = getData('moto');
+    function renderMoto(list) {
       const el = document.getElementById('moto-container');
-      if (list.length === 0) {
-        el.innerHTML = '<div class="empty-msg" style="grid-column:1/-1">還沒有重機地點，到後台新增吧！</div>';
+      if (!list.length) {
+        el.innerHTML = '<div class="empty-msg" style="grid-column:1/-1">還沒有重機地點</div>';
         return;
       }
-      el.innerHTML = list.map(p => `
-        <div class="card">
-          ${p.img
-            ? `<img class="card-img" src="${p.img}" alt="${p.name}">`
-            : '<div class="card-img-placeholder">🏍 封面照片</div>'}
-          <div class="card-body">
-            <div class="card-title">${p.name}</div>
-            <div class="card-meta">${p.location || ''}${p.date ? ' · ' + p.date : ''}</div>
-            ${p.tags ? p.tags.split(',').map(t => `<span class="badge badge-blue">${t.trim()}</span>`).join('') : ''}
-            ${p.desc ? `<p class="card-desc">${p.desc}</p>` : ''}
+      el.innerHTML = list.map(p => {
+        const kuulaUrl = extractKuulaUrl(p.kuula);
+        return `
+          <div class="card">
+            ${p.img ? `<img class="card-img" src="${p.img}" alt="${p.name}">` : '<div class="card-img-placeholder">重機地點封面</div>'}
+            <div class="card-body">
+              <div class="card-title">${p.name}</div>
+              <div class="card-meta">${p.location || ''}${p.date ? '　·　' + p.date : ''}</div>
+              ${p.tags ? p.tags.split(',').map(t => `<span class="badge badge-gold">${t.trim()}</span>`).join('') : ''}
+              ${p.desc ? `<p class="card-desc">${p.desc}</p>` : ''}
+              ${kuulaUrl ? `
+                <div class="kuula-wrap">
+                  <iframe src="${kuulaUrl}" width="100%" height="480" allowfullscreen allow="vr"></iframe>
+                </div>
+                <p class="kuula-caption">360° 環景　—　拖動探索現場環境</p>
+              ` : ''}
+            </div>
           </div>
-        </div>
-      `).join('');
+        `;
+      }).join('');
     }
 
-    renderCamping();
-    renderMoto();
+    async function init() {
+      try {
+        const [camping, moto] = await Promise.all([loadData('camping'), loadData('moto')]);
+        renderCamping(camping);
+        renderMoto(moto);
+      } catch(e) {
+        document.getElementById('camping-container').innerHTML = '<div class="empty-msg">載入失敗，請重新整理</div>';
+        document.getElementById('moto-container').innerHTML = '<div class="empty-msg" style="grid-column:1/-1">載入失敗，請重新整理</div>';
+      }
+    }
+
+    init();
   </script>
 </body>
 </html>
