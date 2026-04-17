@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Syue & Lynn 旅遊足跡</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
+      color: #1a1a1a;
+      background: #ffffff;
+      line-height: 1.7;
+    }
+
+    /* ── 導覽列 ── */
+    nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1rem 2rem;
+      border-bottom: 1px solid #e8e8e8;
+      position: sticky;
+      top: 0;
+      background: #fff;
+      z-index: 100;
+    }
+    .nav-logo {
+      font-size: 18px;
+      font-weight: 600;
+    }
+    .nav-links {
+      display: flex;
+      gap: 2rem;
+    }
+    .nav-links a {
+      font-size: 14px;
+      color: #666;
+      text-decoration: none;
+    }
+    .nav-links a:hover { color: #1a1a1a; }
+
+    /* ── Hero 區塊 ── */
+    .hero {
+      padding: 5rem 2rem 4rem;
+      text-align: center;
+      border-bottom: 1px solid #e8e8e8;
+    }
+    .hero h1 {
+      font-size: 36px;
+      font-weight: 600;
+      margin-bottom: 1rem;
+    }
+    .hero p {
+      font-size: 16px;
+      color: #666;
+    }
+
+    /* ── 分區 ── */
+    .section {
+      padding: 4rem 2rem;
+      max-width: 960px;
+      margin: 0 auto;
+    }
+    .section-label {
+      display: inline-block;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: #888;
+      background: #f4f4f4;
+      padding: 4px 12px;
+      border-radius: 20px;
+      margin-bottom: 0.75rem;
+    }
+    .section h2 {
+      font-size: 26px;
+      font-weight: 600;
+      margin-bottom: 2rem;
+    }
+    hr.divider {
+      border: none;
+      border-top: 1px solid #e8e8e8;
+    }
+
+    /* ── 卡片 ── */
+    .card {
+      background: #fff;
+      border: 1px solid #e8e8e8;
+      border-radius: 12px;
+      overflow: hidden;
+      margin-bottom: 2rem;
+    }
+    .card-img {
+      width: 100%;
+      height: 220px;
+      object-fit: cover;
+      display: block;
+      background: #f4f4f4;
+    }
+    .card-img-placeholder {
+      width: 100%;
+      height: 220px;
+      background: #f4f4f4;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      color: #aaa;
+    }
+    .card-body { padding: 1.5rem; }
+    .card-title {
+      font-size: 20px;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+    .card-meta {
+      font-size: 13px;
+      color: #888;
+      margin-bottom: 1rem;
+    }
+    .badge {
+      display: inline-block;
+      font-size: 12px;
+      padding: 3px 10px;
+      border-radius: 20px;
+      margin-right: 6px;
+      margin-bottom: 8px;
+    }
+    .badge-green { background: #e6f4ea; color: #2d7a3a; }
+    .badge-blue  { background: #e8f0fe; color: #1a56a0; }
+    .badge-orange{ background: #fff3e0; color: #b35c00; }
+
+    .card-desc {
+      font-size: 15px;
+      color: #444;
+      margin-top: 0.75rem;
+      margin-bottom: 1.5rem;
+    }
+
+    /* ── 360 嵌入 ── */
+    .kuula-wrap {
+      border-radius: 8px;
+      overflow: hidden;
+      margin-bottom: 0.5rem;
+    }
+    .kuula-caption {
+      font-size: 12px;
+      color: #aaa;
+      text-align: center;
+      margin-bottom: 0.5rem;
+    }
+
+    /* ── 卡片格狀排版 ── */
+    .card-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 1.5rem;
+    }
+    .card-add {
+      border: 1.5px dashed #ccc;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 200px;
+      color: #bbb;
+      font-size: 14px;
+      cursor: default;
+    }
+    .card-add span { font-size: 28px; display: block; margin-bottom: 8px; }
+
+    /* ── Footer ── */
+    footer {
+      padding: 2.5rem;
+      text-align: center;
+      font-size: 13px;
+      color: #aaa;
+      border-top: 1px solid #e8e8e8;
+    }
+
+    @media (max-width: 600px) {
+      .hero h1 { font-size: 26px; }
+      nav { padding: 1rem; }
+      .nav-links { gap: 1rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- 導覽列 -->
+  <nav>
+    <div class="nav-logo">Syue & Lynn 旅遊足跡</div>
+    <div class="nav-links">
+      <a href="#moto">重機地點</a>
+      <a href="#camping">露營地點</a>
+    </div>
+  </nav>
+
+  <!-- Hero -->
+  <div class="hero">
+    <h1>Syue & Lynn 旅遊足跡</h1>
+    <p>記錄我們騎過的山路、住過的營地<br>每一個地點都是一段故事</p>
+  </div>
+
+  <!-- ── 重機地點 ── -->
+  <div class="section" id="moto">
+    <div class="section-label">重機地點</div>
+    <h2>騎過的路</h2>
+    <div class="card-grid">
+
+      <!-- 重機地點卡片範例（複製這段可新增地點）-->
+      <div class="card">
+        <!-- 換成你的照片路徑，例如 images/moto1.jpg -->
+        <!-- <img class="card-img" src="images/moto1.jpg" alt="地點名稱"> -->
+        <div class="card-img-placeholder">📷 換成你的照片</div>
+        <div class="card-body">
+          <div class="card-title">地點名稱</div>
+          <div class="card-meta">台灣 · 2025年</div>
+          <span class="badge badge-blue">山路</span>
+          <span class="badge badge-blue">海景</span>
+          <p class="card-desc">在這裡寫這個地點的描述，例如：騎行感受、路況、推薦時間等。</p>
+        </div>
+      </div>
+
+      <!-- 新增地點佔位卡 -->
+      <div class="card-add">
+        <div style="text-align:center">
+          <span>+</span>
+          新增地點
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- ── 露營地點 ── -->
+  <div class="section" id="camping">
+    <div class="section-label">露營地點</div>
+    <h2>住過的營地</h2>
+
+    <!-- 台北高級露營區 -->
+    <div class="card">
+      <!-- 換成你的封面照，例如 images/taipei-camp.jpg -->
+      <!-- <img class="card-img" src="images/taipei-camp.jpg" alt="台北高級露營區"> -->
+      <div class="card-img-placeholder">📷 換成營地封面照</div>
+      <div class="card-body">
+        <div class="card-title">台北高級露營區</div>
+        <div class="card-meta">台北市 · 2025年</div>
+        <span class="badge badge-green">山景</span>
+        <span class="badge badge-green">親子友善</span>
+        <span class="badge badge-orange">需預約</span>
+        <p class="card-desc">
+          在這裡寫這個營地的介紹與心得，例如：環境、設施、營地特色、交通方式、注意事項等。
+        </p>
+
+        <!-- Kuula 360 環景嵌入 -->
+        <div class="kuula-wrap">
+          <script src="https://static.kuula.io/embed.js"
+            data-kuula="https://kuula.co/share/collection/7M81b?logo=1&info=1&fs=1&vr=0&sd=1&thumbs=1"
+            data-width="100%"
+            data-height="500px">
+          </script>
+        </div>
+        <p class="kuula-caption">360° 環景 — 拖動滑鼠探索現場環境</p>
+
+      </div>
+    </div>
+
+    <!-- 複製上方 .card 區塊可新增更多露營地 -->
+
+  </div>
+
+  <!-- Footer -->
+  <footer>
+    © Syue & Lynn · 用 Osmo 360 記錄每一個足跡
+  </footer>
+
+</body>
+</html>
