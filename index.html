@@ -6,150 +6,84 @@
   <title>Syue & Lynn 旅遊足跡</title>
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;700&family=Noto+Serif+TC:wght@400;500&display=swap" rel="stylesheet">
   <style>
-    :root {
-      --bg: #0f1410;
-      --surface: #1a1f1b;
-      --surface2: #222820;
-      --border: #2e352c;
-      --text: #e8e4dc;
-      --muted: #8a9088;
-      --accent: #7eb87a;
-      --accent2: #c4a35a;
-      --radius: 12px;
+    :root{
+      --bg:#0f1410;--surface:#1a1f1b;--surface2:#222820;--border:#2e352c;
+      --text:#e8e4dc;--muted:#8a9088;--accent:#7eb87a;--accent2:#c4a35a;
+      --radius:12px;
     }
-    * { margin:0; padding:0; box-sizing:border-box; }
-    body {
-      font-family: 'Noto Serif TC', serif;
-      background: var(--bg);
-      color: var(--text);
-      line-height: 1.8;
-    }
+    *{margin:0;padding:0;box-sizing:border-box;}
+    body{font-family:'Noto Serif TC',serif;background:var(--bg);color:var(--text);line-height:1.8;}
 
-    /* Nav */
-    nav {
-      display: flex; align-items: center; justify-content: space-between;
-      padding: 1.25rem 2.5rem;
-      border-bottom: 1px solid var(--border);
-      position: sticky; top: 0; z-index: 100;
-      background: rgba(15,20,16,0.92);
-      backdrop-filter: blur(12px);
-    }
-    .nav-logo {
-      font-family: 'Playfair Display', serif;
-      font-size: 18px; font-weight: 700;
-      color: var(--accent2);
-      letter-spacing: 0.04em;
-    }
-    .nav-links { display: flex; gap: 2rem; }
-    .nav-links a {
-      font-size: 13px; color: var(--muted); text-decoration: none;
-      letter-spacing: 0.1em; text-transform: uppercase;
-      transition: color 0.2s;
-    }
-    .nav-links a:hover { color: var(--text); }
+    nav{display:flex;align-items:center;justify-content:space-between;padding:1.25rem 2.5rem;border-bottom:1px solid var(--border);position:sticky;top:0;z-index:100;background:rgba(15,20,16,0.92);backdrop-filter:blur(12px);}
+    .nav-logo{font-family:'Playfair Display',serif;font-size:18px;font-weight:700;color:var(--accent2);letter-spacing:0.04em;}
+    .nav-links{display:flex;gap:2rem;}
+    .nav-links a{font-size:13px;color:var(--muted);text-decoration:none;letter-spacing:0.1em;text-transform:uppercase;transition:color 0.2s;}
+    .nav-links a:hover{color:var(--text);}
 
-    /* Hero */
-    .hero {
-      padding: 7rem 2.5rem 6rem;
-      text-align: center;
-      border-bottom: 1px solid var(--border);
-      position: relative;
-      overflow: hidden;
-    }
-    .hero::before {
-      content: '';
-      position: absolute; inset: 0;
-      background: radial-gradient(ellipse at center, rgba(126,184,122,0.06) 0%, transparent 70%);
-      pointer-events: none;
-    }
-    .hero-eyebrow {
-      font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase;
-      color: var(--accent); margin-bottom: 1.25rem;
-    }
-    .hero h1 {
-      font-family: 'Playfair Display', serif;
-      font-size: 52px; font-weight: 700;
-      color: var(--text);
-      line-height: 1.2;
-      margin-bottom: 1.25rem;
-    }
-    .hero p { font-size: 16px; color: var(--muted); }
+    .hero{padding:6rem 2.5rem 5rem;text-align:center;border-bottom:1px solid var(--border);position:relative;}
+    .hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at center,rgba(126,184,122,0.06) 0%,transparent 70%);pointer-events:none;}
+    .hero-eyebrow{font-size:11px;letter-spacing:0.2em;text-transform:uppercase;color:var(--accent);margin-bottom:1.25rem;}
+    .hero h1{font-family:'Playfair Display',serif;font-size:52px;font-weight:700;line-height:1.2;margin-bottom:1.25rem;}
+    .hero p{font-size:16px;color:var(--muted);}
 
-    /* Section */
-    .section { padding: 5rem 2.5rem; max-width: 1000px; margin: 0 auto; }
-    .section-header { display: flex; align-items: baseline; gap: 1rem; margin-bottom: 3rem; }
-    .section-eyebrow {
-      font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase;
-      color: var(--accent); white-space: nowrap;
-    }
-    .section h2 {
-      font-family: 'Playfair Display', serif;
-      font-size: 32px; font-weight: 500; color: var(--text);
-    }
-    .section-line { flex: 1; height: 1px; background: var(--border); margin-left: 1rem; }
+    .section{padding:4rem 2.5rem;max-width:960px;margin:0 auto;}
+    .section-header{display:flex;align-items:baseline;gap:1rem;margin-bottom:2rem;}
+    .section-eyebrow{font-size:11px;letter-spacing:0.2em;text-transform:uppercase;color:var(--accent);white-space:nowrap;}
+    .section h2{font-family:'Playfair Display',serif;font-size:32px;font-weight:500;}
+    .section-line{flex:1;height:1px;background:var(--border);margin-left:1rem;}
+    hr.divider{border:none;border-top:1px solid var(--border);}
 
-    hr.divider { border: none; border-top: 1px solid var(--border); }
+    /* 搜尋框 */
+    .search-wrap{position:relative;margin-bottom:1rem;}
+    .search-wrap input{width:100%;padding:10px 40px 10px 16px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);font-size:14px;color:var(--text);font-family:inherit;outline:none;transition:border-color 0.2s;}
+    .search-wrap input:focus{border-color:var(--accent);}
+    .search-wrap input::placeholder{color:var(--muted);}
+    .search-wrap .s-icon{position:absolute;left:14px;top:50%;transform:translateY(-50%);font-size:14px;color:var(--muted);pointer-events:none;}
+    .search-wrap input{padding-left:40px;}
+    .search-wrap .s-clear{position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--muted);cursor:pointer;font-size:18px;line-height:1;display:none;}
+    .search-wrap .s-clear.show{display:block;}
 
-    /* Card */
-    .card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      overflow: hidden;
-      margin-bottom: 2rem;
-      transition: border-color 0.2s;
-    }
-    .card:hover { border-color: #3e4a3c; }
-    .card-img { width: 100%; height: 260px; object-fit: cover; display: block; }
-    .card-img-placeholder {
-      width: 100%; height: 260px;
-      background: var(--surface2);
-      display: flex; align-items: center; justify-content: center;
-      font-size: 14px; color: var(--muted);
-    }
-    .card-body { padding: 1.75rem; }
-    .card-title {
-      font-family: 'Playfair Display', serif;
-      font-size: 22px; font-weight: 500;
-      color: var(--text); margin-bottom: 6px;
-    }
-    .card-meta { font-size: 12px; color: var(--muted); margin-bottom: 1rem; letter-spacing: 0.05em; }
-    .badge {
-      display: inline-block; font-size: 11px; padding: 3px 10px;
-      border-radius: 20px; margin-right: 6px; margin-bottom: 6px;
-      letter-spacing: 0.05em;
-    }
-    .badge-green { background: rgba(126,184,122,0.12); color: var(--accent); border: 1px solid rgba(126,184,122,0.25); }
-    .badge-gold  { background: rgba(196,163,90,0.12); color: var(--accent2); border: 1px solid rgba(196,163,90,0.25); }
-    .card-desc { font-size: 14px; color: var(--muted); margin-top: 1rem; margin-bottom: 1.5rem; line-height: 1.8; }
+    /* 篩選列 */
+    .filter-bar{display:flex;align-items:center;gap:8px;margin-bottom:1.75rem;flex-wrap:wrap;}
+    .filter-tag{font-size:12px;padding:5px 14px;border-radius:20px;border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;transition:all 0.15s;white-space:nowrap;font-family:inherit;}
+    .filter-tag:hover{border-color:var(--accent);color:var(--accent);}
+    .filter-tag.active{background:var(--accent);color:#0f1410;border-color:var(--accent);font-weight:500;}
+    .filter-tag.gold:hover{border-color:var(--accent2);color:var(--accent2);}
+    .filter-tag.gold.active{background:var(--accent2);border-color:var(--accent2);}
+    .filter-select{font-size:12px;padding:5px 14px;border-radius:20px;border:1px solid var(--border);background:var(--surface2);color:var(--muted);cursor:pointer;outline:none;font-family:inherit;}
+    .filter-select:focus{border-color:var(--accent);}
+    .filter-count{font-size:12px;color:var(--muted);margin-left:auto;white-space:nowrap;}
 
-    .kuula-wrap { border-radius: 8px; overflow: hidden; margin-bottom: 0.5rem; }
-    .kuula-wrap iframe { display: block; border: none; }
-    .kuula-caption { font-size: 11px; color: var(--muted); text-align: center; margin-bottom: 0.5rem; letter-spacing: 0.08em; }
+    /* 卡片 */
+    .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:2rem;transition:border-color 0.2s;}
+    .card:hover{border-color:#3e4a3c;}
+    .card-img{width:100%;height:260px;object-fit:cover;display:block;}
+    .card-img-placeholder{width:100%;height:260px;background:var(--surface2);display:flex;align-items:center;justify-content:center;font-size:14px;color:var(--muted);}
+    .card-body{padding:1.75rem;}
+    .card-title{font-family:'Playfair Display',serif;font-size:22px;font-weight:500;margin-bottom:6px;}
+    .card-meta{font-size:12px;color:var(--muted);margin-bottom:1rem;letter-spacing:0.05em;}
+    .badge{display:inline-block;font-size:11px;padding:3px 10px;border-radius:20px;margin-right:6px;margin-bottom:6px;letter-spacing:0.05em;}
+    .badge-green{background:rgba(126,184,122,0.12);color:var(--accent);border:1px solid rgba(126,184,122,0.25);}
+    .badge-gold{background:rgba(196,163,90,0.12);color:var(--accent2);border:1px solid rgba(196,163,90,0.25);}
+    .card-desc{font-size:14px;color:var(--muted);margin-top:1rem;margin-bottom:1.5rem;line-height:1.8;}
+    .kuula-wrap{border-radius:8px;overflow:hidden;margin-bottom:0.5rem;}
+    .kuula-wrap iframe{display:block;border:none;}
+    .kuula-caption{font-size:11px;color:var(--muted);text-align:center;margin-bottom:0.5rem;letter-spacing:0.08em;}
+    .card-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:1.5rem;}
 
-    .card-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem; }
+    .hl{background:rgba(126,184,122,0.3);border-radius:2px;padding:0 2px;}
+    .hl.gold{background:rgba(196,163,90,0.3);}
 
-    .loading {
-      text-align: center; padding: 3rem;
-      font-size: 13px; color: var(--muted); letter-spacing: 0.1em;
-    }
-    .empty-msg {
-      font-size: 14px; color: var(--muted); padding: 2.5rem;
-      text-align: center; border: 1px dashed var(--border); border-radius: var(--radius);
-    }
+    .empty-msg{font-size:14px;color:var(--muted);padding:3rem;text-align:center;border:1px dashed var(--border);border-radius:var(--radius);}
+    .loading{text-align:center;padding:3rem;font-size:13px;color:var(--muted);letter-spacing:0.1em;}
 
-    footer {
-      padding: 3rem 2.5rem; text-align: center;
-      font-size: 12px; color: var(--muted);
-      border-top: 1px solid var(--border);
-      letter-spacing: 0.1em;
-    }
+    footer{padding:3rem 2.5rem;text-align:center;font-size:12px;color:var(--muted);border-top:1px solid var(--border);letter-spacing:0.1em;}
 
-    @media (max-width: 600px) {
-      .hero h1 { font-size: 34px; }
-      nav { padding: 1rem 1.25rem; }
-      .nav-links { gap: 1.25rem; }
-      .section { padding: 3rem 1.25rem; }
+    @media(max-width:600px){
+      .hero h1{font-size:34px;}
+      nav{padding:1rem 1.25rem;}
+      .nav-links{gap:1.25rem;}
+      .section{padding:3rem 1.25rem;}
     }
   </style>
 </head>
@@ -169,115 +103,176 @@
     <p>記錄我們騎過的山路、住過的營地<br>每一個地點都是一段故事</p>
   </div>
 
+  <!-- 重機地點 -->
   <div class="section" id="moto">
     <div class="section-header">
       <span class="section-eyebrow">Motorcycle</span>
       <h2>重機地點</h2>
       <div class="section-line"></div>
     </div>
-    <div class="card-grid" id="moto-container">
-      <div class="loading">載入中...</div>
+    <div class="search-wrap">
+      <span class="s-icon">🔍</span>
+      <input type="text" id="moto-search" placeholder="搜尋重機地點..." oninput="onSectionSearch('moto')">
+      <button class="s-clear" id="moto-clear" onclick="clearSectionSearch('moto')">×</button>
     </div>
+    <div class="filter-bar" id="moto-filter-bar"><span style="font-size:13px;color:var(--muted)">載入中...</span></div>
+    <div class="card-grid" id="moto-container"><div class="loading" style="grid-column:1/-1">載入中...</div></div>
   </div>
 
   <hr class="divider">
 
+  <!-- 露營地點 -->
   <div class="section" id="camping">
     <div class="section-header">
       <span class="section-eyebrow">Camping</span>
       <h2>露營地點</h2>
       <div class="section-line"></div>
     </div>
-    <div id="camping-container">
-      <div class="loading">載入中...</div>
+    <div class="search-wrap">
+      <span class="s-icon">🔍</span>
+      <input type="text" id="camp-search" placeholder="搜尋露營地點..." oninput="onSectionSearch('camping')">
+      <button class="s-clear" id="camp-clear" onclick="clearSectionSearch('camping')">×</button>
     </div>
+    <div class="filter-bar" id="camp-filter-bar"><span style="font-size:13px;color:var(--muted)">載入中...</span></div>
+    <div id="camping-container"><div class="loading">載入中...</div></div>
   </div>
 
-  <footer>
-    © SYUE & LYNN · 用 Osmo 360 記錄每一個足跡
-  </footer>
+  <footer>© SYUE & LYNN · 用 Osmo 360 記錄每一個足跡</footer>
 
   <script>
-    const API = 'https://script.google.com/macros/s/AKfycbzPguC2eh8JP1x1GAOaqodo9r4nb1BPEE4JayJoQxBF-31jZTLl02pIj1ADQ8SGyHxcDw/exec';
+    const API='https://script.google.com/macros/s/AKfycbzPguC2eh8JP1x1GAOaqodo9r4nb1BPEE4JayJoQxBF-31jZTLl02pIj1ADQ8SGyHxcDw/exec';
+    let campingData=[],motoData=[];
+    const state={
+      camping:{tag:'全部',loc:'全部',kw:''},
+      moto:{tag:'全部',loc:'全部',kw:''}
+    };
 
-    function extractKuulaUrl(code) {
-      if (!code) return null;
-      const match = code.match(/data-kuula="([^"]+)"/);
-      return match ? match[1] : null;
+    function extractKuulaUrl(code){
+      if(!code)return null;
+      const m=code.match(/data-kuula="([^"]+)"/);
+      return m?m[1]:null;
     }
 
-    async function loadData(sheet) {
-      const res = await fetch(`${API}?sheet=${sheet}`);
-      return res.json();
+    function hl(text,kw,gold){
+      if(!kw||!text)return text||'';
+      const cls=gold?'hl gold':'hl';
+      return String(text).replace(new RegExp(kw.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'),'gi'),m=>`<span class="${cls}">${m}</span>`);
     }
 
-    function renderCamping(list) {
-      const el = document.getElementById('camping-container');
-      if (!list.length) {
-        el.innerHTML = '<div class="empty-msg">還沒有露營地點</div>';
-        return;
-      }
-      el.innerHTML = list.map(p => {
-        const kuulaUrl = extractKuulaUrl(p.kuula);
-        return `
-          <div class="card">
-            ${p.img ? `<img class="card-img" src="${p.img}" alt="${p.name}">` : '<div class="card-img-placeholder">露營地點封面</div>'}
+    function matchKw(p,kw){
+      if(!kw)return true;
+      const q=kw.toLowerCase();
+      return ['name','location','date','tags','desc'].some(k=>(p[k]||'').toLowerCase().includes(q));
+    }
+
+    function getFiltered(type){
+      const list=type==='camping'?campingData:motoData;
+      const s=state[type];
+      return list.filter(p=>{
+        const tagOk=s.tag==='全部'||(p.tags&&p.tags.split(',').map(t=>t.trim()).includes(s.tag));
+        const locOk=s.loc==='全部'||(p.location&&p.location.includes(s.loc));
+        return tagOk&&locOk&&matchKw(p,s.kw);
+      });
+    }
+
+    function buildFilter(type){
+      const list=type==='camping'?campingData:motoData;
+      const s=state[type];
+      const isGold=type==='moto';
+      const barId=type==='camping'?'camp-filter-bar':'moto-filter-bar';
+
+      const tagSet=new Set();
+      list.forEach(p=>{if(p.tags)p.tags.split(',').forEach(t=>{if(t.trim())tagSet.add(t.trim());});});
+      const tags=['全部',...Array.from(tagSet)];
+
+      const locSet=new Set();
+      list.forEach(p=>{if(p.location&&p.location.trim())locSet.add(p.location.trim());});
+      const locs=Array.from(locSet);
+
+      const count=getFiltered(type).length;
+
+      document.getElementById(barId).innerHTML=
+        tags.map(t=>`<button class="filter-tag${isGold?' gold':''}${s.tag===t?' active':''}" onclick="setTag('${type}','${t.replace(/'/g,"\\'")}')">${t}</button>`).join('')+
+        (locs.length?`<select class="filter-select" onchange="setLoc('${type}',this.value)">
+          <option value="全部"${s.loc==='全部'?' selected':''}>所有地區</option>
+          ${locs.map(l=>`<option value="${l}"${s.loc===l?' selected':''}>${l}</option>`).join('')}
+        </select>`:'') +
+        `<span class="filter-count">${count} 個地點</span>`;
+    }
+
+    function setTag(type,tag){state[type].tag=tag;buildFilter(type);render(type);}
+    function setLoc(type,loc){state[type].loc=loc;buildFilter(type);render(type);}
+    function onSectionSearch(type){
+      const id=type==='camping'?'camp-search':'moto-search';
+      const clearId=type==='camping'?'camp-clear':'moto-clear';
+      state[type].kw=document.getElementById(id).value.trim();
+      document.getElementById(clearId).className='s-clear'+(state[type].kw?' show':'');
+      buildFilter(type);render(type);
+    }
+    function clearSectionSearch(type){
+      const id=type==='camping'?'camp-search':'moto-search';
+      const clearId=type==='camping'?'camp-clear':'moto-clear';
+      document.getElementById(id).value='';
+      state[type].kw='';
+      document.getElementById(clearId).className='s-clear';
+      buildFilter(type);render(type);
+    }
+
+    function render(type){
+      const filtered=getFiltered(type);
+      const s=state[type];
+      const kw=s.kw;
+      const isGold=type==='moto';
+
+      if(type==='camping'){
+        const el=document.getElementById('camping-container');
+        if(!filtered.length){el.innerHTML='<div class="empty-msg">找不到符合條件的露營地點</div>';return;}
+        el.innerHTML=filtered.map(p=>{
+          const ku=extractKuulaUrl(p.kuula);
+          return `<div class="card">
+            ${p.img?`<img class="card-img" src="${p.img}" alt="${p.name}">`:'<div class="card-img-placeholder">露營地點封面</div>'}
             <div class="card-body">
-              <div class="card-title">${p.name}</div>
-              <div class="card-meta">${p.location || ''}${p.date ? '　·　' + p.date : ''}</div>
-              ${p.tags ? p.tags.split(',').map(t => `<span class="badge badge-green">${t.trim()}</span>`).join('') : ''}
-              ${p.desc ? `<p class="card-desc">${p.desc}</p>` : ''}
-              ${kuulaUrl ? `
-                <div class="kuula-wrap">
-                  <iframe src="${kuulaUrl}" width="100%" height="480" allowfullscreen allow="vr"></iframe>
-                </div>
-                <p class="kuula-caption">360° 環景　—　拖動探索現場環境</p>
-              ` : ''}
+              <div class="card-title">${hl(p.name,kw,false)}</div>
+              <div class="card-meta">${hl(p.location||'',kw,false)}${p.date?' · '+p.date:''}</div>
+              ${p.tags?p.tags.split(',').map(t=>`<span class="badge badge-green">${t.trim()}</span>`).join(''):''}
+              ${p.desc?`<p class="card-desc">${hl(p.desc,kw,false)}</p>`:''}
+              ${ku?`<div class="kuula-wrap"><iframe src="${ku}" width="100%" height="480" allowfullscreen allow="vr"></iframe></div><p class="kuula-caption">360° 環景 — 拖動探索現場環境</p>`:''}
             </div>
-          </div>
-        `;
-      }).join('');
-    }
-
-    function renderMoto(list) {
-      const el = document.getElementById('moto-container');
-      if (!list.length) {
-        el.innerHTML = '<div class="empty-msg" style="grid-column:1/-1">還沒有重機地點</div>';
-        return;
-      }
-      el.innerHTML = list.map(p => {
-        const kuulaUrl = extractKuulaUrl(p.kuula);
-        return `
-          <div class="card">
-            ${p.img ? `<img class="card-img" src="${p.img}" alt="${p.name}">` : '<div class="card-img-placeholder">重機地點封面</div>'}
+          </div>`;
+        }).join('');
+      } else {
+        const el=document.getElementById('moto-container');
+        if(!filtered.length){el.innerHTML='<div class="empty-msg" style="grid-column:1/-1">找不到符合條件的重機地點</div>';return;}
+        el.innerHTML=filtered.map(p=>{
+          const ku=extractKuulaUrl(p.kuula);
+          return `<div class="card">
+            ${p.img?`<img class="card-img" src="${p.img}" alt="${p.name}">`:'<div class="card-img-placeholder">重機地點封面</div>'}
             <div class="card-body">
-              <div class="card-title">${p.name}</div>
-              <div class="card-meta">${p.location || ''}${p.date ? '　·　' + p.date : ''}</div>
-              ${p.tags ? p.tags.split(',').map(t => `<span class="badge badge-gold">${t.trim()}</span>`).join('') : ''}
-              ${p.desc ? `<p class="card-desc">${p.desc}</p>` : ''}
-              ${kuulaUrl ? `
-                <div class="kuula-wrap">
-                  <iframe src="${kuulaUrl}" width="100%" height="480" allowfullscreen allow="vr"></iframe>
-                </div>
-                <p class="kuula-caption">360° 環景　—　拖動探索現場環境</p>
-              ` : ''}
+              <div class="card-title">${hl(p.name,kw,true)}</div>
+              <div class="card-meta">${hl(p.location||'',kw,true)}${p.date?' · '+p.date:''}</div>
+              ${p.tags?p.tags.split(',').map(t=>`<span class="badge badge-gold">${t.trim()}</span>`).join(''):''}
+              ${p.desc?`<p class="card-desc">${hl(p.desc,kw,true)}</p>`:''}
+              ${ku?`<div class="kuula-wrap"><iframe src="${ku}" width="100%" height="480" allowfullscreen allow="vr"></iframe></div><p class="kuula-caption">360° 環景 — 拖動探索現場環境</p>`:''}
             </div>
-          </div>
-        `;
-      }).join('');
-    }
-
-    async function init() {
-      try {
-        const [camping, moto] = await Promise.all([loadData('camping'), loadData('moto')]);
-        renderCamping(camping);
-        renderMoto(moto);
-      } catch(e) {
-        document.getElementById('camping-container').innerHTML = '<div class="empty-msg">載入失敗，請重新整理</div>';
-        document.getElementById('moto-container').innerHTML = '<div class="empty-msg" style="grid-column:1/-1">載入失敗，請重新整理</div>';
+          </div>`;
+        }).join('');
       }
     }
 
+    async function init(){
+      try{
+        const [c,m]=await Promise.all([
+          fetch(API+'?sheet=camping').then(r=>r.json()),
+          fetch(API+'?sheet=moto').then(r=>r.json())
+        ]);
+        campingData=c;motoData=m;
+        buildFilter('camping');buildFilter('moto');
+        render('camping');render('moto');
+      }catch(e){
+        document.getElementById('camping-container').innerHTML='<div class="empty-msg">載入失敗，請重新整理</div>';
+        document.getElementById('moto-container').innerHTML='<div class="empty-msg" style="grid-column:1/-1">載入失敗，請重新整理</div>';
+      }
+    }
     init();
   </script>
 </body>
