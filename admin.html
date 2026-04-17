@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>後台管理 · Syue & Lynn</title>
+<style>
+  :root {
+    --bg: #f7f7f5;
+    --surface: #ffffff;
+    --border: #e4e4e0;
+    --text: #1a1a1a;
+    --muted: #888;
+    --accent: #2d6a4f;
+    --accent-light: #e8f5ee;
+    --accent2: #1a4a8a;
+    --accent2-light: #e8f0fb;
+    --danger: #c0392b;
+    --danger-light: #fdecea;
+    --radius: 10px;
+    --shadow: 0 1px 4px rgba(0,0,0,0.07);
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif; background: var(--bg); color: var(--text); font-size: 15px; line-height: 1.6; }
+
+  /* Login */
+  #login-screen {
+    min-height: 100vh; display: flex; align-items: center; justify-content: center;
+  }
+  .login-card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 14px;
+    padding: 2.5rem 2rem; width: 340px; box-shadow: var(--shadow);
+  }
+  .login-card h1 { font-size: 20px; font-weight: 600; margin-bottom: 0.25rem; }
+  .login-card p { font-size: 13px; color: var(--muted); margin-bottom: 1.75rem; }
+  .login-card input {
+    width: 100%; padding: 10px 14px; border: 1px solid var(--border); border-radius: var(--radius);
+    font-size: 15px; margin-bottom: 1rem; background: var(--bg); color: var(--text);
+  }
+  .login-card input:focus { outline: none; border-color: var(--accent); }
+  .btn-primary {
+    width: 100%; padding: 11px; background: var(--accent); color: #fff; border: none;
+    border-radius: var(--radius); font-size: 15px; font-weight: 500; cursor: pointer;
+  }
+  .btn-primary:hover { opacity: 0.9; }
+  .login-error { color: var(--danger); font-size: 13px; margin-top: 0.75rem; display: none; }
+
+  /* Admin layout */
+  #admin-screen { display: none; min-height: 100vh; }
+  .topbar {
+    background: var(--surface); border-bottom: 1px solid var(--border);
+    padding: 0 2rem; display: flex; align-items: center; justify-content: space-between;
+    height: 56px; position: sticky; top: 0; z-index: 100;
+  }
+  .topbar-logo { font-size: 16px; font-weight: 600; }
+  .topbar-right { display: flex; align-items: center; gap: 1rem; }
+  .btn-sm {
+    padding: 6px 14px; border-radius: 8px; font-size: 13px; font-weight: 500; cursor: pointer;
+    border: 1px solid var(--border); background: var(--surface); color: var(--text);
+  }
+  .btn-sm:hover { background: var(--bg); }
+  .btn-danger-sm {
+    padding: 6px 14px; border-radius: 8px; font-size: 13px; font-weight: 500; cursor: pointer;
+    border: 1px solid var(--danger); background: var(--danger-light); color: var(--danger);
+  }
+
+  .main { display: flex; }
+  .sidebar {
+    width: 200px; min-height: calc(100vh - 56px); background: var(--surface);
+    border-right: 1px solid var(--border); padding: 1.5rem 0; flex-shrink: 0;
+  }
+  .sidebar-item {
+    display: flex; align-items: center; gap: 10px; padding: 10px 1.5rem;
+    font-size: 14px; color: var(--muted); cursor: pointer; border-left: 3px solid transparent;
+  }
+  .sidebar-item:hover { color: var(--text); background: var(--bg); }
+  .sidebar-item.active { color: var(--accent); border-left-color: var(--accent); background: var(--accent-light); font-weight: 500; }
+  .sidebar-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: #bbb; padding: 1.25rem 1.5rem 0.5rem; }
+
+  .content { flex: 1; padding: 2rem; max-width: 900px; }
+  .page { display: none; }
+  .page.active { display: block; }
+
+  .page-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.75rem; }
+  .page-header h2 { font-size: 22px; font-weight: 600; }
+  .btn-add {
+    padding: 9px 18px; background: var(--accent); color: #fff; border: none;
+    border-radius: var(--radius); font-size: 14px; font-weight: 500; cursor: pointer;
+  }
+  .btn-add:hover { opacity: 0.9; }
+
+  /* Cards list */
+  .place-card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 1.25rem 1.5rem; margin-bottom: 1rem; display: flex; align-items: flex-start; gap: 1rem;
+  }
+  .place-thumb {
+    width: 72px; height: 72px; border-radius: 8px; object-fit: cover; background: var(--bg);
+    flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 24px;
+    border: 1px solid var(--border);
+  }
+  .place-thumb img { width: 100%; height: 100%; object-fit: cover; border-radius: 8px; }
+  .place-info { flex: 1; }
+  .place-name { font-size: 16px; font-weight: 600; margin-bottom: 3px; }
+  .place-meta { font-size: 12px; color: var(--muted); margin-bottom: 6px; }
+  .place-desc { font-size: 13px; color: #555; line-height: 1.5; }
+  .place-actions { display: flex; gap: 8px; flex-shrink: 0; }
+  .badge-tag {
+    display: inline-block; font-size: 11px; padding: 2px 8px; border-radius: 20px;
+    margin-right: 4px; background: var(--accent-light); color: var(--accent);
+  }
+  .badge-tag.blue { background: var(--accent2-light); color: var(--accent2); }
+
+  /* Modal */
+  .modal-overlay {
+    display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.35);
+    z-index: 200; align-items: center; justify-content: center;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: var(--surface); border-radius: 14px; padding: 2rem;
+    width: 560px; max-width: 95vw; max-height: 90vh; overflow-y: auto;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+  }
+  .modal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem; }
+  .modal-header h3 { font-size: 18px; font-weight: 600; }
+  .modal-close { background: none; border: none; font-size: 22px; cursor: pointer; color: var(--muted); line-height: 1; }
+  .form-group { margin-bottom: 1.25rem; }
+  .form-group label { display: block; font-size: 13px; font-weight: 500; margin-bottom: 6px; color: var(--muted); }
+  .form-group input, .form-group textarea, .form-group select {
+    width: 100%; padding: 10px 14px; border: 1px solid var(--border); border-radius: var(--radius);
+    font-size: 14px; background: var(--bg); color: var(--text); font-family: inherit;
+  }
+  .form-group input:focus, .form-group textarea:focus { outline: none; border-color: var(--accent); }
+  .form-group textarea { resize: vertical; min-height: 90px; }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+  .modal-footer { display: flex; justify-content: flex-end; gap: 10px; margin-top: 1.5rem; }
+  .btn-cancel {
+    padding: 9px 20px; border-radius: var(--radius); font-size: 14px; font-weight: 500;
+    border: 1px solid var(--border); background: var(--surface); cursor: pointer;
+  }
+  .btn-save {
+    padding: 9px 20px; border-radius: var(--radius); font-size: 14px; font-weight: 500;
+    background: var(--accent); color: #fff; border: none; cursor: pointer;
+  }
+  .btn-save:hover { opacity: 0.9; }
+
+  /* Image upload */
+  .upload-area {
+    border: 2px dashed var(--border); border-radius: var(--radius); padding: 1.5rem;
+    text-align: center; cursor: pointer; background: var(--bg);
+  }
+  .upload-area:hover { border-color: var(--accent); background: var(--accent-light); }
+  .upload-area p { font-size: 13px; color: var(--muted); margin-top: 6px; }
+  .upload-preview { width: 100%; max-height: 180px; object-fit: cover; border-radius: 8px; margin-top: 10px; display: none; }
+
+  /* Stats */
+  .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-bottom: 2rem; }
+  .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.25rem; }
+  .stat-num { font-size: 28px; font-weight: 600; margin-bottom: 4px; }
+  .stat-label { font-size: 13px; color: var(--muted); }
+
+  .empty-state { text-align: center; padding: 3rem; color: var(--muted); font-size: 14px; }
+  .empty-state .empty-icon { font-size: 36px; margin-bottom: 0.75rem; }
+
+  .toast {
+    position: fixed; bottom: 2rem; right: 2rem; background: #1a1a1a; color: #fff;
+    padding: 12px 20px; border-radius: var(--radius); font-size: 14px; z-index: 999;
+    transform: translateY(100px); opacity: 0; transition: all 0.3s;
+  }
+  .toast.show { transform: translateY(0); opacity: 1; }
+</style>
+</head>
+<body>
+
+<!-- 登入畫面 -->
+<div id="login-screen">
+  <div class="login-card">
+    <h1>後台管理</h1>
+    <p>Syue & Lynn 旅遊足跡</p>
+    <input type="password" id="pw-input" placeholder="輸入密碼" onkeydown="if(event.key==='Enter')doLogin()">
+    <button class="btn-primary" onclick="doLogin()">登入</button>
+    <p class="login-error" id="login-error">密碼錯誤，請再試一次</p>
+  </div>
+</div>
+
+<!-- 後台主畫面 -->
+<div id="admin-screen">
+  <div class="topbar">
+    <div class="topbar-logo">Syue & Lynn · 後台管理</div>
+    <div class="topbar-right">
+      <a href="index.html" target="_blank"><button class="btn-sm">查看網站 ↗</button></a>
+      <button class="btn-danger-sm" onclick="doLogout()">登出</button>
+    </div>
+  </div>
+  <div class="main">
+    <div class="sidebar">
+      <div class="sidebar-label">管理</div>
+      <div class="sidebar-item active" onclick="showPage('dashboard')">
+        <span>📊</span> 總覽
+      </div>
+      <div class="sidebar-item" onclick="showPage('camping')">
+        <span>🏕</span> 露營地點
+      </div>
+      <div class="sidebar-item" onclick="showPage('moto')">
+        <span>🏍</span> 重機地點
+      </div>
+    </div>
+    <div class="content">
+
+      <!-- 總覽 -->
+      <div class="page active" id="page-dashboard">
+        <div class="page-header"><h2>總覽</h2></div>
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-num" id="stat-camp">0</div>
+            <div class="stat-label">露營地點</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-num" id="stat-moto">0</div>
+            <div class="stat-label">重機地點</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-num" id="stat-360">0</div>
+            <div class="stat-label">360 環景</div>
+          </div>
+        </div>
+        <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:1.5rem;">
+          <p style="font-size:14px;color:var(--muted);margin-bottom:1rem;font-weight:500;">快速新增</p>
+          <div style="display:flex;gap:1rem;">
+            <button class="btn-add" onclick="showPage('camping');openModal('camping')">+ 露營地點</button>
+            <button class="btn-add" style="background:var(--accent2);" onclick="showPage('moto');openModal('moto')">+ 重機地點</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 露營地點 -->
+      <div class="page" id="page-camping">
+        <div class="page-header">
+          <h2>露營地點</h2>
+          <button class="btn-add" onclick="openModal('camping')">+ 新增地點</button>
+        </div>
+        <div id="camping-list"></div>
+      </div>
+
+      <!-- 重機地點 -->
+      <div class="page" id="page-moto">
+        <div class="page-header">
+          <h2>重機地點</h2>
+          <button class="btn-add" style="background:var(--accent2);" onclick="openModal('moto')">+ 新增地點</button>
+        </div>
+        <div id="moto-list"></div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- 新增／編輯 Modal -->
+<div class="modal-overlay" id="modal-overlay">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="modal-title">新增地點</h3>
+      <button class="modal-close" onclick="closeModal()">×</button>
+    </div>
+    <input type="hidden" id="edit-id">
+    <input type="hidden" id="edit-type">
+    <div class="form-row">
+      <div class="form-group">
+        <label>地點名稱 *</label>
+        <input type="text" id="f-name" placeholder="例：台北高級露營區">
+      </div>
+      <div class="form-group">
+        <label>地區</label>
+        <input type="text" id="f-location" placeholder="例：台北市">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>日期</label>
+        <input type="text" id="f-date" placeholder="例：2025年3月">
+      </div>
+      <div class="form-group">
+        <label>標籤（逗號分隔）</label>
+        <input type="text" id="f-tags" placeholder="例：山景,親子,需預約">
+      </div>
+    </div>
+    <div class="form-group">
+      <label>介紹文字</label>
+      <textarea id="f-desc" placeholder="寫下這個地點的特色、心得、注意事項..."></textarea>
+    </div>
+    <div class="form-group" id="kuula-group">
+      <label>Kuula 360 嵌入碼</label>
+      <textarea id="f-kuula" placeholder='貼上 Kuula 的 <script> 嵌入碼...' style="min-height:70px;font-size:12px;font-family:monospace;"></textarea>
+    </div>
+    <div class="form-group">
+      <label>封面照片</label>
+      <div class="upload-area" onclick="document.getElementById('f-img-input').click()">
+        <div style="font-size:28px;">📷</div>
+        <p>點擊選擇照片，或拖曳照片到這裡</p>
+        <input type="file" id="f-img-input" accept="image/*" style="display:none" onchange="previewImg(this)">
+        <img id="f-img-preview" class="upload-preview">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeModal()">取消</button>
+      <button class="btn-save" onclick="savePlace()">儲存</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const PASSWORD = "syuelynn2025";
+let currentType = 'camping';
+let editingId = null;
+let imgData = null;
+
+function doLogin() {
+  const val = document.getElementById('pw-input').value;
+  if (val === PASSWORD) {
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('admin-screen').style.display = 'block';
+    renderAll();
+  } else {
+    document.getElementById('login-error').style.display = 'block';
+  }
+}
+
+function doLogout() {
+  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('admin-screen').style.display = 'none';
+  document.getElementById('pw-input').value = '';
+}
+
+function showPage(name) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.sidebar-item').forEach(s => s.classList.remove('active'));
+  document.getElementById('page-' + name).classList.add('active');
+  document.querySelectorAll('.sidebar-item')[['dashboard','camping','moto'].indexOf(name)].classList.add('active');
+  if (name !== 'dashboard') renderList(name);
+  updateStats();
+}
+
+function getData(type) {
+  return JSON.parse(localStorage.getItem('sl_' + type) || '[]');
+}
+function setData(type, arr) {
+  localStorage.setItem('sl_' + type, JSON.stringify(arr));
+  updateStats();
+  generateHTML();
+}
+
+function updateStats() {
+  const camps = getData('camping');
+  const motos = getData('moto');
+  document.getElementById('stat-camp').textContent = camps.length;
+  document.getElementById('stat-moto').textContent = motos.length;
+  const total360 = [...camps, ...motos].filter(p => p.kuula).length;
+  document.getElementById('stat-360').textContent = total360;
+}
+
+function renderAll() {
+  renderList('camping');
+  renderList('moto');
+  updateStats();
+}
+
+function renderList(type) {
+  const list = getData(type);
+  const el = document.getElementById(type + '-list');
+  if (list.length === 0) {
+    el.innerHTML = `<div class="empty-state"><div class="empty-icon">${type==='camping'?'🏕':'🏍'}</div><p>還沒有${type==='camping'?'露營':'重機'}地點，點上方按鈕新增！</p></div>`;
+    return;
+  }
+  el.innerHTML = list.map((p, i) => `
+    <div class="place-card">
+      <div class="place-thumb">
+        ${p.img ? `<img src="${p.img}" alt="${p.name}">` : (type==='camping'?'🏕':'🏍')}
+      </div>
+      <div class="place-info">
+        <div class="place-name">${p.name}</div>
+        <div class="place-meta">${p.location || ''} ${p.date ? '· '+p.date : ''} ${p.kuula ? '· <span style="color:var(--accent)">360°</span>' : ''}</div>
+        ${p.tags ? p.tags.split(',').map(t=>`<span class="badge-tag ${type==='moto'?'blue':''}">${t.trim()}</span>`).join('') : ''}
+        <div class="place-desc">${p.desc || ''}</div>
+      </div>
+      <div class="place-actions">
+        <button class="btn-sm" onclick="editPlace('${type}',${i})">編輯</button>
+        <button class="btn-danger-sm" onclick="deletePlace('${type}',${i})">刪除</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function openModal(type, idx) {
+  currentType = type;
+  editingId = (idx !== undefined) ? idx : null;
+  document.getElementById('modal-title').textContent = (idx !== undefined ? '編輯' : '新增') + (type==='camping' ? '露營' : '重機') + '地點';
+  document.getElementById('edit-type').value = type;
+  document.getElementById('kuula-group').style.display = type === 'camping' ? 'block' : 'none';
+  clearForm();
+  if (idx !== undefined) {
+    const p = getData(type)[idx];
+    document.getElementById('f-name').value = p.name || '';
+    document.getElementById('f-location').value = p.location || '';
+    document.getElementById('f-date').value = p.date || '';
+    document.getElementById('f-tags').value = p.tags || '';
+    document.getElementById('f-desc').value = p.desc || '';
+    document.getElementById('f-kuula').value = p.kuula || '';
+    if (p.img) {
+      document.getElementById('f-img-preview').src = p.img;
+      document.getElementById('f-img-preview').style.display = 'block';
+      imgData = p.img;
+    }
+  }
+  document.getElementById('modal-overlay').classList.add('open');
+}
+
+function editPlace(type, idx) {
+  showPage(type);
+  openModal(type, idx);
+}
+
+function deletePlace(type, idx) {
+  if (!confirm('確定要刪除這個地點嗎？')) return;
+  const arr = getData(type);
+  arr.splice(idx, 1);
+  setData(type, arr);
+  renderList(type);
+  showToast('已刪除');
+}
+
+function closeModal() {
+  document.getElementById('modal-overlay').classList.remove('open');
+  clearForm();
+}
+
+function clearForm() {
+  ['f-name','f-location','f-date','f-tags','f-desc','f-kuula'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('f-img-preview').style.display = 'none';
+  document.getElementById('f-img-preview').src = '';
+  imgData = null;
+}
+
+function previewImg(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      const MAX = 800;
+      let w = img.width, h = img.height;
+      if (w > h) { if (w > MAX) { h = h * MAX / w; w = MAX; } }
+      else { if (h > MAX) { w = w * MAX / h; h = MAX; } }
+      canvas.width = w; canvas.height = h;
+      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+      imgData = canvas.toDataURL('image/jpeg', 0.75);
+      const preview = document.getElementById('f-img-preview');
+      preview.src = imgData;
+      preview.style.display = 'block';
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+function savePlace() {
+  const name = document.getElementById('f-name').value.trim();
+  if (!name) { alert('請填寫地點名稱'); return; }
+  const type = document.getElementById('edit-type').value || currentType;
+  const place = {
+    name,
+    location: document.getElementById('f-location').value.trim(),
+    date: document.getElementById('f-date').value.trim(),
+    tags: document.getElementById('f-tags').value.trim(),
+    desc: document.getElementById('f-desc').value.trim(),
+    kuula: document.getElementById('f-kuula').value.trim(),
+    img: imgData || null,
+  };
+  const arr = getData(type);
+  if (editingId !== null) {
+    arr[editingId] = place;
+  } else {
+    arr.push(place);
+  }
+  try {
+    setData(type, arr);
+    renderList(type);
+    closeModal();
+    showToast('已儲存！');
+  } catch(e) {
+    alert('儲存失敗：空間不足，請嘗試換一張較小的照片，或不上傳照片先儲存文字資料。');
+  }
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+function generateHTML() {
+  const camps = getData('camping');
+  const motos = getData('moto');
+
+  const campCards = camps.map(p => `
+    <div class="card">
+      ${p.img ? `<img class="card-img" src="${p.img}" alt="${p.name}">` : '<div class="card-img-placeholder">📷 封面照片</div>'}
+      <div class="card-body">
+        <div class="card-title">${p.name}</div>
+        <div class="card-meta">${p.location || ''}${p.date ? ' · ' + p.date : ''}</div>
+        ${p.tags ? p.tags.split(',').map(t=>`<span class="badge badge-green">${t.trim()}</span>`).join('') : ''}
+        <p class="card-desc">${p.desc || ''}</p>
+        ${p.kuula ? `<div class="kuula-wrap">${p.kuula}</div><p class="kuula-caption">360° 環景 — 拖動滑鼠探索現場環境</p>` : ''}
+      </div>
+    </div>`).join('') || '<p style="color:#aaa;font-size:14px;">尚未新增露營地點</p>';
+
+  const motoCards = motos.map(p => `
+    <div class="card">
+      ${p.img ? `<img class="card-img" src="${p.img}" alt="${p.name}">` : '<div class="card-img-placeholder">📷 封面照片</div>'}
+      <div class="card-body">
+        <div class="card-title">${p.name}</div>
+        <div class="card-meta">${p.location || ''}${p.date ? ' · ' + p.date : ''}</div>
+        ${p.tags ? p.tags.split(',').map(t=>`<span class="badge badge-blue">${t.trim()}</span>`).join('') : ''}
+        <p class="card-desc">${p.desc || ''}</p>
+      </div>
+    </div>`).join('') || '<p style="color:#aaa;font-size:14px;">尚未新增重機地點</p>';
+
+  localStorage.setItem('sl_generated_camp', campCards);
+  localStorage.setItem('sl_generated_moto', motoCards);
+}
+
+document.getElementById('modal-overlay').addEventListener('click', function(e) {
+  if (e.target === this) closeModal();
+});
+
+document.getElementById('pw-input').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') doLogin();
+});
+</script>
+</body>
+</html>
