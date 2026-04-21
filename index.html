@@ -254,7 +254,7 @@
             const bracket = seg.match(/\u3011/);
             if(bracket) splitAt = seg.indexOf('\u3011') + 1;
             else if(nlIdx > 0) splitAt = nlIdx;
-            else if(spaceAt > 0) splitAt = spaceIdx;
+            else if(spaceIdx > 0) splitAt = spaceIdx;
             const title = splitAt > 0 ? seg.slice(0, splitAt).trim() : seg;
             const body = splitAt > 0 ? seg.slice(splitAt).trim() : '';
             return '<div class="card-desc-block">' +
