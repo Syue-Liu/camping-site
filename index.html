@@ -227,46 +227,45 @@
       if(!desc) return '';
 
       // 新格式：分段 JSON
-      if(desc.includes('|||') || desc.startsWith('{"')){
+      if(desc.includes('|||') || desc.startsWith('{"'  )){
         const parts = desc.split('|||');
         return '<div style="margin-top:1rem;margin-bottom:1.5rem;">' + parts.map(p => {
           try {
             const o = JSON.parse(p);
             return '<div class="card-desc-block">' +
-              (o.title ? `<div class="card-desc-title">${o.title}</div>` : '') +
-              (o.text ? `<div class="card-desc-text">${hl(o.text,kw,isGold)}</div>` : '') +
+              (o.title ? '<div class="card-desc-title">'+o.title+'</div>' : '') +
+              (o.text ? '<div class="card-desc-text">'+hl(o.text,kw,isGold)+'</div>' : '') +
               '</div>';
-          } catch(e){ return p.trim() ? `<div class="card-desc-block"><div class="card-desc-text">${hl(p,kw,isGold)}</div></div>` : ''; }
+          } catch(e){ return p.trim() ? '<div class="card-desc-block"><div class="card-desc-text">'+hl(p,kw,isGold)+'</div></div>' : ''; }
         }).join('') + '</div>';
       }
 
-      // 舊格式：自動偵測 emoji 分段
-      const emojiReg = /(\p{Emoji_Presentation}|\p{Extended_Pictographic})/gu;
-      if(emojiReg.test(desc)){
-        // 用 emoji 開頭切段
-        const segments = desc.split(/(?=\s*\p{Emoji_Presentation}|\s*\p{Extended_Pictographic})/gu).filter(s=>s.trim());
-        if(segments.length > 1){
-          return '<div style="margin-top:1rem;margin-bottom:1.5rem;">' + segments.map(seg => {
+      // 舊格式：用 emoji 自動分段
+      const hasEmoji = /\u00a9|\u00ae|[\u2000-\u3300]|\ud83c[\ud000-\udfff]|\ud83d[\ud000-\udfff]|\ud83e[\ud000-\udfff]/.test(desc);
+      if(hasEmoji){
+        const parts = desc.split(/(?=[\u00a9\u00ae\u2600-\u27ff]|\ud83c[\ud000-\udfff]|\ud83d[\ud000-\udfff]|\ud83e[\ud000-\udfff])/).filter(s=>s.trim());
+        if(parts.length > 1){
+          return '<div style="margin-top:1rem;margin-bottom:1.5rem;">' + parts.map(seg => {
             seg = seg.trim();
             if(!seg) return '';
-            // 取出開頭的 emoji + 緊接的文字當標題（到第一個空格或中文句號）
-            const m = seg.match(/^([\p{Emoji_Presentation}\p{Extended_Pictographic}\s]*【[^】]*】|[\p{Emoji_Presentation}\p{Extended_Pictographic}]+\s*[^\s。！？
-]*)/u);
-            if(m){
-              const title = m[0].trim();
-              const body = seg.slice(title.length).trim();
-              return '<div class="card-desc-block">' +
-                `<div class="card-desc-title">${hl(title,kw,isGold)}</div>` +
-                (body ? `<div class="card-desc-text">${hl(body,kw,isGold)}</div>` : '') +
-                '</div>';
-            }
-            return `<div class="card-desc-block"><div class="card-desc-text">${hl(seg,kw,isGold)}</div></div>`;
+            const nlIdx = seg.indexOf('\n');
+            const spaceIdx = seg.search(/\s{2,}/);
+            let splitAt = -1;
+            const bracket = seg.match(/\u3011/);
+            if(bracket) splitAt = seg.indexOf('\u3011') + 1;
+            else if(nlIdx > 0) splitAt = nlIdx;
+            else if(spaceAt > 0) splitAt = spaceIdx;
+            const title = splitAt > 0 ? seg.slice(0, splitAt).trim() : seg;
+            const body = splitAt > 0 ? seg.slice(splitAt).trim() : '';
+            return '<div class="card-desc-block">' +
+              '<div class="card-desc-title">' + hl(title,kw,isGold) + '</div>' +
+              (body ? '<div class="card-desc-text">' + hl(body,kw,isGold) + '</div>' : '') +
+              '</div>';
           }).join('') + '</div>';
         }
       }
 
-      // 純文字
-      return `<p class="card-desc" style="margin-top:1rem;margin-bottom:1.5rem;">${hl(desc,kw,isGold)}</p>`;
+      return '<p class="card-desc" style="margin-top:1rem;margin-bottom:1.5rem;">'+hl(desc,kw,isGold)+'</p>';
     }
     function render(type){
       const filtered=getFiltered(type);
