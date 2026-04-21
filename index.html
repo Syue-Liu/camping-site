@@ -77,6 +77,11 @@
     .empty-msg{font-size:14px;color:var(--muted);padding:3rem;text-align:center;border:1px dashed var(--border);border-radius:var(--radius);}
     .loading{text-align:center;padding:3rem;font-size:13px;color:var(--muted);letter-spacing:0.1em;}
 
+    .card-desc-block{margin-bottom:1.25rem;}
+    .card-desc-block:last-child{margin-bottom:0;}
+    .card-desc-title{font-size:13px;font-weight:500;color:var(--accent);letter-spacing:0.05em;margin-bottom:0.35rem;text-transform:uppercase;}
+    .card-desc-text{font-size:14px;color:var(--muted);line-height:1.8;}
+    .card-desc-plain{font-size:14px;color:var(--muted);line-height:1.8;}
     footer{padding:3rem 2.5rem;text-align:center;font-size:12px;color:var(--muted);border-top:1px solid var(--border);letter-spacing:0.1em;}
 
     @media(max-width:600px){
@@ -218,6 +223,51 @@
       buildFilter(type);render(type);
     }
 
+    function renderDesc(desc, kw, isGold){
+      if(!desc) return '';
+
+      // 新格式：分段 JSON
+      if(desc.includes('|||') || desc.startsWith('{"')){
+        const parts = desc.split('|||');
+        return '<div style="margin-top:1rem;margin-bottom:1.5rem;">' + parts.map(p => {
+          try {
+            const o = JSON.parse(p);
+            return '<div class="card-desc-block">' +
+              (o.title ? `<div class="card-desc-title">${o.title}</div>` : '') +
+              (o.text ? `<div class="card-desc-text">${hl(o.text,kw,isGold)}</div>` : '') +
+              '</div>';
+          } catch(e){ return p.trim() ? `<div class="card-desc-block"><div class="card-desc-text">${hl(p,kw,isGold)}</div></div>` : ''; }
+        }).join('') + '</div>';
+      }
+
+      // 舊格式：自動偵測 emoji 分段
+      const emojiReg = /(\p{Emoji_Presentation}|\p{Extended_Pictographic})/gu;
+      if(emojiReg.test(desc)){
+        // 用 emoji 開頭切段
+        const segments = desc.split(/(?=\s*\p{Emoji_Presentation}|\s*\p{Extended_Pictographic})/gu).filter(s=>s.trim());
+        if(segments.length > 1){
+          return '<div style="margin-top:1rem;margin-bottom:1.5rem;">' + segments.map(seg => {
+            seg = seg.trim();
+            if(!seg) return '';
+            // 取出開頭的 emoji + 緊接的文字當標題（到第一個空格或中文句號）
+            const m = seg.match(/^([\p{Emoji_Presentation}\p{Extended_Pictographic}\s]*【[^】]*】|[\p{Emoji_Presentation}\p{Extended_Pictographic}]+\s*[^\s。！？
+]*)/u);
+            if(m){
+              const title = m[0].trim();
+              const body = seg.slice(title.length).trim();
+              return '<div class="card-desc-block">' +
+                `<div class="card-desc-title">${hl(title,kw,isGold)}</div>` +
+                (body ? `<div class="card-desc-text">${hl(body,kw,isGold)}</div>` : '') +
+                '</div>';
+            }
+            return `<div class="card-desc-block"><div class="card-desc-text">${hl(seg,kw,isGold)}</div></div>`;
+          }).join('') + '</div>';
+        }
+      }
+
+      // 純文字
+      return `<p class="card-desc" style="margin-top:1rem;margin-bottom:1.5rem;">${hl(desc,kw,isGold)}</p>`;
+    }
     function render(type){
       const filtered=getFiltered(type);
       const s=state[type];
@@ -235,7 +285,7 @@
               <div class="card-title">${hl(p.name,kw,false)}</div>
               <div class="card-meta">${hl(p.location||'',kw,false)}${p.date?' · '+p.date:''}</div>
               ${p.tags?p.tags.split(',').map(t=>`<span class="badge badge-green">${t.trim()}</span>`).join(''):''}
-              ${p.desc?`<p class="card-desc">${hl(p.desc,kw,false)}</p>`:''}
+              ${renderDesc(p.desc,kw,false)}
               ${ku?`<div class="kuula-wrap"><iframe src="${ku}" width="100%" height="480" allowfullscreen allow="vr"></iframe></div><p class="kuula-caption">360° 環景 — 拖動探索現場環境</p>`:''}
             </div>
           </div>`;
@@ -251,7 +301,7 @@
               <div class="card-title">${hl(p.name,kw,true)}</div>
               <div class="card-meta">${hl(p.location||'',kw,true)}${p.date?' · '+p.date:''}</div>
               ${p.tags?p.tags.split(',').map(t=>`<span class="badge badge-gold">${t.trim()}</span>`).join(''):''}
-              ${p.desc?`<p class="card-desc">${hl(p.desc,kw,true)}</p>`:''}
+              ${renderDesc(p.desc,kw,true)}
               ${ku?`<div class="kuula-wrap"><iframe src="${ku}" width="100%" height="480" allowfullscreen allow="vr"></iframe></div><p class="kuula-caption">360° 環景 — 拖動探索現場環境</p>`:''}
             </div>
           </div>`;
