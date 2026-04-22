@@ -13,10 +13,19 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Helvetica Neue",Arial,sans-se
 .login-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:2.5rem 2rem;width:340px;}
 .login-logo{font-family:"Playfair Display",serif;font-size:20px;color:var(--accent2);margin-bottom:0.25rem;}
 .login-sub{font-size:13px;color:var(--muted);margin-bottom:1.75rem;}
-.login-card input{width:100%;padding:10px 14px;border:1px solid var(--border);border-radius:var(--radius);font-size:15px;margin-bottom:1rem;background:var(--bg);color:var(--text);}
-.login-card input:focus{outline:none;border-color:var(--accent);}
+.login-field{width:100%;padding:10px 14px;border:1px solid var(--border);border-radius:var(--radius);font-size:15px;margin-bottom:1rem;background:var(--bg);color:var(--text);box-sizing:border-box;}
+.login-field:focus{outline:none;border-color:var(--accent);}
+.pw-wrap{position:relative;margin-bottom:1rem;}
+.pw-wrap input{width:100%;padding:10px 42px 10px 14px;border:1px solid var(--border);border-radius:var(--radius);font-size:15px;background:var(--bg);color:var(--text);box-sizing:border-box;}
+.pw-wrap input:focus{outline:none;border-color:var(--accent);}
+.pw-eye{position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--muted);cursor:pointer;font-size:16px;line-height:1;padding:2px;}
+.pw-eye:hover{color:var(--text);}
 .btn-primary{width:100%;padding:11px;background:var(--accent);color:#0f1410;border:none;border-radius:var(--radius);font-size:15px;font-weight:600;cursor:pointer;}
+.btn-primary:hover{opacity:0.9;}
 .login-error{color:var(--danger);font-size:13px;margin-top:0.75rem;display:none;}
+.login-link{font-size:12px;color:var(--muted);margin-top:1rem;text-align:center;}
+.login-link a{color:var(--muted);text-decoration:underline;text-underline-offset:3px;cursor:pointer;}
+.login-link a:hover{color:var(--text);}
 #admin-screen{display:none;min-height:100vh;}
 .topbar{display:flex;align-items:center;justify-content:space-between;padding:0 2rem;height:56px;border-bottom:1px solid var(--border);background:rgba(15,20,16,0.95);position:sticky;top:0;z-index:100;}
 .topbar-logo{font-family:"Playfair Display",serif;font-size:16px;color:var(--accent2);}
@@ -51,13 +60,13 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Helvetica Neue",Arial,sans-se
 .badge-tag.gold{background:rgba(196,163,90,0.1);color:var(--accent2);border-color:rgba(196,163,90,0.2);}
 .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:200;align-items:center;justify-content:center;}
 .modal-overlay.open{display:flex;}
-.modal{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:2rem;width:600px;max-width:95vw;max-height:92vh;overflow-y:auto;}
+.modal{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:2rem;width:620px;max-width:95vw;max-height:92vh;overflow-y:auto;}
 .modal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem;}
 .modal-header h3{font-size:18px;font-weight:500;}
 .modal-close{background:none;border:none;font-size:22px;cursor:pointer;color:var(--muted);line-height:1;}
 .form-group{margin-bottom:1.25rem;}
 .form-label{display:block;font-size:12px;font-weight:500;margin-bottom:6px;color:var(--muted);letter-spacing:0.05em;text-transform:uppercase;}
-.form-input{width:100%;padding:10px 14px;border:1px solid var(--border);border-radius:var(--radius);font-size:14px;background:var(--bg);color:var(--text);font-family:inherit;}
+.form-input{width:100%;padding:10px 14px;border:1px solid var(--border);border-radius:var(--radius);font-size:14px;background:var(--bg);color:var(--text);font-family:inherit;box-sizing:border-box;}
 .form-input:focus{outline:none;border-color:var(--accent);}
 textarea.form-input{resize:vertical;min-height:90px;}
 .form-row{display:grid;grid-template-columns:1fr 1fr;gap:1rem;}
@@ -110,7 +119,7 @@ textarea.form-input{resize:vertical;min-height:90px;}
 .desc-block-label{font-size:11px;color:var(--muted);letter-spacing:0.05em;text-transform:uppercase;}
 .desc-block-del{background:none;border:none;color:var(--muted);cursor:pointer;font-size:16px;line-height:1;}
 .desc-block-del:hover{color:var(--danger);}
-.desc-block-editor input,.desc-block-editor textarea{width:100%;padding:7px 10px;background:var(--bg);border:1px solid var(--border);border-radius:8px;font-size:13px;color:var(--text);font-family:inherit;margin-bottom:6px;}
+.desc-block-editor input,.desc-block-editor textarea{width:100%;padding:7px 10px;background:var(--bg);border:1px solid var(--border);border-radius:8px;font-size:13px;color:var(--text);font-family:inherit;margin-bottom:6px;box-sizing:border-box;}
 .desc-block-editor input:focus,.desc-block-editor textarea:focus{outline:none;border-color:var(--accent);}
 .desc-block-editor textarea{resize:vertical;min-height:70px;margin-bottom:0;}
 .btn-add-block{width:100%;margin-top:8px;padding:8px;border:1px dashed var(--border);border-radius:var(--radius);background:transparent;color:var(--muted);cursor:pointer;font-size:13px;font-family:inherit;}
@@ -118,9 +127,10 @@ textarea.form-input{resize:vertical;min-height:90px;}
 .settings-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:1.5rem;margin-bottom:1.5rem;}
 .settings-card h3{font-size:16px;font-weight:500;margin-bottom:1.25rem;}
 .input-eye{position:relative;}
-.input-eye input{width:100%;padding:10px 40px 10px 14px;border:1px solid var(--border);border-radius:var(--radius);font-size:14px;background:var(--bg);color:var(--text);}
+.input-eye input{width:100%;padding:10px 42px 10px 14px;border:1px solid var(--border);border-radius:var(--radius);font-size:14px;background:var(--bg);color:var(--text);box-sizing:border-box;}
 .input-eye input:focus{outline:none;border-color:var(--accent);}
-.eye-btn{position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--muted);cursor:pointer;font-size:15px;}
+.eye-btn{position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--muted);cursor:pointer;font-size:15px;padding:2px;}
+.eye-btn:hover{color:var(--text);}
 .current-info{font-size:13px;color:var(--muted);padding:10px 14px;background:var(--surface2);border-radius:8px;margin-bottom:1rem;}
 .current-info span{color:var(--accent);font-weight:500;}
 .btn-save-set{padding:10px 24px;background:var(--accent);color:#0f1410;border:none;border-radius:var(--radius);font-size:14px;font-weight:600;cursor:pointer;margin-top:0.5rem;}
@@ -136,54 +146,59 @@ textarea.form-input{resize:vertical;min-height:90px;}
 </style>
 </head>
 <body>
+
+<!-- ══ 登入畫面 ══════════════════════════════════════════ -->
 <div id="login-screen">
   <div class="login-card">
     <div class="login-logo">Syue &amp; Lynn</div>
     <p class="login-sub">後台管理系統</p>
+
     <!-- 登入表單 -->
     <div id="login-form-block">
-      <input type="text" id="l-user" placeholder="帳號">
-      <div class="input-eye" style="margin-bottom:1rem;">
-        <input type="password" id="l-pw" placeholder="密碼" style="margin-bottom:0;padding-right:40px;" onkeydown="if(event.key==='Enter')doLogin()">
-        <button class="eye-btn" type="button" onclick="toggleEye('l-pw')">👁</button>
+      <input type="text" id="l-user" class="login-field" placeholder="帳號">
+      <div class="pw-wrap">
+        <input type="password" id="l-pw" placeholder="密碼">
+        <button class="pw-eye" type="button" id="login-eye-btn">👁</button>
       </div>
-      <button class="btn-primary" onclick="doLogin()">登入</button>
+      <button class="btn-primary" id="login-btn">登入</button>
       <p class="login-error" id="l-err">帳號或密碼錯誤</p>
-      <p style="font-size:12px;color:var(--muted);margin-top:1rem;text-align:center;">
-        <a href="#" onclick="showForgot();return false;" style="color:var(--muted);text-decoration:underline;text-underline-offset:3px;">忘記密碼？</a>
-      </p>
+      <p class="login-link"><a id="forgot-link">忘記密碼？</a></p>
     </div>
+
     <!-- 忘記密碼面板 -->
     <div id="forgot-block" style="display:none;">
-      <p style="font-size:13px;color:var(--muted);margin-bottom:1rem;">輸入您在設定中登記的緊急聯絡 Email，系統會寄送找回說明。</p>
-      <input type="email" id="fp-email" placeholder="緊急聯絡 Email" style="width:100%;padding:10px 14px;border:1px solid var(--border);border-radius:var(--radius);font-size:15px;margin-bottom:0.75rem;background:var(--bg);color:var(--text);">
-      <p class="login-error" id="fp-err" style="display:none;margin-bottom:0.75rem;">Email 不符或尚未設定緊急聯絡信箱</p>
-      <button class="btn-primary" onclick="doForgotPw()">發送找回通知</button>
-      <p style="font-size:12px;color:var(--muted);margin-top:0.75rem;text-align:center;">
-        <a href="#" onclick="hideForgot();return false;" style="color:var(--muted);text-decoration:underline;text-underline-offset:3px;">← 返回登入</a>
+      <p style="font-size:13px;color:var(--muted);margin-bottom:1.25rem;line-height:1.6;">
+        輸入您的緊急聯絡 Email 進行驗證，驗證後密碼將重置並寄送通知。
       </p>
+      <input type="email" id="fp-email" class="login-field" placeholder="your@email.com" style="margin-bottom:0.75rem;">
+      <p class="login-error" id="fp-err" style="display:none;margin-bottom:0.75rem;">Email 不符，請確認後再試</p>
+      <button class="btn-primary" id="forgot-submit-btn">驗證並重置密碼</button>
+      <p class="login-link"><a id="forgot-back-link">← 返回登入</a></p>
     </div>
   </div>
 </div>
+
+<!-- ══ 後台主畫面 ════════════════════════════════════════ -->
 <div id="admin-screen">
   <div class="topbar">
     <div class="topbar-logo">Syue &amp; Lynn · 後台</div>
     <div class="topbar-right">
       <a href="index.html" target="_blank"><button class="btn-sm">查看網站 ↗</button></a>
-      <button class="btn-danger-sm" onclick="doLogout()">登出</button>
+      <button class="btn-danger-sm" id="logout-btn">登出</button>
     </div>
   </div>
   <div class="main">
     <div class="sidebar">
       <div class="sidebar-label">管理</div>
-      <div class="sidebar-item active" onclick="showPage('dashboard')">◈ 總覽</div>
-      <div class="sidebar-item" onclick="showPage('camping')">▲ 露營地點</div>
-      <div class="sidebar-item" onclick="showPage('moto')">◎ 重機地點</div>
+      <div class="sidebar-item active" data-page="dashboard">◈ 總覽</div>
+      <div class="sidebar-item" data-page="camping">▲ 露營地點</div>
+      <div class="sidebar-item" data-page="moto">◎ 重機地點</div>
       <div class="sidebar-label">設定</div>
-      <div class="sidebar-item" onclick="showPage('social')">📱 社群連結</div>
-      <div class="sidebar-item" onclick="showPage('settings')">⚙ 帳號設定</div>
+      <div class="sidebar-item" data-page="social">📱 社群連結</div>
+      <div class="sidebar-item" data-page="settings">⚙ 帳號設定</div>
     </div>
     <div class="content">
+      <!-- 總覽 -->
       <div class="page active" id="page-dashboard">
         <div class="page-header"><h2>總覽</h2></div>
         <div class="stats-grid">
@@ -194,58 +209,51 @@ textarea.form-input{resize:vertical;min-height:90px;}
         <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:1.5rem;">
           <p style="font-size:12px;color:var(--muted);margin-bottom:1rem;letter-spacing:0.08em;text-transform:uppercase;">快速新增</p>
           <div style="display:flex;gap:1rem;">
-            <button class="btn-add" onclick="showPage('camping');openModal('camping')">+ 露營地點</button>
-            <button class="btn-add gold" onclick="showPage('moto');openModal('moto')">+ 重機地點</button>
+            <button class="btn-add" id="dash-add-camp">+ 露營地點</button>
+            <button class="btn-add gold" id="dash-add-moto">+ 重機地點</button>
           </div>
         </div>
       </div>
+      <!-- 露營 -->
       <div class="page" id="page-camping">
-        <div class="page-header"><h2>露營地點</h2><button class="btn-add" onclick="openModal('camping')">+ 新增地點</button></div>
+        <div class="page-header"><h2>露營地點</h2><button class="btn-add" id="add-camping-btn">+ 新增地點</button></div>
         <div id="camping-list"></div>
       </div>
+      <!-- 重機 -->
       <div class="page" id="page-moto">
-        <div class="page-header"><h2>重機地點</h2><button class="btn-add gold" onclick="openModal('moto')">+ 新增地點</button></div>
+        <div class="page-header"><h2>重機地點</h2><button class="btn-add gold" id="add-moto-btn">+ 新增地點</button></div>
         <div id="moto-list"></div>
       </div>
+      <!-- 社群 -->
       <div class="page" id="page-social">
         <div class="page-header"><h2>社群連結</h2></div>
         <div class="settings-card">
           <h3>Facebook</h3>
-          <div class="form-group">
-            <label class="form-label">FB 粉絲頁網址</label>
-            <input class="form-input" type="text" id="s-fb" placeholder="https://www.facebook.com/yourpage">
-          </div>
+          <div class="form-group"><label class="form-label">FB 粉絲頁網址</label><input class="form-input" type="text" id="s-fb" placeholder="https://www.facebook.com/yourpage"></div>
         </div>
         <div class="settings-card">
           <h3>Instagram</h3>
-          <div class="form-group">
-            <label class="form-label">IG 帳號網址</label>
-            <input class="form-input" type="text" id="s-ig" placeholder="https://www.instagram.com/yourname">
-          </div>
+          <div class="form-group"><label class="form-label">IG 帳號網址</label><input class="form-input" type="text" id="s-ig" placeholder="https://www.instagram.com/yourname"></div>
         </div>
         <div class="settings-card">
           <h3>Line 加好友</h3>
-          <div class="form-group">
-            <label class="form-label">Line 加好友連結</label>
-            <input class="form-input" type="text" id="s-line" placeholder="https://line.me/ti/p/xxxxxxxx">
-          </div>
+          <div class="form-group"><label class="form-label">Line 加好友連結</label><input class="form-input" type="text" id="s-line" placeholder="https://line.me/ti/p/xxxxxxxx"></div>
           <div class="form-group" style="margin-top:1rem;">
             <label class="form-label">Line QR Code 圖片</label>
-            <div class="upload-zone" id="qr-zone" onclick="document.getElementById('qr-file').click()">
-              <div class="icon">📷</div>
-              <p>點擊上傳 QR Code 圖片</p>
-              <p class="hint">從 Line 官方帳號下載 QR Code</p>
+            <div class="upload-zone" id="qr-zone">
+              <div class="icon">📷</div><p>點擊上傳 QR Code 圖片</p><p class="hint">從 Line 官方帳號下載 QR Code</p>
             </div>
-            <div class="upload-replace" id="qr-replace" style="display:none" onclick="document.getElementById('qr-file').click()">點擊更換圖片</div>
-            <input type="file" id="qr-file" accept="image/*" style="display:none" onchange="handleQrImg(this)">
+            <div class="upload-replace" id="qr-replace" style="display:none">點擊更換圖片</div>
+            <input type="file" id="qr-file" accept="image/*" style="display:none">
             <input type="hidden" id="s-lineQr">
           </div>
         </div>
         <div style="display:flex;gap:1rem;flex-wrap:wrap;">
-          <button class="btn-save-set" onclick="saveSocial()">儲存社群設定</button>
-          <button class="btn-save-set" style="background:var(--danger);" onclick="clearSocial()">清除所有連結</button>
+          <button class="btn-save-set" id="save-social-btn">儲存社群設定</button>
+          <button class="btn-save-set" style="background:var(--danger);" id="clear-social-btn">清除所有連結</button>
         </div>
       </div>
+      <!-- 設定 -->
       <div class="page" id="page-settings">
         <div class="page-header"><h2>帳號設定</h2></div>
         <div class="settings-card">
@@ -255,419 +263,740 @@ textarea.form-input{resize:vertical;min-height:90px;}
         <div class="settings-card">
           <h3>修改帳號</h3>
           <div class="form-group"><label class="form-label">新帳號</label><input class="form-input" type="text" id="new-user" placeholder="輸入新帳號"></div>
-          <button class="btn-save-set" onclick="saveUser()">儲存帳號</button>
+          <button class="btn-save-set" id="save-user-btn">儲存帳號</button>
         </div>
         <div class="settings-card">
           <h3>修改密碼</h3>
-          <div class="form-group"><label class="form-label">目前密碼</label><div class="input-eye"><input type="password" id="cur-pw" placeholder="輸入目前密碼"><button class="eye-btn" onclick="toggleEye('cur-pw')">👁</button></div></div>
-          <div class="form-row" style="margin-bottom:0.5rem;">
-            <div class="form-group"><label class="form-label">新密碼</label><div class="input-eye"><input type="password" id="new-pw" placeholder="至少 6 個字元"><button class="eye-btn" onclick="toggleEye('new-pw')">👁</button></div></div>
-            <div class="form-group"><label class="form-label">確認新密碼</label><div class="input-eye"><input type="password" id="cf-pw" placeholder="再輸入一次"><button class="eye-btn" onclick="toggleEye('cf-pw')">👁</button></div></div>
+          <div class="form-group"><label class="form-label">目前密碼</label>
+            <div class="input-eye"><input type="password" id="cur-pw" placeholder="輸入目前密碼"><button class="eye-btn" data-target="cur-pw">👁</button></div>
           </div>
-          <button class="btn-save-set" onclick="savePw()">修改密碼</button>
+          <div class="form-row" style="margin-bottom:0.5rem;">
+            <div class="form-group"><label class="form-label">新密碼</label>
+              <div class="input-eye"><input type="password" id="new-pw" placeholder="至少 6 個字元"><button class="eye-btn" data-target="new-pw">👁</button></div>
+            </div>
+            <div class="form-group"><label class="form-label">確認新密碼</label>
+              <div class="input-eye"><input type="password" id="cf-pw" placeholder="再輸入一次"><button class="eye-btn" data-target="cf-pw">👁</button></div>
+            </div>
+          </div>
+          <button class="btn-save-set" id="save-pw-btn">修改密碼</button>
         </div>
         <div class="settings-card">
           <h3>🔐 緊急聯絡 Email</h3>
-          <p style="font-size:13px;color:var(--muted);margin-bottom:1rem;">設定後，如果忘記密碼可在登入頁輸入此 Email，系統會寄送找回通知到此信箱。</p>
-          <div class="current-info">目前設定：<span id="disp-recovery-email">（未設定）</span></div>
-          <div class="form-group"><label class="form-label">緊急聯絡 Email</label><input class="form-input" type="email" id="recovery-email" placeholder="your@email.com"></div>
-          <button class="btn-save-set" onclick="saveRecoveryEmail()">儲存緊急 Email</button>
+          <p style="font-size:13px;color:var(--muted);margin-bottom:1rem;line-height:1.6;">
+            忘記密碼時，輸入此 Email 即可重置帳密並收到通知信。
+          </p>
+          <div class="current-info">目前設定：<span id="disp-recovery"></span></div>
         </div>
       </div>
     </div>
   </div>
 </div>
+
+<!-- ══ 新增/編輯 Modal ═══════════════════════════════════ -->
 <div class="modal-overlay" id="modal-overlay">
   <div class="modal">
-    <div class="modal-header"><h3 id="modal-title">新增地點</h3><button class="modal-close" onclick="closeModal()">×</button></div>
-    <input type="hidden" id="e-idx"><input type="hidden" id="e-type">
+    <div class="modal-header"><h3 id="modal-title">新增地點</h3><button class="modal-close" id="modal-close-btn">×</button></div>
+    <input type="hidden" id="e-idx">
+    <input type="hidden" id="e-type">
     <div class="form-row">
       <div class="form-group"><label class="form-label">地點名稱 *</label><input class="form-input" type="text" id="f-name" placeholder="例：台北高級露營區"></div>
       <div class="form-group"><label class="form-label">地區</label><input class="form-input" type="text" id="f-loc" placeholder="例：台北市"></div>
     </div>
     <div class="form-group">
       <label class="form-label">旅遊日期</label>
-      <button type="button" class="cal-trigger" onclick="openCal()"><span id="cal-trigger-text" class="cal-placeholder">點擊選擇日期或區間</span><span>📅</span></button>
+      <button type="button" class="cal-trigger" id="cal-trigger-btn"><span id="cal-trigger-text" class="cal-placeholder">點擊選擇日期或區間</span><span>📅</span></button>
       <input type="hidden" id="f-date">
     </div>
     <div class="form-group"><label class="form-label">標籤（逗號分隔）</label><input class="form-input" type="text" id="f-tags" placeholder="例：山景,親子,需預約"></div>
     <div class="form-group">
       <label class="form-label">介紹文字（分段編輯）</label>
       <div id="desc-blocks"></div>
-      <button type="button" class="btn-add-block" onclick="addBlock()">+ 新增區塊</button>
+      <button type="button" class="btn-add-block" id="add-block-btn">+ 新增區塊</button>
       <input type="hidden" id="f-desc">
     </div>
     <div class="form-group"><label class="form-label">Kuula 360 嵌入碼</label><textarea class="form-input" id="f-kuula" placeholder="貼上 Kuula 的 script 嵌入碼..." style="min-height:70px;font-size:12px;font-family:monospace;"></textarea></div>
     <div class="form-row">
-      <div class="form-group"><label class="form-label">YouTube 影片網址</label><input class="form-input" type="text" id="f-youtube" placeholder="https://youtu.be/xxxxx 或 watch?v=xxxxx"></div>
+      <div class="form-group"><label class="form-label">YouTube 影片網址</label><input class="form-input" type="text" id="f-youtube" placeholder="https://youtu.be/xxxxx"></div>
       <div class="form-group"><label class="form-label">Instagram 貼文網址</label><input class="form-input" type="text" id="f-ig" placeholder="https://www.instagram.com/p/xxxxx"></div>
     </div>
     <div class="form-group">
       <label class="form-label">封面照片</label>
-      <div class="upload-zone" id="upload-zone" onclick="document.getElementById('f-img-file').click()">
-        <div class="icon">📷</div><p>點擊上傳照片</p><p class="hint">自動上傳到雲端，所有人都能看到</p>
-      </div>
-      <div class="upload-replace" id="upload-replace" style="display:none" onclick="document.getElementById('f-img-file').click()">點擊更換照片</div>
-      <input type="file" id="f-img-file" accept="image/*" style="display:none" onchange="handleImg(this)">
+      <div class="upload-zone" id="upload-zone"><div class="icon">📷</div><p>點擊上傳照片</p><p class="hint">自動上傳到雲端，所有人都能看到</p></div>
+      <div class="upload-replace" id="upload-replace" style="display:none">點擊更換照片</div>
+      <input type="file" id="f-img-file" accept="image/*" style="display:none">
     </div>
     <div class="modal-footer">
-      <button class="btn-cancel" onclick="closeModal()">取消</button>
-      <button class="btn-save" id="btn-save" onclick="savePlace()">儲存</button>
+      <button class="btn-cancel" id="modal-cancel-btn">取消</button>
+      <button class="btn-save" id="btn-save">儲存</button>
     </div>
   </div>
 </div>
+
+<!-- ══ 日曆 Modal ════════════════════════════════════════ -->
 <div class="cal-modal-overlay" id="cal-modal-overlay">
   <div class="cal-modal">
     <div class="cal-nav-row">
-      <button class="cal-nav-btn" onclick="calMove(-1)">&#8249;</button>
-      <div class="cal-month-year"><select class="cal-month-select" id="cal-month-sel" onchange="calGoTo()"></select><select class="cal-year-select" id="cal-year-sel" onchange="calGoTo()"></select></div>
-      <button class="cal-nav-btn" onclick="calMove(1)">&#8250;</button>
+      <button class="cal-nav-btn" id="cal-prev">&#8249;</button>
+      <div class="cal-month-year">
+        <select class="cal-month-select" id="cal-month-sel"></select>
+        <select class="cal-year-select" id="cal-year-sel"></select>
+      </div>
+      <button class="cal-nav-btn" id="cal-next">&#8250;</button>
     </div>
     <div class="cal-dow-row"><div class="cal-dow">日</div><div class="cal-dow">一</div><div class="cal-dow">二</div><div class="cal-dow">三</div><div class="cal-dow">四</div><div class="cal-dow">五</div><div class="cal-dow">六</div></div>
     <div class="cal-days" id="cal-days"></div>
     <div class="cal-hint" id="cal-hint">點選開始日期</div>
     <div class="cal-result" id="cal-result"></div>
-    <div class="cal-footer"><button class="cal-clear" onclick="calClear()">清除</button><button class="cal-confirm" onclick="calConfirm()">確認</button></div>
+    <div class="cal-footer">
+      <button class="cal-clear" id="cal-clear-btn">清除</button>
+      <button class="cal-confirm" id="cal-confirm-btn">確認</button>
+    </div>
   </div>
 </div>
+
 <div class="saving-mask" id="saving-mask">儲存中，請稍候...</div>
 <div class="toast" id="toast"></div>
+
 <script>
-const API='https://script.google.com/macros/s/AKfycbzPguC2eh8JP1x1GAOaqodo9r4nb1BPEE4JayJoQxBF-31jZTLl02pIj1ADQ8SGyHxcDw/exec';
-const CLOUDINARY_CLOUD='ddcalhl1s';
-const CLOUDINARY_PRESET='g3gyuyoi';
+'use strict';
 
-async function uploadToCloudinary(file){
-  var fd=new FormData();fd.append('file',file);fd.append('upload_preset',CLOUDINARY_PRESET);
-  var res=await fetch('https://api.cloudinary.com/v1_1/'+CLOUDINARY_CLOUD+'/image/upload',{method:'POST',body:fd});
-  var data=await res.json();if(!data.secure_url)throw new Error('fail');return data.secure_url;
+// ── 常數 ─────────────────────────────────────────────────
+var API = 'https://script.google.com/macros/s/AKfycbzPguC2eh8JP1x1GAOaqodo9r4nb1BPEE4JayJoQxBF-31jZTLl02pIj1ADQ8SGyHxcDw/exec';
+var CLOUDINARY_CLOUD = 'ddcalhl1s';
+var CLOUDINARY_PRESET = 'g3gyuyoi';
+var RECOVERY_EMAIL = 'brian17084@icloud.com'; // 固定緊急聯絡信箱
+
+// ── 工具 ─────────────────────────────────────────────────
+function toast(msg, err) {
+  var el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = 'toast' + (err ? ' err' : '') + ' show';
+  setTimeout(function() { el.classList.remove('show'); }, 2500);
 }
 
-// ── 帳號安全 ──────────────────────────────────────────
-function getAcc(){
-  try{
-    var s=localStorage.getItem('sl_acc');
-    if(s){var p=JSON.parse(s);if(p&&p.username&&p.password)return p;}
-  }catch(e){localStorage.removeItem('sl_acc');}
-  return{username:'syuelynn',password:'syuelynn2025'};
-}
-function setAcc(o){localStorage.setItem('sl_acc',JSON.stringify(o));}
-function getRecoveryEmail(){return localStorage.getItem('sl_recovery')||'';}
-function setRecoveryEmail(e){localStorage.setItem('sl_recovery',e);}
+function ge(id) { return document.getElementById(id); }
 
-function doLogin(){
-  var acc=getAcc();
-  var u=document.getElementById('l-user').value.trim();
-  var pw=document.getElementById('l-pw').value;
-  document.getElementById('l-err').style.display='none';
-  if(u===acc.username&&pw===acc.password){
-    document.getElementById('login-screen').style.display='none';
-    document.getElementById('admin-screen').style.display='block';
-    document.getElementById('disp-user').textContent=acc.username;
+// ── 帳號管理 ─────────────────────────────────────────────
+function getAcc() {
+  try {
+    var s = localStorage.getItem('sl_acc');
+    if (s) {
+      var p = JSON.parse(s);
+      if (p && p.username && p.password) return p;
+    }
+  } catch (e) {
+    localStorage.removeItem('sl_acc');
+  }
+  return { username: 'syuelynn', password: 'syuelynn2025' };
+}
+
+function setAcc(obj) {
+  localStorage.setItem('sl_acc', JSON.stringify(obj));
+}
+
+// ── 登入 / 登出 ──────────────────────────────────────────
+function doLogin() {
+  var acc = getAcc();
+  var u = ge('l-user').value.trim();
+  var pw = ge('l-pw').value;
+  ge('l-err').style.display = 'none';
+  if (u === acc.username && pw === acc.password) {
+    ge('login-screen').style.display = 'none';
+    ge('admin-screen').style.display = 'block';
+    ge('disp-user').textContent = acc.username;
     loadAll();
-  }else{
-    document.getElementById('l-err').style.display='block';
+  } else {
+    ge('l-err').style.display = 'block';
   }
 }
-function doLogout(){
-  document.getElementById('login-screen').style.display='flex';
-  document.getElementById('admin-screen').style.display='none';
-  document.getElementById('l-user').value='';document.getElementById('l-pw').value='';
-  hideForgot();
+
+function doLogout() {
+  ge('login-screen').style.display = 'flex';
+  ge('admin-screen').style.display = 'none';
+  ge('l-user').value = '';
+  ge('l-pw').value = '';
+  showLoginForm();
 }
 
-// 忘記密碼流程
-function showForgot(){
-  document.getElementById('login-form-block').style.display='none';
-  document.getElementById('forgot-block').style.display='block';
-  document.getElementById('fp-email').value='';
-  document.getElementById('fp-err').style.display='none';
+// ── 忘記密碼 ─────────────────────────────────────────────
+function showLoginForm() {
+  ge('login-form-block').style.display = 'block';
+  ge('forgot-block').style.display = 'none';
 }
-function hideForgot(){
-  document.getElementById('forgot-block').style.display='none';
-  document.getElementById('login-form-block').style.display='block';
+
+function showForgotForm() {
+  ge('login-form-block').style.display = 'none';
+  ge('forgot-block').style.display = 'block';
+  ge('fp-email').value = '';
+  ge('fp-err').style.display = 'none';
 }
-function doForgotPw(){
-  var input=document.getElementById('fp-email').value.trim().toLowerCase();
-  var stored=getRecoveryEmail().toLowerCase();
-  document.getElementById('fp-err').style.display='none';
-  if(!stored){document.getElementById('fp-err').style.display='block';return;}
-  if(input!==stored){document.getElementById('fp-err').style.display='block';return;}
-  // 重置為預設並寄信
+
+function doForgotPw() {
+  var input = ge('fp-email').value.trim().toLowerCase();
+  ge('fp-err').style.display = 'none';
+  if (input !== RECOVERY_EMAIL.toLowerCase()) {
+    ge('fp-err').style.display = 'block';
+    return;
+  }
+  // 重置密碼
   localStorage.removeItem('sl_acc');
-  var acc=getAcc();
-  var subject=encodeURIComponent('Syue & Lynn 後台 — 密碼已重置');
-  var body=encodeURIComponent(
-    '您的帳號密碼已重置為預設值：\n\n' +
-    '帳號：'+acc.username+'\n密碼：'+acc.password+'\n\n' +
+  var acc = getAcc();
+  // 開啟 mail app 寄通知
+  var sub = encodeURIComponent('Syue & Lynn 後台 — 密碼已重置');
+  var body = encodeURIComponent(
+    '您的後台密碼已重置為預設值：\n\n' +
+    '帳號：' + acc.username + '\n' +
+    '密碼：' + acc.password + '\n\n' +
     '請登入後立即前往「帳號設定」修改密碼。'
   );
-  window.location.href='mailto:'+stored+'?subject='+subject+'&body='+body;
-  hideForgot();
-  document.getElementById('l-user').value=acc.username;
-  toast('密碼已重置，請查收 Email 後登入');
+  window.location.href = 'mailto:' + RECOVERY_EMAIL + '?subject=' + sub + '&body=' + body;
+  showLoginForm();
+  ge('l-user').value = acc.username;
+  toast('密碼已重置！請查收 ' + RECOVERY_EMAIL + ' 的通知信');
 }
 
-function saveUser(){
-  var u=document.getElementById('new-user').value.trim();if(!u){toast('請輸入新帳號',1);return;}
-  var acc=getAcc();acc.username=u;setAcc(acc);document.getElementById('new-user').value='';
-  toast('帳號已更新，請重新登入');setTimeout(doLogout,1500);
+// ── 帳號設定 ─────────────────────────────────────────────
+function saveUser() {
+  var u = ge('new-user').value.trim();
+  if (!u) { toast('請輸入新帳號', 1); return; }
+  var acc = getAcc();
+  acc.username = u;
+  setAcc(acc);
+  ge('new-user').value = '';
+  toast('帳號已更新，請重新登入');
+  setTimeout(doLogout, 1500);
 }
-function savePw(){
-  var acc=getAcc();var cur=document.getElementById('cur-pw').value;var nw=document.getElementById('new-pw').value;var cf=document.getElementById('cf-pw').value;
-  if(cur!==acc.password){toast('目前密碼錯誤',1);return;}
-  if(nw.length<6){toast('新密碼至少 6 個字元',1);return;}
-  if(nw!==cf){toast('兩次密碼不一致',1);return;}
-  acc.password=nw;setAcc(acc);
-  ['cur-pw','new-pw','cf-pw'].forEach(function(id){document.getElementById(id).value='';});
-  toast('密碼已更新，請重新登入');setTimeout(doLogout,1500);
-}
-function saveRecoveryEmail(){
-  var e=document.getElementById('recovery-email').value.trim();
-  if(!e||!e.includes('@')){toast('請輸入有效的 Email',1);return;}
-  setRecoveryEmail(e);
-  document.getElementById('disp-recovery-email').textContent=e;
-  document.getElementById('recovery-email').value='';
-  toast('緊急聯絡 Email 已儲存！');
-}
-function toggleEye(id){var el=document.getElementById(id);el.type=el.type==='password'?'text':'password';}
 
-var PAGES=['dashboard','camping','moto','social','settings'];
-function showPage(name){
-  document.querySelectorAll('.page').forEach(function(p){p.classList.remove('active');});
-  document.querySelectorAll('.sidebar-item').forEach(function(s){s.classList.remove('active');});
-  document.getElementById('page-'+name).classList.add('active');
-  document.querySelectorAll('.sidebar-item')[PAGES.indexOf(name)].classList.add('active');
-  if(name==='camping')renderList('camping');
-  if(name==='moto')renderList('moto');
-  if(name==='social')loadSocialForm();
-  if(name==='settings'){
-    document.getElementById('disp-user').textContent=getAcc().username;
-    var re=getRecoveryEmail();
-    document.getElementById('disp-recovery-email').textContent=re||'（未設定）';
-    document.getElementById('recovery-email').value='';
+function savePw() {
+  var acc = getAcc();
+  var cur = ge('cur-pw').value;
+  var nw = ge('new-pw').value;
+  var cf = ge('cf-pw').value;
+  if (cur !== acc.password) { toast('目前密碼錯誤', 1); return; }
+  if (nw.length < 6) { toast('新密碼至少 6 個字元', 1); return; }
+  if (nw !== cf) { toast('兩次密碼不一致', 1); return; }
+  acc.password = nw;
+  setAcc(acc);
+  ['cur-pw', 'new-pw', 'cf-pw'].forEach(function(id) { ge(id).value = ''; });
+  toast('密碼已更新，請重新登入');
+  setTimeout(doLogout, 1500);
+}
+
+function toggleEye(targetId) {
+  var el = ge(targetId);
+  if (!el) return;
+  el.type = (el.type === 'password') ? 'text' : 'password';
+}
+
+// ── 頁面導航 ─────────────────────────────────────────────
+var PAGES = ['dashboard', 'camping', 'moto', 'social', 'settings'];
+
+function showPage(name) {
+  document.querySelectorAll('.page').forEach(function(p) { p.classList.remove('active'); });
+  document.querySelectorAll('.sidebar-item').forEach(function(s) { s.classList.remove('active'); });
+  ge('page-' + name).classList.add('active');
+  var items = document.querySelectorAll('.sidebar-item');
+  var idx = PAGES.indexOf(name);
+  if (idx >= 0) items[idx].classList.add('active');
+  if (name === 'camping') renderList('camping');
+  if (name === 'moto') renderList('moto');
+  if (name === 'social') loadSocialForm();
+  if (name === 'settings') {
+    ge('disp-user').textContent = getAcc().username;
+    ge('disp-recovery').textContent = RECOVERY_EMAIL;
   }
 }
 
-var campingData=[],motoData=[],curType='camping',editIdx=null,currentImgUrl=null;
+// ── 資料 ─────────────────────────────────────────────────
+var campingData = [], motoData = [], curType = 'camping', editIdx = null, currentImgUrl = null;
 
-async function loadAll(){
-  try{
-    var results=await Promise.all([
-      fetch(API+'?sheet=camping').then(function(r){return r.json();}),
-      fetch(API+'?sheet=moto').then(function(r){return r.json();})
+async function loadAll() {
+  try {
+    var results = await Promise.all([
+      fetch(API + '?sheet=camping').then(function(r) { return r.json(); }),
+      fetch(API + '?sheet=moto').then(function(r) { return r.json(); })
     ]);
-    campingData=results[0];motoData=results[1];updateStats();renderList('camping');renderList('moto');
-  }catch(e){toast('載入失敗',1);}
-}
-function updateStats(){
-  document.getElementById('s-camp').textContent=campingData.length;
-  document.getElementById('s-moto').textContent=motoData.length;
-  document.getElementById('s-360').textContent=[].concat(campingData,motoData).filter(function(p){return p.kuula;}).length;
-}
-function renderList(type){
-  var list=type==='camping'?campingData:motoData;
-  var el=document.getElementById(type+'-list');var g=type==='moto';
-  if(!list.length){el.innerHTML='<div class="empty-state">還沒有地點，點上方按鈕新增！</div>';return;}
-  el.innerHTML=list.map(function(p,i){
-    return'<div class="place-card">'+
-      '<div class="place-thumb">'+(p.img?'<img src="'+p.img+'" alt="">':(g?'◎':'▲'))+'</div>'+
-      '<div class="place-info"><div class="place-name">'+p.name+'</div>'+
-      '<div class="place-meta">'+(p.location||'')+(p.date?' · '+p.date:'')+(p.kuula?' · <span style="color:var(--accent)">360°</span>':'')+'</div>'+
-      (p.tags?p.tags.split(',').map(function(t){return'<span class="badge-tag '+(g?'gold':'')+'">'+t.trim()+'</span>';}).join(''):'')+
-      '<div class="place-desc">'+(p.desc?p.desc.substring(0,80)+'...':'')+'</div></div>'+
-      '<div class="place-actions">'+
-      '<button class="btn-sm" onclick="editPlace(''+type+'','+i+')">編輯</button>'+
-      '<button class="btn-danger-sm" onclick="delPlace(''+type+'','+i+')">刪除</button>'+
-      '</div></div>';
-  }).join('');
-}
-
-function openModal(type,idx){
-  curType=type;editIdx=idx!==undefined?idx:null;
-  document.getElementById('modal-title').textContent=(idx!==undefined?'編輯':'新增')+(type==='camping'?'露營':'重機')+'地點';
-  document.getElementById('e-type').value=type;
-  document.getElementById('btn-save').className='btn-save'+(type==='moto'?' gold':'');
-  calR1=null;calR2=null;currentImgUrl=null;resetForm();
-  if(idx!==undefined){
-    var p=(type==='camping'?campingData:motoData)[idx];
-    document.getElementById('f-name').value=p.name||'';
-    document.getElementById('f-loc').value=p.location||'';
-    document.getElementById('f-date').value=p.date||'';
-    document.getElementById('f-tags').value=p.tags||'';
-    document.getElementById('f-kuula').value=p.kuula||'';
-    document.getElementById('f-youtube').value=p.youtube||'';
-    document.getElementById('f-ig').value=p.ig||'';
-    if(p.date){var t=document.getElementById('cal-trigger-text');t.textContent=p.date;t.className='cal-val';}
-    if(p.img){currentImgUrl=p.img;setImgPreview(p.img,'upload-zone','upload-replace');}
-    loadDescBlocks(p.desc||'');
+    campingData = results[0];
+    motoData = results[1];
+    updateStats();
+    renderList('camping');
+    renderList('moto');
+  } catch (e) {
+    toast('載入失敗', 1);
   }
-  document.getElementById('modal-overlay').classList.add('open');
-}
-function editPlace(type,idx){showPage(type);openModal(type,idx);}
-async function delPlace(type,idx){
-  if(!confirm('確定要刪除？'))return;
-  if(type==='camping')campingData.splice(idx,1);else motoData.splice(idx,1);
-  await pushToSheets(type);renderList(type);updateStats();
-}
-function closeModal(){document.getElementById('modal-overlay').classList.remove('open');resetForm();}
-function resetForm(){
-  ['f-name','f-loc','f-date','f-tags','f-kuula','f-youtube','f-ig'].forEach(function(id){document.getElementById(id).value='';});
-  var t=document.getElementById('cal-trigger-text');t.textContent='點擊選擇日期或區間';t.className='cal-placeholder';
-  resetUploadZone('upload-zone','upload-replace');
-  document.getElementById('f-img-file').value='';
-  document.getElementById('desc-blocks').innerHTML='';blockCount=0;currentImgUrl=null;calR1=null;calR2=null;
 }
 
-// 分段編輯器
-var blockCount=0;
-function addBlock(title,text){
-  blockCount++;var id='blk-'+blockCount;
-  var div=document.createElement('div');div.className='desc-block-editor';div.id=id;
-  div.innerHTML='<div class="desc-block-header"><span class="desc-block-label">區塊 '+blockCount+'</span><button class="desc-block-del" onclick="document.getElementById(''+id+'').remove()">×</button></div>'+
-    '<input type="text" placeholder="小標題（可留空）" value="'+(title||'').replace(/"/g,'&quot;')+'">'+
-    '<textarea placeholder="內容文字...">'+(text||'')+'</textarea>';
-  document.getElementById('desc-blocks').appendChild(div);
+function updateStats() {
+  ge('s-camp').textContent = campingData.length;
+  ge('s-moto').textContent = motoData.length;
+  ge('s-360').textContent = campingData.concat(motoData).filter(function(p) { return p.kuula; }).length;
 }
-function getDescValue(){
-  var blocks=document.querySelectorAll('#desc-blocks .desc-block-editor');
-  if(!blocks.length)return'';
-  var arr=[];
-  blocks.forEach(function(b){
-    var title=b.querySelector('input').value.trim();
-    var text=b.querySelector('textarea').value.trim();
-    if(title||text)arr.push(JSON.stringify({title:title,text:text}));
+
+// ── 清單渲染（使用 data-* 屬性避免引號衝突）─────────────
+function renderList(type) {
+  var list = type === 'camping' ? campingData : motoData;
+  var el = ge(type + '-list');
+  var g = type === 'moto';
+  if (!list.length) {
+    el.innerHTML = '<div class="empty-state">還沒有地點，點上方按鈕新增！</div>';
+    return;
+  }
+  var html = '';
+  list.forEach(function(p, i) {
+    var tags = p.tags ? p.tags.split(',').map(function(t) {
+      return '<span class="badge-tag' + (g ? ' gold' : '') + '">' + t.trim() + '</span>';
+    }).join('') : '';
+    var desc = p.desc ? p.desc.substring(0, 80) + '...' : '';
+    var ku = p.kuula ? ' · <span style="color:var(--accent)">360°</span>' : '';
+    html += '<div class="place-card">' +
+      '<div class="place-thumb">' + (p.img ? '<img src="' + p.img + '" alt="">' : (g ? '◎' : '▲')) + '</div>' +
+      '<div class="place-info">' +
+        '<div class="place-name">' + (p.name || '') + '</div>' +
+        '<div class="place-meta">' + (p.location || '') + (p.date ? ' · ' + p.date : '') + ku + '</div>' +
+        tags +
+        '<div class="place-desc">' + desc + '</div>' +
+      '</div>' +
+      '<div class="place-actions">' +
+        '<button class="btn-sm place-edit-btn" data-type="' + type + '" data-idx="' + i + '">編輯</button>' +
+        '<button class="btn-danger-sm place-del-btn" data-type="' + type + '" data-idx="' + i + '">刪除</button>' +
+      '</div>' +
+    '</div>';
+  });
+  el.innerHTML = html;
+}
+
+// 事件委派處理編輯/刪除
+document.addEventListener('click', function(e) {
+  if (e.target.classList.contains('place-edit-btn')) {
+    var t = e.target.dataset.type;
+    var i = parseInt(e.target.dataset.idx);
+    showPage(t);
+    openModal(t, i);
+  }
+  if (e.target.classList.contains('place-del-btn')) {
+    var t = e.target.dataset.type;
+    var i = parseInt(e.target.dataset.idx);
+    delPlace(t, i);
+  }
+});
+
+// ── Modal ────────────────────────────────────────────────
+function openModal(type, idx) {
+  curType = type;
+  editIdx = (idx !== undefined) ? idx : null;
+  ge('modal-title').textContent = (idx !== undefined ? '編輯' : '新增') + (type === 'camping' ? '露營' : '重機') + '地點';
+  ge('e-type').value = type;
+  ge('btn-save').className = 'btn-save' + (type === 'moto' ? ' gold' : '');
+  calR1 = null; calR2 = null; currentImgUrl = null;
+  resetForm();
+  if (idx !== undefined) {
+    var p = (type === 'camping' ? campingData : motoData)[idx];
+    ge('f-name').value = p.name || '';
+    ge('f-loc').value = p.location || '';
+    ge('f-date').value = p.date || '';
+    ge('f-tags').value = p.tags || '';
+    ge('f-kuula').value = p.kuula || '';
+    ge('f-youtube').value = p.youtube || '';
+    ge('f-ig').value = p.ig || '';
+    if (p.date) {
+      var t = ge('cal-trigger-text');
+      t.textContent = p.date;
+      t.className = 'cal-val';
+    }
+    if (p.img) { currentImgUrl = p.img; setImgPreview(p.img, 'upload-zone', 'upload-replace'); }
+    loadDescBlocks(p.desc || '');
+  }
+  ge('modal-overlay').classList.add('open');
+}
+
+function closeModal() {
+  ge('modal-overlay').classList.remove('open');
+  resetForm();
+}
+
+function resetForm() {
+  ['f-name', 'f-loc', 'f-date', 'f-tags', 'f-kuula', 'f-youtube', 'f-ig'].forEach(function(id) {
+    ge(id).value = '';
+  });
+  var t = ge('cal-trigger-text');
+  t.textContent = '點擊選擇日期或區間';
+  t.className = 'cal-placeholder';
+  resetUploadZone('upload-zone', 'upload-replace');
+  ge('f-img-file').value = '';
+  ge('desc-blocks').innerHTML = '';
+  blockCount = 0;
+  currentImgUrl = null;
+  calR1 = null;
+  calR2 = null;
+}
+
+async function savePlace() {
+  var name = ge('f-name').value.trim();
+  if (!name) { toast('請填寫地點名稱', 1); return; }
+  var type = ge('e-type').value || curType;
+  var place = {
+    name: name,
+    location: ge('f-loc').value.trim(),
+    date: ge('f-date').value.trim(),
+    tags: ge('f-tags').value.trim(),
+    desc: getDescValue(),
+    kuula: ge('f-kuula').value.trim(),
+    youtube: ge('f-youtube').value.trim(),
+    ig: ge('f-ig').value.trim(),
+    img: currentImgUrl || ''
+  };
+  var arr = type === 'camping' ? campingData : motoData;
+  if (editIdx !== null) arr[editIdx] = place; else arr.push(place);
+  await pushToSheets(type);
+  renderList(type);
+  updateStats();
+  closeModal();
+}
+
+async function delPlace(type, idx) {
+  if (!confirm('確定要刪除？')) return;
+  if (type === 'camping') campingData.splice(idx, 1); else motoData.splice(idx, 1);
+  await pushToSheets(type);
+  renderList(type);
+  updateStats();
+}
+
+async function pushToSheets(type) {
+  ge('saving-mask').classList.add('show');
+  try {
+    var data = type === 'camping' ? campingData : motoData;
+    await fetch(API, { method: 'POST', body: JSON.stringify({ sheet: type, data: data }) });
+    toast('已儲存！');
+  } catch (e) {
+    toast('儲存失敗', 1);
+  } finally {
+    ge('saving-mask').classList.remove('show');
+  }
+}
+
+// ── 分段編輯器 ───────────────────────────────────────────
+var blockCount = 0;
+
+function addBlock(title, text) {
+  blockCount++;
+  var blkId = 'blk-' + blockCount;
+  var div = document.createElement('div');
+  div.className = 'desc-block-editor';
+  div.id = blkId;
+
+  var header = document.createElement('div');
+  header.className = 'desc-block-header';
+  var label = document.createElement('span');
+  label.className = 'desc-block-label';
+  label.textContent = '區塊 ' + blockCount;
+  var delBtn = document.createElement('button');
+  delBtn.className = 'desc-block-del';
+  delBtn.textContent = '×';
+  delBtn.type = 'button';
+  delBtn.addEventListener('click', function() { div.remove(); });
+  header.appendChild(label);
+  header.appendChild(delBtn);
+
+  var inp = document.createElement('input');
+  inp.type = 'text';
+  inp.placeholder = '小標題（可留空）';
+  inp.value = title || '';
+
+  var ta = document.createElement('textarea');
+  ta.placeholder = '內容文字...';
+  ta.value = text || '';
+
+  div.appendChild(header);
+  div.appendChild(inp);
+  div.appendChild(ta);
+  ge('desc-blocks').appendChild(div);
+}
+
+function getDescValue() {
+  var blocks = document.querySelectorAll('#desc-blocks .desc-block-editor');
+  if (!blocks.length) return '';
+  var arr = [];
+  blocks.forEach(function(b) {
+    var t = b.querySelector('input').value.trim();
+    var x = b.querySelector('textarea').value.trim();
+    if (t || x) arr.push(JSON.stringify({ title: t, text: x }));
   });
   return arr.join('|||');
 }
-function loadDescBlocks(desc){
-  document.getElementById('desc-blocks').innerHTML='';blockCount=0;
-  if(!desc)return;
-  if(desc.includes('|||')||desc.startsWith('{"')){
-    desc.split('|||').forEach(function(p){try{var o=JSON.parse(p);addBlock(o.title||'',o.text||'');}catch(e){if(p.trim())addBlock('',p.trim());}});
-  }else{addBlock('',desc);}
-}
 
-// 照片上傳
-async function handleImg(input){
-  var file=input.files[0];if(!file)return;
-  var z=document.getElementById('upload-zone');
-  z.className='upload-zone uploading';z.innerHTML='<div class="icon">&#x23F3;</div><p>上傳中，請稍候...</p>';
-  try{
-    var url=await uploadToCloudinary(file);currentImgUrl=url;
-    setImgPreview(url,'upload-zone','upload-replace');toast('照片上傳成功！');
-  }catch(e){
-    z.className='upload-zone';z.innerHTML='<div class="icon">📷</div><p>上傳失敗，請重試</p>';toast('照片上傳失敗',1);
+function loadDescBlocks(desc) {
+  ge('desc-blocks').innerHTML = '';
+  blockCount = 0;
+  if (!desc) return;
+  if (desc.includes('|||') || desc.startsWith('{"')) {
+    desc.split('|||').forEach(function(p) {
+      try { var o = JSON.parse(p); addBlock(o.title || '', o.text || ''); }
+      catch (e) { if (p.trim()) addBlock('', p.trim()); }
+    });
+  } else {
+    addBlock('', desc);
   }
 }
-async function handleQrImg(input){
-  var file=input.files[0];if(!file)return;
-  var z=document.getElementById('qr-zone');
-  z.className='upload-zone uploading';z.innerHTML='<div class="icon">&#x23F3;</div><p>上傳中...</p>';
-  try{
-    var url=await uploadToCloudinary(file);document.getElementById('s-lineQr').value=url;
-    setImgPreview(url,'qr-zone','qr-replace');toast('QR Code 上傳成功！');
-  }catch(e){
-    z.className='upload-zone';z.innerHTML='<div class="icon">📷</div><p>上傳失敗</p>';toast('上傳失敗',1);
+
+// ── 照片上傳 ─────────────────────────────────────────────
+async function uploadToCloudinary(file) {
+  var fd = new FormData();
+  fd.append('file', file);
+  fd.append('upload_preset', CLOUDINARY_PRESET);
+  var res = await fetch('https://api.cloudinary.com/v1_1/' + CLOUDINARY_CLOUD + '/image/upload', { method: 'POST', body: fd });
+  var data = await res.json();
+  if (!data.secure_url) throw new Error('fail');
+  return data.secure_url;
+}
+
+async function handleImg(input) {
+  var file = input.files[0]; if (!file) return;
+  var z = ge('upload-zone');
+  z.className = 'upload-zone uploading';
+  z.innerHTML = '<div class="icon">&#x23F3;</div><p>上傳中，請稍候...</p>';
+  try {
+    var url = await uploadToCloudinary(file);
+    currentImgUrl = url;
+    setImgPreview(url, 'upload-zone', 'upload-replace');
+    toast('照片上傳成功！');
+  } catch (e) {
+    z.className = 'upload-zone';
+    z.innerHTML = '<div class="icon">📷</div><p>上傳失敗，請重試</p>';
+    toast('照片上傳失敗', 1);
   }
 }
-function setImgPreview(src,zoneId,replaceId){
-  var z=document.getElementById(zoneId);z.className='upload-zone has-img';z.innerHTML='<img src="'+src+'" alt="預覽">';
-  document.getElementById(replaceId).style.display='block';
-}
-function resetUploadZone(zoneId,replaceId){
-  var z=document.getElementById(zoneId);z.className='upload-zone';
-  z.innerHTML='<div class="icon">📷</div><p>點擊上傳照片</p><p class="hint">自動上傳到雲端，所有人都能看到</p>';
-  document.getElementById(replaceId).style.display='none';
+
+async function handleQrImg(input) {
+  var file = input.files[0]; if (!file) return;
+  var z = ge('qr-zone');
+  z.className = 'upload-zone uploading';
+  z.innerHTML = '<div class="icon">&#x23F3;</div><p>上傳中...</p>';
+  try {
+    var url = await uploadToCloudinary(file);
+    ge('s-lineQr').value = url;
+    setImgPreview(url, 'qr-zone', 'qr-replace');
+    toast('QR Code 上傳成功！');
+  } catch (e) {
+    z.className = 'upload-zone';
+    z.innerHTML = '<div class="icon">📷</div><p>上傳失敗</p>';
+    toast('上傳失敗', 1);
+  }
 }
 
-async function savePlace(){
-  var name=document.getElementById('f-name').value.trim();if(!name){toast('請填寫地點名稱',1);return;}
-  var type=document.getElementById('e-type').value||curType;
-  var place={name:name,location:document.getElementById('f-loc').value.trim(),date:document.getElementById('f-date').value.trim(),tags:document.getElementById('f-tags').value.trim(),desc:getDescValue(),kuula:document.getElementById('f-kuula').value.trim(),youtube:document.getElementById('f-youtube').value.trim(),ig:document.getElementById('f-ig').value.trim(),img:currentImgUrl||''};
-  var arr=type==='camping'?campingData:motoData;
-  if(editIdx!==null)arr[editIdx]=place;else arr.push(place);
-  await pushToSheets(type);renderList(type);updateStats();closeModal();
-}
-async function pushToSheets(type){
-  document.getElementById('saving-mask').classList.add('show');
-  try{
-    var data=type==='camping'?campingData:motoData;
-    await fetch(API,{method:'POST',body:JSON.stringify({sheet:type,data:data})});toast('已儲存！');
-  }catch(e){toast('儲存失敗',1);}
-  finally{document.getElementById('saving-mask').classList.remove('show');}
+function setImgPreview(src, zoneId, replaceId) {
+  var z = ge(zoneId);
+  z.className = 'upload-zone has-img';
+  z.innerHTML = '<img src="' + src + '" alt="預覽">';
+  ge(replaceId).style.display = 'block';
 }
 
-// 社群設定
-async function loadSocialForm(){
-  try{
-    var res=await fetch(API+'?sheet=social');var data=await res.json();
-    if(data&&data[0]&&data[0].data){
-      var s=JSON.parse(data[0].data);
-      document.getElementById('s-fb').value=s.fb||'';
-      document.getElementById('s-ig').value=s.ig||'';
-      document.getElementById('s-line').value=s.line||'';
-      document.getElementById('s-lineQr').value=s.lineQr||'';
-      if(s.lineQr)setImgPreview(s.lineQr,'qr-zone','qr-replace');
+function resetUploadZone(zoneId, replaceId) {
+  var z = ge(zoneId);
+  z.className = 'upload-zone';
+  z.innerHTML = '<div class="icon">📷</div><p>點擊上傳照片</p><p class="hint">自動上傳到雲端，所有人都能看到</p>';
+  ge(replaceId).style.display = 'none';
+}
+
+// ── 社群設定 ─────────────────────────────────────────────
+async function loadSocialForm() {
+  try {
+    var res = await fetch(API + '?sheet=social');
+    var data = await res.json();
+    if (data && data[0] && data[0].data) {
+      var s = JSON.parse(data[0].data);
+      ge('s-fb').value = s.fb || '';
+      ge('s-ig').value = s.ig || '';
+      ge('s-line').value = s.line || '';
+      ge('s-lineQr').value = s.lineQr || '';
+      if (s.lineQr) setImgPreview(s.lineQr, 'qr-zone', 'qr-replace');
     }
-  }catch(e){}
+  } catch (e) {}
 }
-async function saveSocial(){
-  var obj={fb:document.getElementById('s-fb').value.trim(),ig:document.getElementById('s-ig').value.trim(),line:document.getElementById('s-line').value.trim(),lineQr:document.getElementById('s-lineQr').value.trim()};
-  document.getElementById('saving-mask').classList.add('show');
-  try{
-    await fetch(API,{method:'POST',body:JSON.stringify({sheet:'social',data:[{data:JSON.stringify(obj)}]})});
+
+async function saveSocial() {
+  var obj = {
+    fb: ge('s-fb').value.trim(),
+    ig: ge('s-ig').value.trim(),
+    line: ge('s-line').value.trim(),
+    lineQr: ge('s-lineQr').value.trim()
+  };
+  ge('saving-mask').classList.add('show');
+  try {
+    await fetch(API, { method: 'POST', body: JSON.stringify({ sheet: 'social', data: [{ data: JSON.stringify(obj) }] }) });
     toast('社群設定已儲存！');
-  }catch(e){toast('儲存失敗',1);}
-  finally{document.getElementById('saving-mask').classList.remove('show');}
+  } catch (e) {
+    toast('儲存失敗', 1);
+  } finally {
+    ge('saving-mask').classList.remove('show');
+  }
 }
-async function clearSocial(){
-  if(!confirm('確定要清除所有社群連結嗎？'))return;
-  document.getElementById('s-fb').value='';document.getElementById('s-ig').value='';document.getElementById('s-line').value='';document.getElementById('s-lineQr').value='';
-  resetUploadZone('qr-zone','qr-replace');
+
+async function clearSocial() {
+  if (!confirm('確定要清除所有社群連結嗎？')) return;
+  ['s-fb', 's-ig', 's-line', 's-lineQr'].forEach(function(id) { ge(id).value = ''; });
+  resetUploadZone('qr-zone', 'qr-replace');
   await saveSocial();
 }
 
-// 萬年曆
-var calY=new Date().getFullYear(),calM=new Date().getMonth(),calR1=null,calR2=null;
-var MNAMES=['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
-function openCal(){if(!calR1){calY=new Date().getFullYear();calM=new Date().getMonth();}buildSelects();renderCalDays();document.getElementById('cal-modal-overlay').classList.add('open');}
-function buildSelects(){
-  var ms=document.getElementById('cal-month-sel');var ys=document.getElementById('cal-year-sel');
-  ms.innerHTML=MNAMES.map(function(m,i){return'<option value="'+i+'"'+(i===calM?' selected':'')+'>'+m+'</option>';}).join('');
-  var cy=new Date().getFullYear();var yHTML='';
-  for(var y=cy-5;y<=cy+5;y++)yHTML+='<option value="'+y+'"'+(y===calY?' selected':'')+'>'+y+'年</option>';
-  ys.innerHTML=yHTML;
-}
-function calGoTo(){calM=parseInt(document.getElementById('cal-month-sel').value);calY=parseInt(document.getElementById('cal-year-sel').value);renderCalDays();}
-function calMove(d){calM+=d;if(calM>11){calM=0;calY++;}if(calM<0){calM=11;calY--;}buildSelects();renderCalDays();}
-function renderCalDays(){
-  var el=document.getElementById('cal-days');
-  var first=new Date(calY,calM,1).getDay();var total=new Date(calY,calM+1,0).getDate();
-  var today=new Date();today.setHours(0,0,0,0);
-  var html='';for(var i=0;i<first;i++)html+='<div class="cal-day empty"></div>';
-  for(var d=1;d<=total;d++){
-    var dt=new Date(calY,calM,d);dt.setHours(0,0,0,0);var cls='cal-day';
-    if(dt.getTime()===today.getTime())cls+=' today';
-    if(calR1&&calR2){var s=calR1.getTime(),e=calR2.getTime(),t=dt.getTime();
-      if(t===s&&t===e)cls+=' sel-start sel-end';else if(t===s)cls+=' sel-start';else if(t===e)cls+=' sel-end';else if(t>s&&t<e)cls+=' in-range';
-    }else if(calR1&&dt.getTime()===calR1.getTime())cls+=' sel-start sel-end';
-    html+='<div class="'+cls+'" onclick="calClick('+calY+','+calM+','+d+')">'+d+'</div>';
-  }
-  el.innerHTML=html;
-  var hint=document.getElementById('cal-hint');var res=document.getElementById('cal-result');
-  if(!calR1){hint.textContent='點選開始日期';res.textContent='';}
-  else if(!calR2){hint.textContent='再點選結束日期（單日可直接確認）';res.textContent=fmtDate(calR1);}
-  else{hint.textContent='已選取區間';res.textContent=fmtDate(calR1)+' ~ '+fmtDate(calR2);}
-}
-function calClick(y,m,d){var dt=new Date(y,m,d);dt.setHours(0,0,0,0);if(!calR1||calR2){calR1=dt;calR2=null;}else{if(dt<calR1){calR2=calR1;calR1=dt;}else calR2=dt;}renderCalDays();}
-function fmtDate(d){return d.getFullYear()+'年'+(d.getMonth()+1)+'月'+d.getDate()+'日';}
-function calClear(){calR1=null;calR2=null;renderCalDays();document.getElementById('f-date').value='';var t=document.getElementById('cal-trigger-text');t.textContent='點擊選擇日期或區間';t.className='cal-placeholder';document.getElementById('cal-modal-overlay').classList.remove('open');}
-function calConfirm(){if(!calR1){toast('請先選擇日期',1);return;}var val=calR2?fmtDate(calR1)+' ~ '+fmtDate(calR2):fmtDate(calR1);document.getElementById('f-date').value=val;var t=document.getElementById('cal-trigger-text');t.textContent=val;t.className='cal-val';document.getElementById('cal-modal-overlay').classList.remove('open');}
+// ── 萬年曆 ───────────────────────────────────────────────
+var calY = new Date().getFullYear(), calM = new Date().getMonth(), calR1 = null, calR2 = null;
+var MNAMES = ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
 
-function toast(msg,err){var el=document.getElementById('toast');el.textContent=msg;el.className='toast'+(err?' err':'')+' show';setTimeout(function(){el.classList.remove('show');},2500);}
-document.getElementById('modal-overlay').addEventListener('click',function(e){if(e.target===document.getElementById('modal-overlay'))closeModal();});
-document.getElementById('l-pw').addEventListener('keydown',function(e){if(e.key==='Enter')doLogin();});
+function openCal() {
+  if (!calR1) { calY = new Date().getFullYear(); calM = new Date().getMonth(); }
+  buildSelects(); renderCalDays();
+  ge('cal-modal-overlay').classList.add('open');
+}
+
+function buildSelects() {
+  var ms = ge('cal-month-sel'), ys = ge('cal-year-sel');
+  ms.innerHTML = MNAMES.map(function(m, i) {
+    return '<option value="' + i + '"' + (i === calM ? ' selected' : '') + '>' + m + '</option>';
+  }).join('');
+  var cy = new Date().getFullYear(), yHTML = '';
+  for (var y = cy - 5; y <= cy + 5; y++) {
+    yHTML += '<option value="' + y + '"' + (y === calY ? ' selected' : '') + '>' + y + '年</option>';
+  }
+  ys.innerHTML = yHTML;
+}
+
+function calGoTo() {
+  calM = parseInt(ge('cal-month-sel').value);
+  calY = parseInt(ge('cal-year-sel').value);
+  renderCalDays();
+}
+
+function calMove(d) {
+  calM += d;
+  if (calM > 11) { calM = 0; calY++; }
+  if (calM < 0) { calM = 11; calY--; }
+  buildSelects(); renderCalDays();
+}
+
+function renderCalDays() {
+  var el = ge('cal-days');
+  var first = new Date(calY, calM, 1).getDay();
+  var total = new Date(calY, calM + 1, 0).getDate();
+  var today = new Date(); today.setHours(0, 0, 0, 0);
+  var html = '';
+  for (var i = 0; i < first; i++) html += '<div class="cal-day empty"></div>';
+  for (var d = 1; d <= total; d++) {
+    var dt = new Date(calY, calM, d); dt.setHours(0, 0, 0, 0);
+    var cls = 'cal-day';
+    if (dt.getTime() === today.getTime()) cls += ' today';
+    if (calR1 && calR2) {
+      var s = calR1.getTime(), e = calR2.getTime(), tt = dt.getTime();
+      if (tt === s && tt === e) cls += ' sel-start sel-end';
+      else if (tt === s) cls += ' sel-start';
+      else if (tt === e) cls += ' sel-end';
+      else if (tt > s && tt < e) cls += ' in-range';
+    } else if (calR1 && dt.getTime() === calR1.getTime()) {
+      cls += ' sel-start sel-end';
+    }
+    html += '<div class="' + cls + '" data-cy="' + calY + '" data-cm="' + calM + '" data-cd="' + d + '">' + d + '</div>';
+  }
+  el.innerHTML = html;
+  var hint = ge('cal-hint'), res = ge('cal-result');
+  if (!calR1) { hint.textContent = '點選開始日期'; res.textContent = ''; }
+  else if (!calR2) { hint.textContent = '再點選結束日期（單日可直接確認）'; res.textContent = fmtDate(calR1); }
+  else { hint.textContent = '已選取區間'; res.textContent = fmtDate(calR1) + ' ~ ' + fmtDate(calR2); }
+}
+
+ge('cal-days').addEventListener('click', function(e) {
+  var el = e.target;
+  if (!el.classList.contains('cal-day') || el.classList.contains('empty')) return;
+  var y = parseInt(el.dataset.cy), m = parseInt(el.dataset.cm), d = parseInt(el.dataset.cd);
+  var dt = new Date(y, m, d); dt.setHours(0, 0, 0, 0);
+  if (!calR1 || calR2) { calR1 = dt; calR2 = null; }
+  else { if (dt < calR1) { calR2 = calR1; calR1 = dt; } else calR2 = dt; }
+  renderCalDays();
+});
+
+function fmtDate(d) {
+  return d.getFullYear() + '年' + (d.getMonth() + 1) + '月' + d.getDate() + '日';
+}
+
+function calClear() {
+  calR1 = null; calR2 = null; renderCalDays();
+  ge('f-date').value = '';
+  var t = ge('cal-trigger-text'); t.textContent = '點擊選擇日期或區間'; t.className = 'cal-placeholder';
+  ge('cal-modal-overlay').classList.remove('open');
+}
+
+function calConfirm() {
+  if (!calR1) { toast('請先選擇日期', 1); return; }
+  var val = calR2 ? fmtDate(calR1) + ' ~ ' + fmtDate(calR2) : fmtDate(calR1);
+  ge('f-date').value = val;
+  var t = ge('cal-trigger-text'); t.textContent = val; t.className = 'cal-val';
+  ge('cal-modal-overlay').classList.remove('open');
+}
+
+// ══════════════════════════════════════════════════════════
+// 事件綁定（全部用 addEventListener，不用 onclick 屬性）
+// ══════════════════════════════════════════════════════════
+
+// 登入
+ge('login-btn').addEventListener('click', doLogin);
+ge('l-pw').addEventListener('keydown', function(e) { if (e.key === 'Enter') doLogin(); });
+ge('login-eye-btn').addEventListener('click', function() { toggleEye('l-pw'); });
+ge('forgot-link').addEventListener('click', showForgotForm);
+ge('forgot-submit-btn').addEventListener('click', doForgotPw);
+ge('fp-email').addEventListener('keydown', function(e) { if (e.key === 'Enter') doForgotPw(); });
+ge('forgot-back-link').addEventListener('click', showLoginForm);
+
+// 登出
+ge('logout-btn').addEventListener('click', doLogout);
+
+// Sidebar
+document.querySelectorAll('.sidebar-item').forEach(function(item) {
+  item.addEventListener('click', function() { showPage(item.dataset.page); });
+});
+
+// 快速新增
+ge('dash-add-camp').addEventListener('click', function() { showPage('camping'); openModal('camping'); });
+ge('dash-add-moto').addEventListener('click', function() { showPage('moto'); openModal('moto'); });
+ge('add-camping-btn').addEventListener('click', function() { openModal('camping'); });
+ge('add-moto-btn').addEventListener('click', function() { openModal('moto'); });
+
+// Modal
+ge('modal-close-btn').addEventListener('click', closeModal);
+ge('modal-cancel-btn').addEventListener('click', closeModal);
+ge('btn-save').addEventListener('click', savePlace);
+ge('modal-overlay').addEventListener('click', function(e) { if (e.target === ge('modal-overlay')) closeModal(); });
+
+// 日曆
+ge('cal-trigger-btn').addEventListener('click', openCal);
+ge('cal-prev').addEventListener('click', function() { calMove(-1); });
+ge('cal-next').addEventListener('click', function() { calMove(1); });
+ge('cal-month-sel').addEventListener('change', calGoTo);
+ge('cal-year-sel').addEventListener('change', calGoTo);
+ge('cal-clear-btn').addEventListener('click', calClear);
+ge('cal-confirm-btn').addEventListener('click', calConfirm);
+
+// 照片上傳
+ge('upload-zone').addEventListener('click', function() { ge('f-img-file').click(); });
+ge('upload-replace').addEventListener('click', function() { ge('f-img-file').click(); });
+ge('f-img-file').addEventListener('change', function() { handleImg(this); });
+ge('qr-zone').addEventListener('click', function() { ge('qr-file').click(); });
+ge('qr-replace').addEventListener('click', function() { ge('qr-file').click(); });
+ge('qr-file').addEventListener('change', function() { handleQrImg(this); });
+
+// 分段編輯
+ge('add-block-btn').addEventListener('click', function() { addBlock(); });
+
+// 帳號設定
+ge('save-user-btn').addEventListener('click', saveUser);
+ge('save-pw-btn').addEventListener('click', savePw);
+
+// 小眼睛（設定頁）
+document.querySelectorAll('.eye-btn').forEach(function(btn) {
+  btn.addEventListener('click', function() { toggleEye(btn.dataset.target); });
+});
+
+// 社群
+ge('save-social-btn').addEventListener('click', saveSocial);
+ge('clear-social-btn').addEventListener('click', clearSocial);
+
 </script>
 </body>
 </html>
