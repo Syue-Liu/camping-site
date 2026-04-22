@@ -6,100 +6,84 @@
   <title>Syue & Lynn 旅遊足跡</title>
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;700&family=Noto+Serif+TC:wght@400;500&display=swap" rel="stylesheet">
   <style>
-    :root{
-      --bg:#0f1410;--surface:#1a1f1b;--surface2:#222820;--border:#2e352c;
-      --text:#e8e4dc;--muted:#8a9088;--accent:#7eb87a;--accent2:#c4a35a;
-      --radius:12px;
-    }
+    :root{--bg:#0f1410;--surface:#1a1f1b;--surface2:#222820;--border:#2e352c;--text:#e8e4dc;--muted:#8a9088;--accent:#7eb87a;--accent2:#c4a35a;--radius:12px;}
     *{margin:0;padding:0;box-sizing:border-box;}
     body{font-family:'Noto Serif TC',serif;background:var(--bg);color:var(--text);line-height:1.8;}
-
     nav{display:flex;align-items:center;justify-content:space-between;padding:1.25rem 2.5rem;border-bottom:1px solid var(--border);position:sticky;top:0;z-index:100;background:rgba(15,20,16,0.92);backdrop-filter:blur(12px);}
-    .nav-logo{font-family:'Playfair Display',serif;font-size:18px;font-weight:700;color:var(--accent2);letter-spacing:0.04em;}
+    .nav-logo{font-family:'Playfair Display',serif;font-size:18px;font-weight:700;color:var(--accent2);}
     .nav-links{display:flex;gap:2rem;}
-    .nav-links a{font-size:13px;color:var(--muted);text-decoration:none;letter-spacing:0.1em;text-transform:uppercase;transition:color 0.2s;}
+    .nav-links a{font-size:13px;color:var(--muted);text-decoration:none;letter-spacing:0.1em;text-transform:uppercase;}
     .nav-links a:hover{color:var(--text);}
-
-    .hero{padding:6rem 2.5rem 5rem;text-align:center;border-bottom:1px solid var(--border);position:relative;}
-    .hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at center,rgba(126,184,122,0.06) 0%,transparent 70%);pointer-events:none;}
+    .hero{padding:6rem 2.5rem 5rem;text-align:center;border-bottom:1px solid var(--border);}
     .hero-eyebrow{font-size:11px;letter-spacing:0.2em;text-transform:uppercase;color:var(--accent);margin-bottom:1.25rem;}
     .hero h1{font-family:'Playfair Display',serif;font-size:52px;font-weight:700;line-height:1.2;margin-bottom:1.25rem;}
     .hero p{font-size:16px;color:var(--muted);}
-
+    .social-section{padding:2rem 2.5rem;max-width:960px;margin:0 auto;border-bottom:1px solid var(--border);}
+    .social-title{font-size:11px;letter-spacing:0.15em;text-transform:uppercase;color:var(--muted);margin-bottom:1rem;}
+    .social-links{display:flex;gap:12px;flex-wrap:wrap;align-items:flex-start;}
+    .social-btn{display:inline-flex;align-items:center;gap:8px;padding:9px 18px;border:1px solid var(--border);border-radius:var(--radius);font-size:13px;color:var(--muted);text-decoration:none;background:var(--surface);transition:all 0.15s;}
+    .social-btn:hover{border-color:var(--accent);color:var(--text);}
+    .social-btn.fb:hover{border-color:#1877f2;color:#1877f2;}
+    .social-btn.ig:hover{border-color:#e1306c;color:#e1306c;}
+    .social-btn.line:hover{border-color:#00c300;color:#00c300;}
+    .qr-block{display:inline-block;padding:12px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);}
+    .qr-block img{width:110px;height:110px;border-radius:6px;display:block;}
+    .qr-label{font-size:11px;color:var(--muted);text-align:center;margin-top:6px;}
     .section{padding:4rem 2.5rem;max-width:960px;margin:0 auto;}
     .section-header{display:flex;align-items:baseline;gap:1rem;margin-bottom:2rem;}
     .section-eyebrow{font-size:11px;letter-spacing:0.2em;text-transform:uppercase;color:var(--accent);white-space:nowrap;}
     .section h2{font-family:'Playfair Display',serif;font-size:32px;font-weight:500;}
     .section-line{flex:1;height:1px;background:var(--border);margin-left:1rem;}
     hr.divider{border:none;border-top:1px solid var(--border);}
-
-    /* 搜尋框 */
     .search-wrap{position:relative;margin-bottom:1rem;}
-    .search-wrap input{width:100%;padding:10px 40px 10px 16px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);font-size:14px;color:var(--text);font-family:inherit;outline:none;transition:border-color 0.2s;}
+    .search-wrap input{width:100%;padding:10px 40px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);font-size:14px;color:var(--text);font-family:inherit;outline:none;}
     .search-wrap input:focus{border-color:var(--accent);}
     .search-wrap input::placeholder{color:var(--muted);}
-    .search-wrap .s-icon{position:absolute;left:14px;top:50%;transform:translateY(-50%);font-size:14px;color:var(--muted);pointer-events:none;}
-    .search-wrap input{padding-left:40px;}
-    .search-wrap .s-clear{position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--muted);cursor:pointer;font-size:18px;line-height:1;display:none;}
-    .search-wrap .s-clear.show{display:block;}
-
-    /* 篩選列 */
+    .s-icon{position:absolute;left:14px;top:50%;transform:translateY(-50%);font-size:14px;color:var(--muted);pointer-events:none;}
+    .s-clear{position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--muted);cursor:pointer;font-size:18px;line-height:1;display:none;}
+    .s-clear.show{display:block;}
     .filter-bar{display:flex;align-items:center;gap:8px;margin-bottom:1.75rem;flex-wrap:wrap;}
-    .filter-tag{font-size:12px;padding:5px 14px;border-radius:20px;border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;transition:all 0.15s;white-space:nowrap;font-family:inherit;}
+    .filter-tag{font-size:12px;padding:5px 14px;border-radius:20px;border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;white-space:nowrap;font-family:inherit;}
     .filter-tag:hover{border-color:var(--accent);color:var(--accent);}
     .filter-tag.active{background:var(--accent);color:#0f1410;border-color:var(--accent);font-weight:500;}
     .filter-tag.gold:hover{border-color:var(--accent2);color:var(--accent2);}
     .filter-tag.gold.active{background:var(--accent2);border-color:var(--accent2);}
     .filter-select{font-size:12px;padding:5px 14px;border-radius:20px;border:1px solid var(--border);background:var(--surface2);color:var(--muted);cursor:pointer;outline:none;font-family:inherit;}
-    .filter-select:focus{border-color:var(--accent);}
-    .filter-count{font-size:12px;color:var(--muted);margin-left:auto;white-space:nowrap;}
-
-    /* 卡片 */
-    .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:2rem;transition:border-color 0.2s;}
+    .filter-count{font-size:12px;color:var(--muted);margin-left:auto;}
+    .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:2rem;}
     .card:hover{border-color:#3e4a3c;}
     .card-img{width:100%;height:260px;object-fit:cover;display:block;}
     .card-img-placeholder{width:100%;height:260px;background:var(--surface2);display:flex;align-items:center;justify-content:center;font-size:14px;color:var(--muted);}
     .card-body{padding:1.75rem;}
     .card-title{font-family:'Playfair Display',serif;font-size:22px;font-weight:500;margin-bottom:6px;}
-    .card-meta{font-size:12px;color:var(--muted);margin-bottom:1rem;letter-spacing:0.05em;}
-    .badge{display:inline-block;font-size:11px;padding:3px 10px;border-radius:20px;margin-right:6px;margin-bottom:6px;letter-spacing:0.05em;}
+    .card-meta{font-size:12px;color:var(--muted);margin-bottom:1rem;}
+    .badge{display:inline-block;font-size:11px;padding:3px 10px;border-radius:20px;margin-right:6px;margin-bottom:6px;}
     .badge-green{background:rgba(126,184,122,0.12);color:var(--accent);border:1px solid rgba(126,184,122,0.25);}
     .badge-gold{background:rgba(196,163,90,0.12);color:var(--accent2);border:1px solid rgba(196,163,90,0.25);}
-    .card-desc{font-size:14px;color:var(--muted);margin-top:1rem;margin-bottom:1.5rem;line-height:1.8;}
-    .kuula-wrap{border-radius:8px;overflow:hidden;margin-bottom:0.5rem;}
+    .card-preview{font-size:14px;color:var(--muted);margin-top:0.75rem;line-height:1.8;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+    .card-full{display:none;margin-top:1rem;}
+    .card-full.open{display:block;}
+    .desc-block{margin-bottom:1.1rem;}
+    .desc-title{font-size:13px;font-weight:500;letter-spacing:0.05em;margin-bottom:0.3rem;}
+    .desc-text{font-size:14px;color:var(--muted);line-height:1.8;}
+    .btn-more{margin-top:0.75rem;padding:6px 16px;border:1px solid var(--border);border-radius:20px;background:transparent;color:var(--muted);font-size:12px;cursor:pointer;font-family:inherit;letter-spacing:0.05em;}
+    .btn-more:hover{border-color:var(--accent);color:var(--accent);}
+    .kuula-wrap{border-radius:8px;overflow:hidden;margin-top:1.25rem;margin-bottom:0.5rem;}
     .kuula-wrap iframe{display:block;border:none;}
-    .kuula-caption{font-size:11px;color:var(--muted);text-align:center;margin-bottom:0.5rem;letter-spacing:0.08em;}
+    .kuula-caption{font-size:11px;color:var(--muted);text-align:center;letter-spacing:0.08em;}
     .card-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:1.5rem;}
-
     .hl{background:rgba(126,184,122,0.3);border-radius:2px;padding:0 2px;}
     .hl.gold{background:rgba(196,163,90,0.3);}
-
     .empty-msg{font-size:14px;color:var(--muted);padding:3rem;text-align:center;border:1px dashed var(--border);border-radius:var(--radius);}
-    .loading{text-align:center;padding:3rem;font-size:13px;color:var(--muted);letter-spacing:0.1em;}
-
-    .card-desc-block{margin-bottom:1.25rem;}
-    .card-desc-block:last-child{margin-bottom:0;}
-    .card-desc-title{font-size:13px;font-weight:500;color:var(--accent);letter-spacing:0.05em;margin-bottom:0.35rem;text-transform:uppercase;}
-    .card-desc-text{font-size:14px;color:var(--muted);line-height:1.8;}
-    .card-desc-plain{font-size:14px;color:var(--muted);line-height:1.8;}
-    footer{padding:3rem 2.5rem;text-align:center;font-size:12px;color:var(--muted);border-top:1px solid var(--border);letter-spacing:0.1em;}
-
-    @media(max-width:600px){
-      .hero h1{font-size:34px;}
-      nav{padding:1rem 1.25rem;}
-      .nav-links{gap:1.25rem;}
-      .section{padding:3rem 1.25rem;}
-    }
+    .loading{text-align:center;padding:3rem;font-size:13px;color:var(--muted);}
+    footer{padding:3rem 2.5rem;text-align:center;font-size:12px;color:var(--muted);border-top:1px solid var(--border);}
+    @media(max-width:600px){.hero h1{font-size:34px;}nav{padding:1rem 1.25rem;}.section{padding:3rem 1.25rem;}.social-section{padding:1.5rem 1.25rem;}}
   </style>
 </head>
 <body>
-
   <nav>
-    <div class="nav-logo">Syue & Lynn</div>
-    <div class="nav-links">
-      <a href="#moto">重機</a>
-      <a href="#camping">露營</a>
-    </div>
+    <div class="nav-logo">Syue &amp; Lynn</div>
+    <div class="nav-links"><a href="#moto">重機</a><a href="#camping">露營</a></div>
   </nav>
 
   <div class="hero">
@@ -108,7 +92,11 @@
     <p>記錄我們騎過的山路、住過的營地<br>每一個地點都是一段故事</p>
   </div>
 
-  <!-- 重機地點 -->
+  <div class="social-section" id="social-section" style="display:none;">
+    <div class="social-title">Follow Us</div>
+    <div class="social-links" id="social-links"></div>
+  </div>
+
   <div class="section" id="moto">
     <div class="section-header">
       <span class="section-eyebrow">Motorcycle</span>
@@ -117,8 +105,8 @@
     </div>
     <div class="search-wrap">
       <span class="s-icon">🔍</span>
-      <input type="text" id="moto-search" placeholder="搜尋重機地點..." oninput="onSectionSearch('moto')">
-      <button class="s-clear" id="moto-clear" onclick="clearSectionSearch('moto')">×</button>
+      <input type="text" id="moto-search" placeholder="搜尋重機地點..." oninput="onSearch('moto')">
+      <button class="s-clear" id="moto-clear" onclick="clearSearch('moto')">×</button>
     </div>
     <div class="filter-bar" id="moto-filter-bar"><span style="font-size:13px;color:var(--muted)">載入中...</span></div>
     <div class="card-grid" id="moto-container"><div class="loading" style="grid-column:1/-1">載入中...</div></div>
@@ -126,7 +114,6 @@
 
   <hr class="divider">
 
-  <!-- 露營地點 -->
   <div class="section" id="camping">
     <div class="section-header">
       <span class="section-eyebrow">Camping</span>
@@ -135,191 +122,167 @@
     </div>
     <div class="search-wrap">
       <span class="s-icon">🔍</span>
-      <input type="text" id="camp-search" placeholder="搜尋露營地點..." oninput="onSectionSearch('camping')">
-      <button class="s-clear" id="camp-clear" onclick="clearSectionSearch('camping')">×</button>
+      <input type="text" id="camp-search" placeholder="搜尋露營地點..." oninput="onSearch('camping')">
+      <button class="s-clear" id="camp-clear" onclick="clearSearch('camping')">×</button>
     </div>
     <div class="filter-bar" id="camp-filter-bar"><span style="font-size:13px;color:var(--muted)">載入中...</span></div>
     <div id="camping-container"><div class="loading">載入中...</div></div>
   </div>
 
-  <footer>© SYUE & LYNN · 用 Osmo 360 記錄每一個足跡</footer>
+  <footer>© SYUE &amp; LYNN · 用 Osmo 360 記錄每一個足跡</footer>
 
   <script>
     const API='https://script.google.com/macros/s/AKfycbzPguC2eh8JP1x1GAOaqodo9r4nb1BPEE4JayJoQxBF-31jZTLl02pIj1ADQ8SGyHxcDw/exec';
     let campingData=[],motoData=[];
-    const state={
-      camping:{tag:'全部',loc:'全部',kw:''},
-      moto:{tag:'全部',loc:'全部',kw:''}
-    };
+    const state={camping:{tag:'全部',loc:'全部',kw:''},moto:{tag:'全部',loc:'全部',kw:''}};
+    let cid=0;
 
-    function extractKuulaUrl(code){
-      if(!code)return null;
-      const m=code.match(/data-kuula="([^"]+)"/);
-      return m?m[1]:null;
-    }
+    function kuulaUrl(code){if(!code)return null;const m=code.match(/data-kuula="([^"]+)"/);return m?m[1]:null;}
 
-    function hl(text,kw,gold){
-      if(!kw||!text)return text||'';
-      const cls=gold?'hl gold':'hl';
-      return String(text).replace(new RegExp(kw.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'),'gi'),m=>`<span class="${cls}">${m}</span>`);
+    function hl(t,kw,g){
+      if(!kw||!t)return String(t||'');
+      return String(t).replace(new RegExp(kw.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'),'gi'),function(m){return'<span class="hl'+(g?' gold':'')+'">'+m+'</span>';});
     }
 
     function matchKw(p,kw){
       if(!kw)return true;
       const q=kw.toLowerCase();
-      return ['name','location','date','tags','desc'].some(k=>(p[k]||'').toLowerCase().includes(q));
+      return['name','location','date','tags','desc'].some(function(k){return(p[k]||'').toLowerCase().includes(q);});
     }
 
     function getFiltered(type){
       const list=type==='camping'?campingData:motoData;
       const s=state[type];
-      return list.filter(p=>{
-        const tagOk=s.tag==='全部'||(p.tags&&p.tags.split(',').map(t=>t.trim()).includes(s.tag));
+      return list.filter(function(p){
+        const tagOk=s.tag==='全部'||(p.tags&&p.tags.split(',').map(function(t){return t.trim();}).includes(s.tag));
         const locOk=s.loc==='全部'||(p.location&&p.location.includes(s.loc));
         return tagOk&&locOk&&matchKw(p,s.kw);
       });
     }
 
-    function buildFilter(type){
-      const list=type==='camping'?campingData:motoData;
-      const s=state[type];
-      const isGold=type==='moto';
-      const barId=type==='camping'?'camp-filter-bar':'moto-filter-bar';
-
-      const tagSet=new Set();
-      list.forEach(p=>{if(p.tags)p.tags.split(',').forEach(t=>{if(t.trim())tagSet.add(t.trim());});});
-      const tags=['全部',...Array.from(tagSet)];
-
-      const locSet=new Set();
-      list.forEach(p=>{if(p.location&&p.location.trim())locSet.add(p.location.trim());});
-      const locs=Array.from(locSet);
-
-      const count=getFiltered(type).length;
-
-      document.getElementById(barId).innerHTML=
-        tags.map(t=>`<button class="filter-tag${isGold?' gold':''}${s.tag===t?' active':''}" onclick="setTag('${type}','${t.replace(/'/g,"\\'")}')">${t}</button>`).join('')+
-        (locs.length?`<select class="filter-select" onchange="setLoc('${type}',this.value)">
-          <option value="全部"${s.loc==='全部'?' selected':''}>所有地區</option>
-          ${locs.map(l=>`<option value="${l}"${s.loc===l?' selected':''}>${l}</option>`).join('')}
-        </select>`:'') +
-        `<span class="filter-count">${count} 個地點</span>`;
-    }
-
-    function setTag(type,tag){state[type].tag=tag;buildFilter(type);render(type);}
-    function setLoc(type,loc){state[type].loc=loc;buildFilter(type);render(type);}
-    function onSectionSearch(type){
-      const id=type==='camping'?'camp-search':'moto-search';
-      const clearId=type==='camping'?'camp-clear':'moto-clear';
-      state[type].kw=document.getElementById(id).value.trim();
-      document.getElementById(clearId).className='s-clear'+(state[type].kw?' show':'');
-      buildFilter(type);render(type);
-    }
-    function clearSectionSearch(type){
-      const id=type==='camping'?'camp-search':'moto-search';
-      const clearId=type==='camping'?'camp-clear':'moto-clear';
-      document.getElementById(id).value='';
-      state[type].kw='';
-      document.getElementById(clearId).className='s-clear';
-      buildFilter(type);render(type);
-    }
-
-    function renderDesc(desc, kw, isGold){
-      if(!desc) return '';
-
-      // 新格式：分段 JSON
-      if(desc.includes('|||') || desc.startsWith('{"'  )){
-        const parts = desc.split('|||');
-        return '<div style="margin-top:1rem;margin-bottom:1.5rem;">' + parts.map(p => {
-          try {
-            const o = JSON.parse(p);
-            return '<div class="card-desc-block">' +
-              (o.title ? '<div class="card-desc-title">'+o.title+'</div>' : '') +
-              (o.text ? '<div class="card-desc-text">'+hl(o.text,kw,isGold)+'</div>' : '') +
-              '</div>';
-          } catch(e){ return p.trim() ? '<div class="card-desc-block"><div class="card-desc-text">'+hl(p,kw,isGold)+'</div></div>' : ''; }
-        }).join('') + '</div>';
+    function plainText(desc){
+      if(!desc)return'';
+      if(desc.includes('|||')||desc.startsWith('{"')){
+        var t='';desc.split('|||').forEach(function(p){try{var o=JSON.parse(p);t+=(o.text||'')+' ';}catch(e){t+=p+' ';}});return t.trim();
       }
+      return desc;
+    }
 
-      // 舊格式：用 emoji 自動分段
-      const hasEmoji = /\u00a9|\u00ae|[\u2000-\u3300]|\ud83c[\ud000-\udfff]|\ud83d[\ud000-\udfff]|\ud83e[\ud000-\udfff]/.test(desc);
+    function renderFull(desc,kw,g){
+      if(!desc)return'';
+      var ac=g?'var(--accent2)':'var(--accent)';
+      if(desc.includes('|||')||desc.startsWith('{"')){
+        return desc.split('|||').map(function(p){
+          try{var o=JSON.parse(p);return'<div class="desc-block">'+(o.title?'<div class="desc-title" style="color:'+ac+'">'+hl(o.title,kw,g)+'</div>':'')+(o.text?'<div class="desc-text">'+hl(o.text,kw,g)+'</div>':'')+'</div>';}
+          catch(e){return p.trim()?'<div class="desc-block"><div class="desc-text">'+hl(p,kw,g)+'</div></div>':'';}
+        }).join('');
+      }
+      var hasEmoji=/\ud83c[\ud000-\udfff]|\ud83d[\ud000-\udfff]|\ud83e[\ud000-\udfff]|[\u2600-\u27ff]/.test(desc);
       if(hasEmoji){
-        const parts = desc.split(/(?=[\u00a9\u00ae\u2600-\u27ff]|\ud83c[\ud000-\udfff]|\ud83d[\ud000-\udfff]|\ud83e[\ud000-\udfff])/).filter(s=>s.trim());
-        if(parts.length > 1){
-          return '<div style="margin-top:1rem;margin-bottom:1.5rem;">' + parts.map(seg => {
-            seg = seg.trim();
-            if(!seg) return '';
-            const nlIdx = seg.indexOf('\n');
-            const spaceIdx = seg.search(/\s{2,}/);
-            let splitAt = -1;
-            const bracket = seg.match(/\u3011/);
-            if(bracket) splitAt = seg.indexOf('\u3011') + 1;
-            else if(nlIdx > 0) splitAt = nlIdx;
-            else if(spaceIdx > 0) splitAt = spaceIdx;
-            const title = splitAt > 0 ? seg.slice(0, splitAt).trim() : seg;
-            const body = splitAt > 0 ? seg.slice(splitAt).trim() : '';
-            return '<div class="card-desc-block">' +
-              '<div class="card-desc-title">' + hl(title,kw,isGold) + '</div>' +
-              (body ? '<div class="card-desc-text">' + hl(body,kw,isGold) + '</div>' : '') +
-              '</div>';
-          }).join('') + '</div>';
+        var parts=desc.split(/(?=\ud83c[\ud000-\udfff]|\ud83d[\ud000-\udfff]|\ud83e[\ud000-\udfff]|[\u2600-\u27ff])/).filter(function(s){return s.trim();});
+        if(parts.length>1){
+          return parts.map(function(seg){
+            seg=seg.trim();if(!seg)return'';
+            var bi=seg.indexOf('\u3011');
+            var sp=bi>0?bi+1:seg.search(/\s{2}/);
+            var title=sp>0?seg.slice(0,sp).trim():seg.split('\n')[0];
+            var body=sp>0?seg.slice(sp).trim():'';
+            return'<div class="desc-block"><div class="desc-title" style="color:'+ac+'">'+hl(title,kw,g)+'</div>'+(body?'<div class="desc-text">'+hl(body,kw,g)+'</div>':'')+'</div>';
+          }).join('');
         }
       }
-
-      return '<p class="card-desc" style="margin-top:1rem;margin-bottom:1.5rem;">'+hl(desc,kw,isGold)+'</p>';
+      return'<div class="desc-text">'+hl(desc,kw,g)+'</div>';
     }
-    function render(type){
-      const filtered=getFiltered(type);
-      const s=state[type];
-      const kw=s.kw;
-      const isGold=type==='moto';
 
-      if(type==='camping'){
-        const el=document.getElementById('camping-container');
-        if(!filtered.length){el.innerHTML='<div class="empty-msg">找不到符合條件的露營地點</div>';return;}
-        el.innerHTML=filtered.map(p=>{
-          const ku=extractKuulaUrl(p.kuula);
-          return `<div class="card">
-            ${p.img?`<img class="card-img" src="${p.img}" alt="${p.name}">`:'<div class="card-img-placeholder">露營地點封面</div>'}
-            <div class="card-body">
-              <div class="card-title">${hl(p.name,kw,false)}</div>
-              <div class="card-meta">${hl(p.location||'',kw,false)}${p.date?' · '+p.date:''}</div>
-              ${p.tags?p.tags.split(',').map(t=>`<span class="badge badge-green">${t.trim()}</span>`).join(''):''}
-              ${renderDesc(p.desc,kw,false)}
-              ${ku?`<div class="kuula-wrap"><iframe src="${ku}" width="100%" height="480" allowfullscreen allow="vr"></iframe></div><p class="kuula-caption">360° 環景 — 拖動探索現場環境</p>`:''}
-            </div>
-          </div>`;
-        }).join('');
-      } else {
-        const el=document.getElementById('moto-container');
-        if(!filtered.length){el.innerHTML='<div class="empty-msg" style="grid-column:1/-1">找不到符合條件的重機地點</div>';return;}
-        el.innerHTML=filtered.map(p=>{
-          const ku=extractKuulaUrl(p.kuula);
-          return `<div class="card">
-            ${p.img?`<img class="card-img" src="${p.img}" alt="${p.name}">`:'<div class="card-img-placeholder">重機地點封面</div>'}
-            <div class="card-body">
-              <div class="card-title">${hl(p.name,kw,true)}</div>
-              <div class="card-meta">${hl(p.location||'',kw,true)}${p.date?' · '+p.date:''}</div>
-              ${p.tags?p.tags.split(',').map(t=>`<span class="badge badge-gold">${t.trim()}</span>`).join(''):''}
-              ${renderDesc(p.desc,kw,true)}
-              ${ku?`<div class="kuula-wrap"><iframe src="${ku}" width="100%" height="480" allowfullscreen allow="vr"></iframe></div><p class="kuula-caption">360° 環景 — 拖動探索現場環境</p>`:''}
-            </div>
-          </div>`;
-        }).join('');
-      }
+    function toggleMore(btn,id){
+      var el=document.getElementById('full-'+id);
+      var open=el.classList.contains('open');
+      el.classList.toggle('open');
+      btn.textContent=open?'展開更多 ∨':'收起 ∧';
+    }
+
+    function buildFilter(type){
+      var list=type==='camping'?campingData:motoData;
+      var s=state[type];var g=type==='moto';
+      var bid=type==='camping'?'camp-filter-bar':'moto-filter-bar';
+      var tagSet=new Set();list.forEach(function(p){if(p.tags)p.tags.split(',').forEach(function(t){if(t.trim())tagSet.add(t.trim());});});
+      var tags=['全部'].concat(Array.from(tagSet));
+      var locSet=new Set();list.forEach(function(p){if(p.location&&p.location.trim())locSet.add(p.location.trim());});
+      var locs=Array.from(locSet);
+      var count=getFiltered(type).length;
+      document.getElementById(bid).innerHTML=
+        tags.map(function(t){return'<button class="filter-tag'+(g?' gold':'')+(s.tag===t?' active':'')+'" onclick="setTag(\''+type+'\',\''+t.replace(/'/g,"\\'")+'\')">'+ t+'</button>';}).join('')+
+        (locs.length?'<select class="filter-select" onchange="setLoc(\''+type+'\',this.value)"><option value="全部"'+(s.loc==='全部'?' selected':'')+'>所有地區</option>'+locs.map(function(l){return'<option value="'+l+'"'+(s.loc===l?' selected':'')+'>'+l+'</option>';}).join('')+'</select>':'')+
+        '<span class="filter-count">'+count+' 個地點</span>';
+    }
+
+    function setTag(t,tag){state[t].tag=tag;buildFilter(t);render(t);}
+    function setLoc(t,loc){state[t].loc=loc;buildFilter(t);render(t);}
+    function onSearch(t){
+      var id=t==='camping'?'camp-search':'moto-search';
+      var ci=t==='camping'?'camp-clear':'moto-clear';
+      state[t].kw=document.getElementById(id).value.trim();
+      document.getElementById(ci).className='s-clear'+(state[t].kw?' show':'');
+      buildFilter(t);render(t);
+    }
+    function clearSearch(t){
+      document.getElementById(t==='camping'?'camp-search':'moto-search').value='';
+      state[t].kw='';
+      document.getElementById(t==='camping'?'camp-clear':'moto-clear').className='s-clear';
+      buildFilter(t);render(t);
+    }
+
+    function render(type){
+      var filtered=getFiltered(type);var kw=state[type].kw;var g=type==='moto';
+      var el=document.getElementById(type==='camping'?'camping-container':'moto-container');
+      if(!filtered.length){el.innerHTML='<div class="empty-msg">找不到符合條件的地點</div>';return;}
+      var html=filtered.map(function(p){
+        cid++;var id='c'+cid;
+        var ku=kuulaUrl(p.kuula);
+        var preview=plainText(p.desc);
+        var full=renderFull(p.desc,kw,g);
+        var hasDesc=preview.length>0;
+        return'<div class="card">'+
+          (p.img?'<img class="card-img" src="'+p.img+'" alt="'+p.name+'">':`<div class="card-img-placeholder">${g?'重機':'露營'}地點封面</div>`)+
+          '<div class="card-body">'+
+          '<div class="card-title">'+hl(p.name,kw,g)+'</div>'+
+          '<div class="card-meta">'+hl(p.location||'',kw,g)+(p.date?' · '+p.date:'')+'</div>'+
+          (p.tags?p.tags.split(',').map(function(t){return'<span class="badge badge-'+(g?'gold':'green')+'">'+t.trim()+'</span>';}).join(''):'')+
+          (hasDesc?'<div class="card-preview">'+hl(preview,kw,g)+'</div>':'')+
+          (hasDesc?'<div class="card-full" id="full-'+id+'">'+full+'</div>':'')+
+          (hasDesc?'<button class="btn-more" onclick="toggleMore(this,\''+id+'\')">展開更多 ∨</button>':'')+
+          (ku?'<div class="kuula-wrap"><iframe src="'+ku+'" width="100%" height="480" allowfullscreen allow="vr"></iframe></div><p class="kuula-caption">360° 環景 — 拖動探索現場環境</p>':'')+
+          '</div></div>';
+      }).join('');
+      el.innerHTML=html;
+    }
+
+    function loadSocial(data){
+      if(!data)return;
+      var s;try{s=JSON.parse(data);}catch(e){return;}
+      var links=[];
+      if(s.fb)links.push('<a class="social-btn fb" href="'+s.fb+'" target="_blank"><span style="font-size:16px">📘</span>Facebook</a>');
+      if(s.ig)links.push('<a class="social-btn ig" href="'+s.ig+'" target="_blank"><span style="font-size:16px">📸</span>Instagram</a>');
+      if(s.line)links.push('<a class="social-btn line" href="'+s.line+'" target="_blank"><span style="font-size:16px">💬</span>Line 加好友</a>');
+      if(s.lineQr)links.push('<div class="qr-block"><img src="'+s.lineQr+'" alt="Line QR"><div class="qr-label">掃描加入 Line</div></div>');
+      if(links.length){document.getElementById('social-section').style.display='block';document.getElementById('social-links').innerHTML=links.join('');}
     }
 
     async function init(){
       try{
-        const [c,m]=await Promise.all([
-          fetch(API+'?sheet=camping').then(r=>r.json()),
-          fetch(API+'?sheet=moto').then(r=>r.json())
+        var results=await Promise.all([
+          fetch(API+'?sheet=camping').then(function(r){return r.json();}),
+          fetch(API+'?sheet=moto').then(function(r){return r.json();}),
+          fetch(API+'?sheet=social').then(function(r){return r.json();}).catch(function(){return[];})
         ]);
-        campingData=c;motoData=m;
+        campingData=results[0];motoData=results[1];
+        var soc=results[2];
+        if(soc&&soc[0]&&soc[0].data)loadSocial(soc[0].data);
         buildFilter('camping');buildFilter('moto');
         render('camping');render('moto');
       }catch(e){
         document.getElementById('camping-container').innerHTML='<div class="empty-msg">載入失敗，請重新整理</div>';
-        document.getElementById('moto-container').innerHTML='<div class="empty-msg" style="grid-column:1/-1">載入失敗，請重新整理</div>';
+        document.getElementById('moto-container').innerHTML='<div class="empty-msg">載入失敗，請重新整理</div>';
       }
     }
     init();
