@@ -239,6 +239,15 @@
       buildFilter(t);render(t);
     }
 
+    function parseImgField(raw){
+      if(!raw)return{img:'',youtube:'',ig:''};
+      if(raw.charAt(0)==='{'){
+        try{var o=JSON.parse(raw);return{img:o.img||'',youtube:o.youtube||'',ig:o.ig||''};}
+        catch(e){}
+      }
+      return{img:raw,youtube:'',ig:''};
+    }
+
     function youtubeEmbedUrl(url){
       if(!url||!url.trim())return null;
       url=url.trim();
@@ -263,13 +272,14 @@
       if(!filtered.length){el.innerHTML='<div class="empty-msg">找不到符合條件的地點</div>';return;}
       var html=filtered.map(function(p){
         cid++;var id='c'+cid;
+        var imgP=parseImgField(p.img||'');
         var ku=kuulaUrl(p.kuula);
-        var ytUrl=youtubeEmbedUrl(p.youtube||'');
-        var igUrl=(p.ig||'').trim();
+        var ytUrl=youtubeEmbedUrl(imgP.youtube||p.youtube||'');
+        var igUrl=(imgP.ig||p.ig||'').trim();
         var descHtml=renderFull(p.desc,kw,g);
         // 第一層封面圖
-        var thumbHtml=p.img
-          ?'<img class="card-img" src="'+p.img+'" alt="'+p.name+'">'
+        var thumbHtml=imgP.img
+          ?'<img class="card-img" src="'+imgP.img+'" alt="'+p.name+'">'
           :'';
         // 標籤
         var tagsHtml=p.tags
