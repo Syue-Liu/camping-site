@@ -53,23 +53,21 @@
     .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:2rem;}
     .card:hover{border-color:#3e4a3c;}
     .card-img{width:100%;height:260px;object-fit:cover;display:block;}
-    @media(max-width:768px){.card-img{height:auto;aspect-ratio:16/9;}
-    .card-img-placeholder{height:auto;aspect-ratio:16/9;}}
-    .card-img-placeholder{width:100%;height:260px;background:var(--surface2);display:flex;align-items:center;justify-content:center;font-size:14px;color:var(--muted);}
+    @media(max-width:768px){.card-img{height:auto;aspect-ratio:16/9;}}
     .card-body{padding:1.75rem;}
     .card-title{font-family:'Playfair Display',serif;font-size:22px;font-weight:500;margin-bottom:6px;}
-    .card-meta{font-size:12px;color:var(--muted);margin-bottom:1rem;}
-    .badge{display:inline-block;font-size:11px;padding:3px 10px;border-radius:20px;margin-right:6px;margin-bottom:6px;}
+    .card-meta{font-size:12px;color:var(--muted);margin-bottom:0.75rem;}
+    .card-tags{display:block;margin-bottom:0.75rem;line-height:2;}
+    .badge{display:inline-block;font-size:11px;padding:3px 10px;border-radius:20px;margin-right:6px;margin-bottom:4px;}
     .badge-green{background:rgba(126,184,122,0.12);color:var(--accent);border:1px solid rgba(126,184,122,0.25);}
     .badge-gold{background:rgba(196,163,90,0.12);color:var(--accent2);border:1px solid rgba(196,163,90,0.25);}
-    .card-preview{font-size:14px;color:var(--muted);margin-top:0.75rem;line-height:1.8;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
-    .card-full{display:none;margin-top:1rem;}
+    .btn-more{display:block;width:fit-content;margin-top:0.5rem;padding:6px 16px;border:1px solid var(--border);border-radius:20px;background:transparent;color:var(--muted);font-size:12px;cursor:pointer;font-family:inherit;letter-spacing:0.05em;}
+    .btn-more:hover{border-color:var(--accent);color:var(--accent);}
+    .card-full{display:none;margin-top:1.25rem;padding-top:1.25rem;border-top:1px solid var(--border);}
     .card-full.open{display:block;}
     .desc-block{margin-bottom:1.1rem;}
-    .desc-title{font-size:13px;font-weight:500;letter-spacing:0.05em;margin-bottom:0.3rem;}
+    .desc-title{font-size:13px;font-weight:600;letter-spacing:0.05em;margin-bottom:0.4rem;}
     .desc-text{font-size:14px;color:var(--muted);line-height:1.8;}
-    .btn-more{margin-top:0.75rem;padding:6px 16px;border:1px solid var(--border);border-radius:20px;background:transparent;color:var(--muted);font-size:12px;cursor:pointer;font-family:inherit;letter-spacing:0.05em;}
-    .btn-more:hover{border-color:var(--accent);color:var(--accent);}
     .kuula-wrap{border-radius:8px;overflow:hidden;margin-top:1.25rem;margin-bottom:0.5rem;}
     .kuula-wrap iframe{display:block;border:none;}
     .kuula-caption{font-size:11px;color:var(--muted);text-align:center;letter-spacing:0.08em;}
@@ -242,12 +240,20 @@
     }
 
     function youtubeEmbedUrl(url){
-      if(!url)return null;
-      var m=url.match(/youtu\.be\/([^?&\s]+)/);
+      if(!url||!url.trim())return null;
+      url=url.trim();
+      // youtu.be/XXXX
+      var m=url.match(/youtu\.be\/([^?&\s/]+)/);
       if(m)return'https://www.youtube.com/embed/'+m[1];
+      // watch?v=XXXX or &v=XXXX
       m=url.match(/[?&]v=([^&\s]+)/);
       if(m)return'https://www.youtube.com/embed/'+m[1];
-      if(url.includes('youtube.com/embed/'))return url;
+      // already embed URL
+      m=url.match(/youtube\.com\/embed\/([^?&\s]+)/);
+      if(m)return'https://www.youtube.com/embed/'+m[1];
+      // shorts
+      m=url.match(/youtube\.com\/shorts\/([^?&\s]+)/);
+      if(m)return'https://www.youtube.com/embed/'+m[1];
       return null;
     }
 
@@ -260,31 +266,39 @@
         var ku=kuulaUrl(p.kuula);
         var ytUrl=youtubeEmbedUrl(p.youtube||'');
         var igUrl=(p.ig||'').trim();
-        var full=renderFull(p.desc,kw,g);
-        var hasExpand=p.img||full||ku||ytUrl||igUrl;
-        var expandContent='';
-        if(p.img)expandContent+='<img class="card-expand-img" src="'+p.img+'" alt="'+p.name+'">';
-        else expandContent+='<div class="card-expand-placeholder">'+(g?'◎ 重機':'▲ 露營')+'地點封面</div>';
-        if(full)expandContent+=full;
-        if(ku)expandContent+='<div class="kuula-wrap"><iframe src="'+ku+'" width="100%" height="480" allowfullscreen allow="vr"></iframe></div><p class="kuula-caption">360° 環景 — 拖動探索現場環境</p>';
-        if(ytUrl)expandContent+='<div class="yt-wrap"><iframe src="'+ytUrl+'" allowfullscreen allow="accelerometer;autoplay;clipboard-write;encrypted-media;gyroscope;picture-in-picture"></iframe></div><p class="yt-caption">▶ YouTube 影片</p>';
-        if(igUrl)expandContent+='<a class="ig-link" href="'+igUrl+'" target="_blank" rel="noopener"><span style="font-size:16px">📸</span>在 Instagram 查看貼文</a>';
+        var descHtml=renderFull(p.desc,kw,g);
+        // 第一層封面圖
         var thumbHtml=p.img
           ?'<img class="card-img" src="'+p.img+'" alt="'+p.name+'">'
-          :'<div class="card-img-placeholder">'+(g?'◎ 重機':'▲ 露營')+'地點封面</div>';
-        // Remove duplicate image from expandContent (already shown on top)
-        var expandNoImg=p.img
-          ?expandContent.replace('<img class="card-expand-img" src="'+p.img+'" alt="'+p.name+'">','')
-          :expandContent.replace('<div class="card-expand-placeholder">'+(g?'◎ 重機':'▲ 露營')+'地點封面</div>','');
+          :'';
+        // 標籤
+        var tagsHtml=p.tags
+          ?'<div class="card-tags">'+p.tags.split(',').map(function(t){
+              return'<span class="badge badge-'+(g?'gold':'green')+'">'+t.trim()+'</span>';
+            }).join('')+'</div>'
+          :'';
+        // 展開內容
+        var hasExpand=!!(descHtml||ku||ytUrl||igUrl);
+        var expandHtml='';
+        if(descHtml)expandHtml+=descHtml;
+        if(ku)expandHtml+='<div class="kuula-wrap"><iframe src="'+ku+'" width="100%" height="480" allowfullscreen allow="vr"></iframe></div><p class="kuula-caption">360° 環景 — 拖動探索現場環境</p>';
+        if(ytUrl)expandHtml+=
+          '<div class="yt-wrap"><iframe src="'+ytUrl+'"'+
+          ' allow="accelerometer;autoplay;clipboard-write;encrypted-media;gyroscope;picture-in-picture"'+
+          ' allowfullscreen></iframe></div><p class="yt-caption">▶ YouTube 影片</p>';
+        if(igUrl)expandHtml+=
+          '<a class="ig-link" href="'+igUrl+'" target="_blank" rel="noopener">'+
+          '<span style="font-size:16px">📸</span>在 Instagram 查看貼文</a>';
         return'<div class="card">'+
           thumbHtml+
           '<div class="card-body">'+
-          '<div class="card-title">'+hl(p.name,kw,g)+'</div>'+
-          '<div class="card-meta">'+hl(p.location||'',kw,g)+(p.date?' · '+p.date:'')+'</div>'+
-          (p.tags?p.tags.split(',').map(function(t){return'<span class="badge badge-'+(g?'gold':'green')+'">'+t.trim()+'</span>';}).join(''):'')+
-          (hasExpand?'<button class="btn-more" onclick="toggleMore(this,\''+id+'\')">展開更多 ∨</button>':'')+
-          (hasExpand?'<div class="card-full" id="full-'+id+'">'+expandNoImg+'</div>':'')+
-          '</div></div>';
+            '<div class="card-title">'+hl(p.name,kw,g)+'</div>'+
+            '<div class="card-meta">'+hl(p.location||'',kw,g)+(p.date?' · '+p.date:'')+'</div>'+
+            tagsHtml+
+            (hasExpand?'<button class="btn-more" onclick="toggleMore(this,\''+id+'\')">展開更多 ∨</button>':'')+
+            (hasExpand?'<div class="card-full" id="full-'+id+'">'+expandHtml+'</div>':'')+
+          '</div>'+
+        '</div>';
       }).join('');
       el.innerHTML=html;
     }
