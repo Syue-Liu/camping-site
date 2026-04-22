@@ -269,13 +269,21 @@
         if(ku)expandContent+='<div class="kuula-wrap"><iframe src="'+ku+'" width="100%" height="480" allowfullscreen allow="vr"></iframe></div><p class="kuula-caption">360° 環景 — 拖動探索現場環境</p>';
         if(ytUrl)expandContent+='<div class="yt-wrap"><iframe src="'+ytUrl+'" allowfullscreen allow="accelerometer;autoplay;clipboard-write;encrypted-media;gyroscope;picture-in-picture"></iframe></div><p class="yt-caption">▶ YouTube 影片</p>';
         if(igUrl)expandContent+='<a class="ig-link" href="'+igUrl+'" target="_blank" rel="noopener"><span style="font-size:16px">📸</span>在 Instagram 查看貼文</a>';
+        var thumbHtml=p.img
+          ?'<img class="card-img" src="'+p.img+'" alt="'+p.name+'">'
+          :'<div class="card-img-placeholder">'+(g?'◎ 重機':'▲ 露營')+'地點封面</div>';
+        // Remove duplicate image from expandContent (already shown on top)
+        var expandNoImg=p.img
+          ?expandContent.replace('<img class="card-expand-img" src="'+p.img+'" alt="'+p.name+'">','')
+          :expandContent.replace('<div class="card-expand-placeholder">'+(g?'◎ 重機':'▲ 露營')+'地點封面</div>','');
         return'<div class="card">'+
+          thumbHtml+
           '<div class="card-body">'+
           '<div class="card-title">'+hl(p.name,kw,g)+'</div>'+
           '<div class="card-meta">'+hl(p.location||'',kw,g)+(p.date?' · '+p.date:'')+'</div>'+
           (p.tags?p.tags.split(',').map(function(t){return'<span class="badge badge-'+(g?'gold':'green')+'">'+t.trim()+'</span>';}).join(''):'')+
           (hasExpand?'<button class="btn-more" onclick="toggleMore(this,\''+id+'\')">展開更多 ∨</button>':'')+
-          (hasExpand?'<div class="card-full" id="full-'+id+'">'+expandContent+'</div>':'')+
+          (hasExpand?'<div class="card-full" id="full-'+id+'">'+expandNoImg+'</div>':'')+
           '</div></div>';
       }).join('');
       el.innerHTML=html;
