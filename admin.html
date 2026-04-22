@@ -140,14 +140,29 @@ textarea.form-input{resize:vertical;min-height:90px;}
   <div class="login-card">
     <div class="login-logo">Syue &amp; Lynn</div>
     <p class="login-sub">後台管理系統</p>
-    <input type="text" id="l-user" placeholder="帳號">
-    <div class="input-eye" style="margin-bottom:1rem;">
-      <input type="password" id="l-pw" placeholder="密碼" style="margin-bottom:0;font-size:15px;" onkeydown="if(event.key==='Enter')doLogin()">
-      <button class="eye-btn" type="button" onclick="toggleEye('l-pw')">👁</button>
+    <!-- 登入表單 -->
+    <div id="login-form-block">
+      <input type="text" id="l-user" placeholder="帳號">
+      <div class="input-eye" style="margin-bottom:1rem;">
+        <input type="password" id="l-pw" placeholder="密碼" style="margin-bottom:0;padding-right:40px;" onkeydown="if(event.key==='Enter')doLogin()">
+        <button class="eye-btn" type="button" onclick="toggleEye('l-pw')">👁</button>
+      </div>
+      <button class="btn-primary" onclick="doLogin()">登入</button>
+      <p class="login-error" id="l-err">帳號或密碼錯誤</p>
+      <p style="font-size:12px;color:var(--muted);margin-top:1rem;text-align:center;">
+        <a href="#" onclick="showForgot();return false;" style="color:var(--muted);text-decoration:underline;text-underline-offset:3px;">忘記密碼？</a>
+      </p>
     </div>
-    <button class="btn-primary" onclick="doLogin()">登入</button>
-    <p class="login-error" id="l-err">帳號或密碼錯誤</p>
-    <p style="font-size:11px;color:#4a5448;margin-top:0.75rem;text-align:center;"><a href="#" onclick="resetCredentials();return false;" style="color:var(--muted);text-decoration:none;">忘記密碼？點此重置為預設帳密</a></p>
+    <!-- 忘記密碼面板 -->
+    <div id="forgot-block" style="display:none;">
+      <p style="font-size:13px;color:var(--muted);margin-bottom:1rem;">輸入您在設定中登記的緊急聯絡 Email，系統會寄送找回說明。</p>
+      <input type="email" id="fp-email" placeholder="緊急聯絡 Email" style="width:100%;padding:10px 14px;border:1px solid var(--border);border-radius:var(--radius);font-size:15px;margin-bottom:0.75rem;background:var(--bg);color:var(--text);">
+      <p class="login-error" id="fp-err" style="display:none;margin-bottom:0.75rem;">Email 不符或尚未設定緊急聯絡信箱</p>
+      <button class="btn-primary" onclick="doForgotPw()">發送找回通知</button>
+      <p style="font-size:12px;color:var(--muted);margin-top:0.75rem;text-align:center;">
+        <a href="#" onclick="hideForgot();return false;" style="color:var(--muted);text-decoration:underline;text-underline-offset:3px;">← 返回登入</a>
+      </p>
+    </div>
   </div>
 </div>
 <div id="admin-screen">
@@ -251,6 +266,13 @@ textarea.form-input{resize:vertical;min-height:90px;}
           </div>
           <button class="btn-save-set" onclick="savePw()">修改密碼</button>
         </div>
+        <div class="settings-card">
+          <h3>🔐 緊急聯絡 Email</h3>
+          <p style="font-size:13px;color:var(--muted);margin-bottom:1rem;">設定後，如果忘記密碼可在登入頁輸入此 Email，系統會寄送找回通知到此信箱。</p>
+          <div class="current-info">目前設定：<span id="disp-recovery-email">（未設定）</span></div>
+          <div class="form-group"><label class="form-label">緊急聯絡 Email</label><input class="form-input" type="email" id="recovery-email" placeholder="your@email.com"></div>
+          <button class="btn-save-set" onclick="saveRecoveryEmail()">儲存緊急 Email</button>
+        </div>
       </div>
     </div>
   </div>
@@ -321,23 +343,71 @@ async function uploadToCloudinary(file){
   var data=await res.json();if(!data.secure_url)throw new Error('fail');return data.secure_url;
 }
 
-function getAcc(){var s=localStorage.getItem('sl_acc');return s?JSON.parse(s):{username:'syuelynn',password:'syuelynn2025'};}
+// ── 帳號安全 ──────────────────────────────────────────
+function getAcc(){
+  try{
+    var s=localStorage.getItem('sl_acc');
+    if(s){var p=JSON.parse(s);if(p&&p.username&&p.password)return p;}
+  }catch(e){localStorage.removeItem('sl_acc');}
+  return{username:'syuelynn',password:'syuelynn2025'};
+}
 function setAcc(o){localStorage.setItem('sl_acc',JSON.stringify(o));}
+function getRecoveryEmail(){return localStorage.getItem('sl_recovery')||'';}
+function setRecoveryEmail(e){localStorage.setItem('sl_recovery',e);}
 
 function doLogin(){
   var acc=getAcc();
-  if(document.getElementById('l-user').value.trim()===acc.username&&document.getElementById('l-pw').value===acc.password){
+  var u=document.getElementById('l-user').value.trim();
+  var pw=document.getElementById('l-pw').value;
+  document.getElementById('l-err').style.display='none';
+  if(u===acc.username&&pw===acc.password){
     document.getElementById('login-screen').style.display='none';
     document.getElementById('admin-screen').style.display='block';
     document.getElementById('disp-user').textContent=acc.username;
     loadAll();
-  }else{document.getElementById('l-err').style.display='block';}
+  }else{
+    document.getElementById('l-err').style.display='block';
+  }
 }
 function doLogout(){
   document.getElementById('login-screen').style.display='flex';
   document.getElementById('admin-screen').style.display='none';
   document.getElementById('l-user').value='';document.getElementById('l-pw').value='';
+  hideForgot();
 }
+
+// 忘記密碼流程
+function showForgot(){
+  document.getElementById('login-form-block').style.display='none';
+  document.getElementById('forgot-block').style.display='block';
+  document.getElementById('fp-email').value='';
+  document.getElementById('fp-err').style.display='none';
+}
+function hideForgot(){
+  document.getElementById('forgot-block').style.display='none';
+  document.getElementById('login-form-block').style.display='block';
+}
+function doForgotPw(){
+  var input=document.getElementById('fp-email').value.trim().toLowerCase();
+  var stored=getRecoveryEmail().toLowerCase();
+  document.getElementById('fp-err').style.display='none';
+  if(!stored){document.getElementById('fp-err').style.display='block';return;}
+  if(input!==stored){document.getElementById('fp-err').style.display='block';return;}
+  // 重置為預設並寄信
+  localStorage.removeItem('sl_acc');
+  var acc=getAcc();
+  var subject=encodeURIComponent('Syue & Lynn 後台 — 密碼已重置');
+  var body=encodeURIComponent(
+    '您的帳號密碼已重置為預設值：\n\n' +
+    '帳號：'+acc.username+'\n密碼：'+acc.password+'\n\n' +
+    '請登入後立即前往「帳號設定」修改密碼。'
+  );
+  window.location.href='mailto:'+stored+'?subject='+subject+'&body='+body;
+  hideForgot();
+  document.getElementById('l-user').value=acc.username;
+  toast('密碼已重置，請查收 Email 後登入');
+}
+
 function saveUser(){
   var u=document.getElementById('new-user').value.trim();if(!u){toast('請輸入新帳號',1);return;}
   var acc=getAcc();acc.username=u;setAcc(acc);document.getElementById('new-user').value='';
@@ -352,8 +422,15 @@ function savePw(){
   ['cur-pw','new-pw','cf-pw'].forEach(function(id){document.getElementById(id).value='';});
   toast('密碼已更新，請重新登入');setTimeout(doLogout,1500);
 }
+function saveRecoveryEmail(){
+  var e=document.getElementById('recovery-email').value.trim();
+  if(!e||!e.includes('@')){toast('請輸入有效的 Email',1);return;}
+  setRecoveryEmail(e);
+  document.getElementById('disp-recovery-email').textContent=e;
+  document.getElementById('recovery-email').value='';
+  toast('緊急聯絡 Email 已儲存！');
+}
 function toggleEye(id){var el=document.getElementById(id);el.type=el.type==='password'?'text':'password';}
-function resetCredentials(){if(confirm('確定要重置帳號密碼為預設值嗎？\n帳號：syuelynn\n密碼：syuelynn2025')){localStorage.removeItem('sl_acc');document.getElementById('l-err').style.display='none';toast('已重置！請使用預設帳密登入');}}
 
 var PAGES=['dashboard','camping','moto','social','settings'];
 function showPage(name){
@@ -364,7 +441,12 @@ function showPage(name){
   if(name==='camping')renderList('camping');
   if(name==='moto')renderList('moto');
   if(name==='social')loadSocialForm();
-  if(name==='settings')document.getElementById('disp-user').textContent=getAcc().username;
+  if(name==='settings'){
+    document.getElementById('disp-user').textContent=getAcc().username;
+    var re=getRecoveryEmail();
+    document.getElementById('disp-recovery-email').textContent=re||'（未設定）';
+    document.getElementById('recovery-email').value='';
+  }
 }
 
 var campingData=[],motoData=[],curType='camping',editIdx=null,currentImgUrl=null;
