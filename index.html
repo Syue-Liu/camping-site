@@ -73,6 +73,13 @@
     .kuula-wrap{border-radius:8px;overflow:hidden;margin-top:1.25rem;margin-bottom:0.5rem;}
     .kuula-wrap iframe{display:block;border:none;}
     .kuula-caption{font-size:11px;color:var(--muted);text-align:center;letter-spacing:0.08em;}
+    .yt-wrap{border-radius:8px;overflow:hidden;margin-top:1.25rem;margin-bottom:0.25rem;position:relative;padding-bottom:56.25%;height:0;}
+    .yt-wrap iframe{position:absolute;top:0;left:0;width:100%;height:100%;border:none;display:block;}
+    .yt-caption{font-size:11px;color:var(--muted);text-align:center;letter-spacing:0.08em;margin-bottom:0.5rem;}
+    .ig-link{display:inline-flex;align-items:center;gap:8px;margin-top:1rem;padding:9px 18px;border:1px solid rgba(225,48,108,0.3);border-radius:var(--radius);font-size:13px;color:#e1306c;text-decoration:none;background:rgba(225,48,108,0.06);transition:all 0.15s;}
+    .ig-link:hover{background:rgba(225,48,108,0.12);border-color:#e1306c;}
+    .card-expand-img{width:100%;max-height:320px;object-fit:cover;border-radius:8px;margin-bottom:1rem;display:block;}
+    .card-expand-placeholder{width:100%;height:180px;background:var(--surface2);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:13px;color:var(--muted);margin-bottom:1rem;}
     .card-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:1.5rem;}
     .hl{background:rgba(126,184,122,0.3);border-radius:2px;padding:0 2px;}
     .hl.gold{background:rgba(196,163,90,0.3);}
@@ -234,6 +241,16 @@
       buildFilter(t);render(t);
     }
 
+    function youtubeEmbedUrl(url){
+      if(!url)return null;
+      var m=url.match(/youtu\.be\/([^?&\s]+)/);
+      if(m)return'https://www.youtube.com/embed/'+m[1];
+      m=url.match(/[?&]v=([^&\s]+)/);
+      if(m)return'https://www.youtube.com/embed/'+m[1];
+      if(url.includes('youtube.com/embed/'))return url;
+      return null;
+    }
+
     function render(type){
       var filtered=getFiltered(type);var kw=state[type].kw;var g=type==='moto';
       var el=document.getElementById(type==='camping'?'camping-container':'moto-container');
@@ -241,19 +258,24 @@
       var html=filtered.map(function(p){
         cid++;var id='c'+cid;
         var ku=kuulaUrl(p.kuula);
-        var preview=plainText(p.desc);
+        var ytUrl=youtubeEmbedUrl(p.youtube||'');
+        var igUrl=(p.ig||'').trim();
         var full=renderFull(p.desc,kw,g);
-        var hasDesc=preview.length>0;
+        var hasExpand=p.img||full||ku||ytUrl||igUrl;
+        var expandContent='';
+        if(p.img)expandContent+='<img class="card-expand-img" src="'+p.img+'" alt="'+p.name+'">';
+        else expandContent+='<div class="card-expand-placeholder">'+(g?'◎ 重機':'▲ 露營')+'地點封面</div>';
+        if(full)expandContent+=full;
+        if(ku)expandContent+='<div class="kuula-wrap"><iframe src="'+ku+'" width="100%" height="480" allowfullscreen allow="vr"></iframe></div><p class="kuula-caption">360° 環景 — 拖動探索現場環境</p>';
+        if(ytUrl)expandContent+='<div class="yt-wrap"><iframe src="'+ytUrl+'" allowfullscreen allow="accelerometer;autoplay;clipboard-write;encrypted-media;gyroscope;picture-in-picture"></iframe></div><p class="yt-caption">▶ YouTube 影片</p>';
+        if(igUrl)expandContent+='<a class="ig-link" href="'+igUrl+'" target="_blank" rel="noopener"><span style="font-size:16px">📸</span>在 Instagram 查看貼文</a>';
         return'<div class="card">'+
-          (p.img?'<img class="card-img" src="'+p.img+'" alt="'+p.name+'">':`<div class="card-img-placeholder">${g?'重機':'露營'}地點封面</div>`)+
           '<div class="card-body">'+
           '<div class="card-title">'+hl(p.name,kw,g)+'</div>'+
           '<div class="card-meta">'+hl(p.location||'',kw,g)+(p.date?' · '+p.date:'')+'</div>'+
           (p.tags?p.tags.split(',').map(function(t){return'<span class="badge badge-'+(g?'gold':'green')+'">'+t.trim()+'</span>';}).join(''):'')+
-          (hasDesc?'<div class="card-preview">'+hl(preview,kw,g)+'</div>':'')+
-          (hasDesc?'<div class="card-full" id="full-'+id+'">'+full+'</div>':'')+
-          (hasDesc?'<button class="btn-more" onclick="toggleMore(this,\''+id+'\')">展開更多 ∨</button>':'')+
-          (ku?'<div class="kuula-wrap"><iframe src="'+ku+'" width="100%" height="480" allowfullscreen allow="vr"></iframe></div><p class="kuula-caption">360° 環景 — 拖動探索現場環境</p>':'')+
+          (hasExpand?'<button class="btn-more" onclick="toggleMore(this,\''+id+'\')">展開更多 ∨</button>':'')+
+          (hasExpand?'<div class="card-full" id="full-'+id+'">'+expandContent+'</div>':'')+
           '</div></div>';
       }).join('');
       el.innerHTML=html;
