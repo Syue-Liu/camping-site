@@ -141,9 +141,13 @@ textarea.form-input{resize:vertical;min-height:90px;}
     <div class="login-logo">Syue &amp; Lynn</div>
     <p class="login-sub">後台管理系統</p>
     <input type="text" id="l-user" placeholder="帳號">
-    <input type="password" id="l-pw" placeholder="密碼" onkeydown="if(event.key==='Enter')doLogin()">
+    <div class="input-eye" style="margin-bottom:1rem;">
+      <input type="password" id="l-pw" placeholder="密碼" style="margin-bottom:0;font-size:15px;" onkeydown="if(event.key==='Enter')doLogin()">
+      <button class="eye-btn" type="button" onclick="toggleEye('l-pw')">👁</button>
+    </div>
     <button class="btn-primary" onclick="doLogin()">登入</button>
     <p class="login-error" id="l-err">帳號或密碼錯誤</p>
+    <p style="font-size:11px;color:#4a5448;margin-top:0.75rem;text-align:center;"><a href="#" onclick="resetCredentials();return false;" style="color:var(--muted);text-decoration:none;">忘記密碼？點此重置為預設帳密</a></p>
   </div>
 </div>
 <div id="admin-screen">
@@ -272,6 +276,10 @@ textarea.form-input{resize:vertical;min-height:90px;}
       <input type="hidden" id="f-desc">
     </div>
     <div class="form-group"><label class="form-label">Kuula 360 嵌入碼</label><textarea class="form-input" id="f-kuula" placeholder="貼上 Kuula 的 script 嵌入碼..." style="min-height:70px;font-size:12px;font-family:monospace;"></textarea></div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">YouTube 影片網址</label><input class="form-input" type="text" id="f-youtube" placeholder="https://youtu.be/xxxxx 或 watch?v=xxxxx"></div>
+      <div class="form-group"><label class="form-label">Instagram 貼文網址</label><input class="form-input" type="text" id="f-ig" placeholder="https://www.instagram.com/p/xxxxx"></div>
+    </div>
     <div class="form-group">
       <label class="form-label">封面照片</label>
       <div class="upload-zone" id="upload-zone" onclick="document.getElementById('f-img-file').click()">
@@ -345,6 +353,7 @@ function savePw(){
   toast('密碼已更新，請重新登入');setTimeout(doLogout,1500);
 }
 function toggleEye(id){var el=document.getElementById(id);el.type=el.type==='password'?'text':'password';}
+function resetCredentials(){if(confirm('確定要重置帳號密碼為預設值嗎？\n帳號：syuelynn\n密碼：syuelynn2025')){localStorage.removeItem('sl_acc');document.getElementById('l-err').style.display='none';toast('已重置！請使用預設帳密登入');}}
 
 var PAGES=['dashboard','camping','moto','social','settings'];
 function showPage(name){
@@ -405,6 +414,8 @@ function openModal(type,idx){
     document.getElementById('f-date').value=p.date||'';
     document.getElementById('f-tags').value=p.tags||'';
     document.getElementById('f-kuula').value=p.kuula||'';
+    document.getElementById('f-youtube').value=p.youtube||'';
+    document.getElementById('f-ig').value=p.ig||'';
     if(p.date){var t=document.getElementById('cal-trigger-text');t.textContent=p.date;t.className='cal-val';}
     if(p.img){currentImgUrl=p.img;setImgPreview(p.img,'upload-zone','upload-replace');}
     loadDescBlocks(p.desc||'');
@@ -419,7 +430,7 @@ async function delPlace(type,idx){
 }
 function closeModal(){document.getElementById('modal-overlay').classList.remove('open');resetForm();}
 function resetForm(){
-  ['f-name','f-loc','f-date','f-tags','f-kuula'].forEach(function(id){document.getElementById(id).value='';});
+  ['f-name','f-loc','f-date','f-tags','f-kuula','f-youtube','f-ig'].forEach(function(id){document.getElementById(id).value='';});
   var t=document.getElementById('cal-trigger-text');t.textContent='點擊選擇日期或區間';t.className='cal-placeholder';
   resetUploadZone('upload-zone','upload-replace');
   document.getElementById('f-img-file').value='';
@@ -491,7 +502,7 @@ function resetUploadZone(zoneId,replaceId){
 async function savePlace(){
   var name=document.getElementById('f-name').value.trim();if(!name){toast('請填寫地點名稱',1);return;}
   var type=document.getElementById('e-type').value||curType;
-  var place={name:name,location:document.getElementById('f-loc').value.trim(),date:document.getElementById('f-date').value.trim(),tags:document.getElementById('f-tags').value.trim(),desc:getDescValue(),kuula:document.getElementById('f-kuula').value.trim(),img:currentImgUrl||''};
+  var place={name:name,location:document.getElementById('f-loc').value.trim(),date:document.getElementById('f-date').value.trim(),tags:document.getElementById('f-tags').value.trim(),desc:getDescValue(),kuula:document.getElementById('f-kuula').value.trim(),youtube:document.getElementById('f-youtube').value.trim(),ig:document.getElementById('f-ig').value.trim(),img:currentImgUrl||''};
   var arr=type==='camping'?campingData:motoData;
   if(editIdx!==null)arr[editIdx]=place;else arr.push(place);
   await pushToSheets(type);renderList(type);updateStats();closeModal();
