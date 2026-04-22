@@ -543,16 +543,19 @@ function renderList(type) {
   }
   var html = '';
   list.forEach(function(p, i) {
+    var imgP = parseImgField(p.img || '');
     var tags = p.tags ? p.tags.split(',').map(function(t) {
       return '<span class="badge-tag' + (g ? ' gold' : '') + '">' + t.trim() + '</span>';
     }).join('') : '';
     var desc = p.desc ? p.desc.substring(0, 80) + '...' : '';
     var ku = p.kuula ? ' · <span style="color:var(--accent)">360°</span>' : '';
+    var ytIcon = imgP.youtube ? ' · <span style="color:#ff4444">▶ YT</span>' : '';
+    var igIcon = imgP.ig ? ' · <span style="color:#e1306c">📸 IG</span>' : '';
     html += '<div class="place-card">' +
-      '<div class="place-thumb">' + (p.img ? '<img src="' + p.img + '" alt="">' : (g ? '◎' : '▲')) + '</div>' +
+      '<div class="place-thumb">' + (imgP.img ? '<img src="' + imgP.img + '" alt="">' : (g ? '◎' : '▲')) + '</div>' +
       '<div class="place-info">' +
         '<div class="place-name">' + (p.name || '') + '</div>' +
-        '<div class="place-meta">' + (p.location || '') + (p.date ? ' · ' + p.date : '') + ku + '</div>' +
+        '<div class="place-meta">' + (p.location || '') + (p.date ? ' · ' + p.date : '') + ku + ytIcon + igIcon + '</div>' +
         tags +
         '<div class="place-desc">' + desc + '</div>' +
       '</div>' +
@@ -591,19 +594,22 @@ function openModal(type, idx) {
   resetForm();
   if (idx !== undefined) {
     var p = (type === 'camping' ? campingData : motoData)[idx];
-    ge('f-name').value = p.name || '';
-    ge('f-loc').value = p.location || '';
-    ge('f-date').value = p.date || '';
-    ge('f-tags').value = p.tags || '';
-    ge('f-kuula').value = p.kuula || '';
-    ge('f-youtube').value = p.youtube || '';
-    ge('f-ig').value = p.ig || '';
+    ge('f-name').value  = p.name     || '';
+    ge('f-loc').value   = p.location || '';
+    ge('f-date').value  = p.date     || '';
+    ge('f-tags').value  = p.tags     || '';
+    ge('f-kuula').value = p.kuula    || '';
+    // 解包 img 欄位（可能包含 youtube / ig）
+    var imgParsed = parseImgField(p.img || '');
+    currentImgUrl = imgParsed.img;
+    ge('f-youtube').value = imgParsed.youtube;
+    ge('f-ig').value      = imgParsed.ig;
     if (p.date) {
       var t = ge('cal-trigger-text');
       t.textContent = p.date;
       t.className = 'cal-val';
     }
-    if (p.img) { currentImgUrl = p.img; setImgPreview(p.img, 'upload-zone', 'upload-replace'); }
+    if (imgParsed.img) { setImgPreview(imgParsed.img, 'upload-zone', 'upload-replace'); }
     loadDescBlocks(p.desc || '');
   }
   ge('modal-overlay').classList.add('open');
@@ -634,16 +640,21 @@ async function savePlace() {
   var name = ge('f-name').value.trim();
   if (!name) { toast('請填寫地點名稱', 1); return; }
   var type = ge('e-type').value || curType;
+  var ytVal  = ge('f-youtube').value.trim();
+  var igVal  = ge('f-ig').value.trim();
+  var rawImg = currentImgUrl || '';
+  // 把 youtube / ig 打包進 img 欄位（JSON），讓現有後端不需修改就能儲存
+  var imgField = (ytVal || igVal)
+    ? JSON.stringify({ img: rawImg, youtube: ytVal, ig: igVal })
+    : rawImg;
   var place = {
-    name: name,
+    name:     name,
     location: ge('f-loc').value.trim(),
-    date: ge('f-date').value.trim(),
-    tags: ge('f-tags').value.trim(),
-    desc: getDescValue(),
-    kuula: ge('f-kuula').value.trim(),
-    youtube: ge('f-youtube').value.trim(),
-    ig: ge('f-ig').value.trim(),
-    img: currentImgUrl || ''
+    date:     ge('f-date').value.trim(),
+    tags:     ge('f-tags').value.trim(),
+    desc:     getDescValue(),
+    kuula:    ge('f-kuula').value.trim(),
+    img:      imgField
   };
   var arr = type === 'camping' ? campingData : motoData;
   if (editIdx !== null) arr[editIdx] = place; else arr.push(place);
@@ -736,6 +747,18 @@ function loadDescBlocks(desc) {
   } else {
     addBlock('', desc);
   }
+}
+
+// ── img 欄位解包（相容舊資料與新 JSON 格式）────────────
+function parseImgField(raw) {
+  if (!raw) return { img: '', youtube: '', ig: '' };
+  if (raw.charAt(0) === '{') {
+    try {
+      var o = JSON.parse(raw);
+      return { img: o.img || '', youtube: o.youtube || '', ig: o.ig || '' };
+    } catch (e) {}
+  }
+  return { img: raw, youtube: '', ig: '' };
 }
 
 // ── 照片上傳 ─────────────────────────────────────────────
