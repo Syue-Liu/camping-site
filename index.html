@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Syue & Lynn 旅遊足跡</title>
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;700&family=Noto+Serif+TC:wght@400;500&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <style>
     :root{--bg:#0f1410;--surface:#1a1f1b;--surface2:#222820;--border:#2e352c;--text:#e8e4dc;--muted:#8a9088;--accent:#7eb87a;--accent2:#c4a35a;--radius:12px;}
     *{margin:0;padding:0;box-sizing:border-box;}
@@ -70,7 +71,32 @@
     .desc-text{font-size:14px;color:var(--muted);line-height:1.8;}
     .kuula-wrap{border-radius:8px;overflow:hidden;margin-top:1.25rem;margin-bottom:0.5rem;}
     .kuula-wrap iframe{display:block;border:none;}
-    .kuula-caption{font-size:11px;color:var(--muted);text-align:center;letter-spacing:0.08em;}
+    .kuula-caption{font-size:11px;color:var(--muted);text-align:center;letter-spacing:0.08em;margin-top:6px;}
+    /* Inline 360° viewer */
+    .pano-wrap{position:relative;width:100%;border-radius:8px;overflow:hidden;background:#0a0f0a;margin-top:1.25rem;user-select:none;}
+    .pano-wrap canvas{display:block;width:100% !important;height:100% !important;cursor:grab;touch-action:none;}
+    .pano-wrap canvas.grabbing{cursor:grabbing;}
+    .pano-loading{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;background:#0a0f0a;}
+    .pano-ring{width:36px;height:36px;border:3px solid rgba(126,184,122,.15);border-top-color:#7eb87a;border-radius:50%;animation:spin .9s linear infinite;}
+    @keyframes spin{to{transform:rotate(360deg);}}
+    .pano-loading-text{font-size:12px;color:#8a9088;}
+    .pano-placeholder{width:100%;height:340px;background:var(--surface2);border-radius:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;cursor:pointer;transition:background .15s;margin-top:1.25rem;}
+    .pano-placeholder:hover{background:rgba(126,184,122,.08);}
+    .pano-placeholder-icon{font-size:38px;}
+    .pano-placeholder-text{font-size:13px;color:var(--muted);}
+    .pano-placeholder-btn{padding:8px 22px;background:rgba(126,184,122,.12);border:1px solid rgba(126,184,122,.3);border-radius:20px;color:var(--accent);font-size:13px;cursor:pointer;font-family:inherit;}
+    .pano-label{position:absolute;bottom:10px;left:50%;transform:translateX(-50%);color:rgba(255,255,255,.8);font-size:11px;background:rgba(0,0,0,.5);padding:4px 14px;border-radius:14px;pointer-events:none;white-space:nowrap;}
+    .pano-dots{position:absolute;bottom:10px;right:10px;display:flex;flex-direction:column;gap:6px;}
+    .pano-dot{width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.4);cursor:pointer;transition:all .2s;}
+    .pano-dot.active{background:#7eb87a;border-color:#7eb87a;}
+    .pano-hs-layer{position:absolute;inset:0;pointer-events:none;}
+    .pano-hs{position:absolute;transform:translate(-50%,-50%);cursor:pointer;pointer-events:auto;transition:transform .15s;}
+    .pano-hs:hover{transform:translate(-50%,-50%) scale(1.2);}
+    .pano-hs-inner{border-radius:50%;display:flex;align-items:center;justify-content:center;position:relative;box-shadow:0 2px 10px rgba(0,0,0,.5);}
+    .pano-hs-label{position:absolute;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%);white-space:nowrap;background:rgba(0,0,0,.75);color:#fff;font-size:11px;padding:3px 9px;border-radius:10px;opacity:0;transition:opacity .2s;pointer-events:none;}
+    .pano-hs:hover .pano-hs-label{opacity:1;}
+    .pano-hs-pulse{position:absolute;inset:0;border-radius:50%;animation:pr 1.9s ease-out infinite;}
+    @keyframes pr{0%{transform:scale(1);opacity:.65;}100%{transform:scale(2.3);opacity:0;}}
     .yt-wrap{border-radius:8px;overflow:hidden;margin-top:1.25rem;margin-bottom:0.25rem;position:relative;padding-bottom:56.25%;height:0;}
     .yt-wrap iframe{position:absolute;top:0;left:0;width:100%;height:100%;border:none;display:block;}
     .yt-caption{font-size:11px;color:var(--muted);text-align:center;letter-spacing:0.08em;margin-bottom:0.5rem;}
@@ -144,23 +170,313 @@
     const state={camping:{tag:'全部',loc:'全部',kw:''},moto:{tag:'全部',loc:'全部',kw:''}};
     let cid=0;
 
-    function kuulaEmbed(code){
-      if(!code||!code.trim())return null;
-      code=code.trim();
-      // 1. 直接貼 <iframe ...> 標籤（360viewer 或任何 iframe）
-      if(code.toLowerCase().startsWith('<iframe')){
-        // 確保有寬度100%和圓角
-        var fixed=code
-          .replace(/width="[^"]*"/i,'width="100%"')
-          .replace(/style="[^"]*"/i,'style="border-radius:8px;display:block;border:none;"');
-        if(!fixed.includes('style='))fixed=fixed.replace('<iframe','<iframe style="border-radius:8px;display:block;border:none;"');
-        return{type:'raw',html:'<div class="kuula-wrap" style="overflow:hidden;border-radius:8px;">'+fixed+'</div>'};
+    // ── 360° inline viewer ─────────────────────────────────
+    var _panoViewers = {}; // id → InlinePano instance
+
+    function InlinePano(containerId, cfg, gold) {
+      var me = this;
+      me.containerId = containerId;
+      me.cfg = cfg; // {scenes:[{name,imageUrl,hotspots:[]}], startScene}
+      me.gold = gold;
+      me.currentIdx = 0;
+      me.renderer = null; me.camera = null; me.scene = null;
+      me.sphere = null; me.mat = null;
+      me.isDrag = false; me.prevX = 0; me.prevY = 0;
+      me.velX = 0; me.velY = 0; me.fov = 75;
+      me.loader = null; me.raf = null;
+      me.init();
+    }
+
+    InlinePano.prototype.init = function() {
+      var me = this;
+      var wrap = document.getElementById(me.containerId);
+      if (!wrap) return;
+
+      // Canvas
+      var canvas = document.createElement('canvas');
+      canvas.style.cssText = 'width:100%;height:340px;display:block;';
+      wrap.innerHTML = '<div class="pano-loading"><div class="pano-ring"></div><div class="pano-loading-text">載入中...</div></div>';
+      wrap.appendChild(canvas);
+      var loadEl = wrap.querySelector('.pano-loading');
+
+      // HS layer
+      var hsLayer = document.createElement('div');
+      hsLayer.className = 'pano-hs-layer';
+      wrap.appendChild(hsLayer);
+      me.hsLayer = hsLayer;
+
+      // Label
+      var label = document.createElement('div');
+      label.className = 'pano-label';
+      wrap.appendChild(label);
+      me.labelEl = label;
+
+      // Dots
+      var dots = document.createElement('div');
+      dots.className = 'pano-dots';
+      wrap.appendChild(dots);
+      me.dotsEl = dots;
+
+      // Three.js init
+      try {
+        me.renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true });
+        me.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        me.camera = new THREE.PerspectiveCamera(75, 1, 0.1, 200);
+        me.camera.rotation.order = 'YXZ';
+        me.scene = new THREE.Scene();
+        var geo = new THREE.SphereGeometry(100, 60, 40);
+        me.mat = new THREE.MeshBasicMaterial({ side: THREE.BackSide, color: 0x111811 });
+        me.sphere = new THREE.Mesh(geo, me.mat);
+        me.scene.add(me.sphere);
+        me.loader = new THREE.TextureLoader();
+        me.loader.crossOrigin = 'anonymous';
+      } catch(e) {
+        wrap.innerHTML = '<div style="padding:2rem;text-align:center;color:#8a9088;font-size:13px;">⚠️ WebGL 不支援</div>';
+        return;
       }
-      // 2. Kuula script 嵌入碼（data-kuula="URL"）
-      var m=code.match(/data-kuula="([^"]+)"/);
-      if(m)return{type:'url',url:m[1]};
-      // 3. 直接是 URL
-      if(code.startsWith('http'))return{type:'url',url:code};
+
+      // Resize
+      me.resize = function() {
+        var w = wrap.clientWidth, h = 340;
+        me.renderer.setSize(w, h, false);
+        me.camera.aspect = w / h;
+        me.camera.updateProjectionMatrix();
+      };
+      me.resize();
+
+      // Controls
+      canvas.addEventListener('mousedown', function(e) {
+        me.isDrag = true; me.prevX = e.clientX; me.prevY = e.clientY;
+        canvas.classList.add('grabbing');
+      });
+      window.addEventListener('mouseup', function() { me.isDrag = false; canvas.classList.remove('grabbing'); });
+      window.addEventListener('mousemove', function(e) {
+        if (!me.isDrag) return;
+        var dx = e.clientX - me.prevX, dy = e.clientY - me.prevY;
+        me.velX = dx; me.velY = dy;
+        me.camera.rotation.y -= dx * 0.005;
+        me.camera.rotation.x = Math.max(-Math.PI/2, Math.min(Math.PI/2, me.camera.rotation.x + dy * 0.005));
+        me.prevX = e.clientX; me.prevY = e.clientY;
+      });
+      canvas.addEventListener('wheel', function(e) {
+        me.fov = Math.max(40, Math.min(100, me.fov + e.deltaY * 0.04));
+        me.camera.fov = me.fov; me.camera.updateProjectionMatrix();
+      });
+      var ltouch = null, lpinch = null;
+      canvas.addEventListener('touchstart', function(e) {
+        e.preventDefault();
+        if (e.touches.length === 1) { ltouch = { x: e.touches[0].clientX, y: e.touches[0].clientY }; lpinch = null; }
+        else { lpinch = Math.hypot(e.touches[0].clientX-e.touches[1].clientX, e.touches[0].clientY-e.touches[1].clientY); }
+      }, { passive: false });
+      canvas.addEventListener('touchmove', function(e) {
+        e.preventDefault();
+        if (e.touches.length === 1 && ltouch) {
+          var dx = e.touches[0].clientX - ltouch.x, dy = e.touches[0].clientY - ltouch.y;
+          me.camera.rotation.y -= dx * 0.006;
+          me.camera.rotation.x = Math.max(-Math.PI/2, Math.min(Math.PI/2, me.camera.rotation.x + dy * 0.006));
+          ltouch = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+        } else if (e.touches.length === 2 && lpinch) {
+          var d = Math.hypot(e.touches[0].clientX-e.touches[1].clientX, e.touches[0].clientY-e.touches[1].clientY);
+          me.fov = Math.max(40, Math.min(100, me.fov * (lpinch / d)));
+          me.camera.fov = me.fov; me.camera.updateProjectionMatrix(); lpinch = d;
+        }
+      }, { passive: false });
+
+      // Render loop
+      me.raycaster = new THREE.Raycaster();
+      function loop() {
+        me.raf = requestAnimationFrame(loop);
+        if (!me.isDrag) {
+          me.velX *= 0.9; me.velY *= 0.9;
+          if (Math.abs(me.velX) > 0.01) me.camera.rotation.y -= me.velX * 0.0006;
+          if (Math.abs(me.velY) > 0.01) me.camera.rotation.x = Math.max(-Math.PI/2, Math.min(Math.PI/2, me.camera.rotation.x + me.velY * 0.0006));
+        }
+        me.renderer.render(me.scene, me.camera);
+        me.updateHs();
+      }
+      loop();
+
+      // Load first scene
+      me.buildDots();
+      me.goScene(0, loadEl);
+    };
+
+    InlinePano.prototype.goScene = function(idx, loadEl) {
+      var me = this;
+      var scenes = me.cfg.scenes || [];
+      if (!scenes.length) return;
+      idx = Math.max(0, Math.min(scenes.length - 1, idx));
+      me.currentIdx = idx;
+      var sc = scenes[idx];
+      me.labelEl.textContent = sc.name || '';
+      me.camera.rotation.set(0, 0, 0); me.fov = 75; me.camera.fov = 75; me.camera.updateProjectionMatrix();
+      me.buildDots();
+      me.buildHs(sc.hotspots || []);
+
+      if (!sc.imageUrl) return;
+      if (loadEl) { loadEl.style.display = 'flex'; }
+      else {
+        var w = document.getElementById(me.containerId);
+        var ld = w && w.querySelector('.pano-loading');
+        if (ld) ld.style.display = 'flex';
+      }
+      me.loader.load(sc.imageUrl, function(tex) {
+        tex.encoding = THREE.sRGBEncoding;
+        tex.wrapS = THREE.RepeatWrapping; tex.repeat.x = -1; tex.offset.x = 1;
+        if (me.mat.map) me.mat.map.dispose();
+        me.mat.map = tex; me.mat.color.set(0xffffff); me.mat.needsUpdate = true;
+        var wrap = document.getElementById(me.containerId);
+        var ld2 = wrap && wrap.querySelector('.pano-loading');
+        if (ld2) ld2.style.display = 'none';
+      }, undefined, function() {
+        var wrap = document.getElementById(me.containerId);
+        var ld2 = wrap && wrap.querySelector('.pano-loading');
+        if (ld2) ld2.innerHTML = '<div style="font-size:12px;color:#e05c5c">⚠️ 圖片載入失敗</div>';
+      });
+    };
+
+    InlinePano.prototype.buildDots = function() {
+      var me = this;
+      var scenes = me.cfg.scenes || [];
+      var acc = me.gold ? '#c4a35a' : '#7eb87a';
+      me.dotsEl.innerHTML = '';
+      if (scenes.length <= 1) return;
+      scenes.forEach(function(sc, i) {
+        var d = document.createElement('div');
+        d.className = 'pano-dot' + (i === me.currentIdx ? ' active' : '');
+        d.title = sc.name || '';
+        d.addEventListener('click', function() { me.goScene(i); });
+        me.dotsEl.appendChild(d);
+      });
+    };
+
+    InlinePano.prototype.buildHs = function(hotspots) {
+      var me = this;
+      me.hotspots = hotspots;
+      me.hsLayer.innerHTML = '';
+      hotspots.forEach(function(hs) {
+        var div = document.createElement('div');
+        div.className = 'pano-hs'; div.dataset.hsid = hs.id;
+        var size = hs.size || 40, color = hs.color || '#7eb87a';
+        var inner = document.createElement('div');
+        inner.className = 'pano-hs-inner';
+        inner.style.cssText = 'width:'+size+'px;height:'+size+'px;background:'+color+'22;border:2.5px solid '+color+';font-size:'+Math.round(size*.42)+'px;';
+        if (hs.pulse !== false) {
+          var pulse = document.createElement('div');
+          pulse.className = 'pano-hs-pulse';
+          pulse.style.background = color + '55';
+          inner.appendChild(pulse);
+        }
+        inner.appendChild(document.createTextNode(hs.icon || '🔵'));
+        var lbl = document.createElement('div');
+        lbl.className = 'pano-hs-label';
+        lbl.textContent = hs.label || '前往';
+        div.appendChild(inner); div.appendChild(lbl);
+        div.addEventListener('click', function(e) {
+          e.stopPropagation();
+          if (hs.targetScene) {
+            var tidx = (me.cfg.scenes || []).findIndex(function(s) { return s.id === hs.targetScene; });
+            if (tidx >= 0) me.goScene(tidx);
+          }
+        });
+        me.hsLayer.appendChild(div);
+      });
+    };
+
+    InlinePano.prototype.updateHs = function() {
+      var me = this;
+      var hots = me.hotspots || [];
+      var w = me.renderer.domElement.clientWidth;
+      var h = me.renderer.domElement.clientHeight;
+      hots.forEach(function(hs) {
+        var el = me.hsLayer.querySelector('[data-hsid="'+hs.id+'"]');
+        if (!el) return;
+        var pos = new THREE.Vector3(
+          Math.sin(hs.phi)*Math.sin(hs.theta),
+          Math.cos(hs.phi),
+          Math.sin(hs.phi)*Math.cos(hs.theta)
+        );
+        var fwd = new THREE.Vector3(0, 0, -1).applyEuler(me.camera.rotation);
+        var dot = fwd.dot(pos.clone().normalize());
+        if (dot < 0.1) { el.style.display = 'none'; return; }
+        var proj = pos.clone().project(me.camera);
+        var sx = (proj.x + 1) / 2 * w, sy = -(proj.y - 1) / 2 * h;
+        if (sx < -50 || sx > w+50 || sy < -50 || sy > h+50) { el.style.display = 'none'; return; }
+        el.style.display = 'block';
+        el.style.left = sx + 'px'; el.style.top = sy + 'px';
+        el.style.opacity = Math.min(1, (dot - 0.1) / 0.25);
+      });
+    };
+
+    // Called when user clicks load button
+    function initPano360(id) {
+      var wrap = document.getElementById(id);
+      if (!wrap) return;
+      var configUrl = wrap.dataset.configUrl;
+      var imageUrl = wrap.dataset.imageUrl;
+      var gold = wrap.dataset.gold === 'true';
+      wrap.innerHTML = '<div class="pano-loading"><div class="pano-ring"></div><div class="pano-loading-text">初始化中...</div></div>';
+      wrap.style.height = '340px';
+
+      function startWithConfig(cfg) {
+        _panoViewers[id] = new InlinePano(id, cfg, gold);
+      }
+
+      if (configUrl) {
+        fetch(configUrl)
+          .then(function(r) { return r.json(); })
+          .then(startWithConfig)
+          .catch(function() {
+            wrap.innerHTML = '<div style="padding:2rem;text-align:center;color:#e05c5c;font-size:13px;">⚠️ 無法載入設定，請確認 GitHub 網址正確且設為 Public</div>';
+          });
+      } else if (imageUrl) {
+        startWithConfig({ scenes: [{ id:'s1', name:'360° 環景', imageUrl: imageUrl, hotspots:[] }] });
+      }
+    }
+
+    // ── 偵測 360° 嵌入格式 ────────────────────────────────
+    function kuulaEmbed(code) {
+      if (!code || !code.trim()) return null;
+      code = code.trim();
+
+      // iframe tag - 嘗試提取 config URL
+      if (code.toLowerCase().startsWith('<iframe')) {
+        var srcM = code.match(/src="([^"]+)"/i);
+        if (srcM) {
+          var src = srcM[1];
+          var cfgM = src.match(/[?&]config=([^&"]+)/);
+          if (cfgM) return { type:'pano360', configUrl: decodeURIComponent(cfgM[1]) };
+          var dataM = src.match(/[?&]data=([^"]{1,3000})/);
+          if (dataM) {
+            try {
+              var cfg = JSON.parse(decodeURIComponent(dataM[1]));
+              return { type:'pano360', cfg: cfg };
+            } catch(e) {}
+          }
+        }
+        // Generic iframe
+        var fixed = code.replace(/width="[^"]*"/i,'width="100%"')
+          .replace(/<iframe/i,'<iframe style="display:block;border:none;" ');
+        return { type:'iframe', html:'<div class="kuula-wrap" style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;border-radius:8px;"><iframe style="position:absolute;top:0;left:0;width:100%;height:100%;border:none;"'+fixed.replace(/<iframe[^>]*/i,'').replace('</iframe>','')+'></iframe></div>' };
+      }
+
+      // Kuula script
+      var m = code.match(/data-kuula="([^"]+)"/);
+      if (m) return { type:'url', url: m[1] };
+
+      // JSON config URL (GitHub raw or .json)
+      if (code.startsWith('http') && (code.endsWith('.json') || code.includes('raw.githubusercontent.com'))) {
+        return { type:'pano360', configUrl: code };
+      }
+
+      // Direct panorama image URL
+      if (code.startsWith('http') && /\.(jpg|jpeg|png|webp)/i.test(code)) {
+        return { type:'pano360', imageUrl: code };
+      }
+
+      // Other URL
+      if (code.startsWith('http')) return { type:'url', url: code };
+
       return null;
     }
 
@@ -310,8 +626,20 @@
         var expandHtml='';
         if(descHtml)expandHtml+=descHtml;
         if(ku){
-          if(ku.type==='raw'){
-            expandHtml+=ku.html+'<p class="kuula-caption">360° 環景 — 拖動探索現場環境</p>';
+          if(ku.type==='pano360'){
+            var panoId='pano-'+id;
+            var dataAttrs='';
+            if(ku.configUrl)dataAttrs+=' data-config-url="'+ku.configUrl+'"';
+            if(ku.imageUrl)dataAttrs+=' data-image-url="'+ku.imageUrl+'"';
+            if(ku.cfg)dataAttrs+=' data-cfg="'+encodeURIComponent(JSON.stringify(ku.cfg))+'"';
+            dataAttrs+=' data-gold="'+g+'"';
+            expandHtml+='<div class="pano-placeholder" id="'+panoId+'"'+dataAttrs+' onclick="initPano360AndReplace(\''+panoId+'\')">'+
+              '<div class="pano-placeholder-icon">🌐</div>'+
+              '<div class="pano-placeholder-text">360° 互動全景</div>'+
+              '<div class="pano-placeholder-btn">▶ 點擊載入</div>'+
+            '</div><p class="kuula-caption">360° 環景 — 拖動探索現場環境</p>';
+          } else if(ku.type==='iframe'){
+            expandHtml+=ku.html+'<p class="kuula-caption">360° 環景</p>';
           } else {
             expandHtml+='<div class="kuula-wrap"><iframe src="'+ku.url+'" width="100%" height="480" allowfullscreen allow="vr" style="display:block;border:none;"></iframe></div><p class="kuula-caption">360° 環景 — 拖動探索現場環境</p>';
           }
@@ -346,6 +674,39 @@
       if(s.line)links.push('<a class="social-btn line" href="'+s.line+'" target="_blank"><span style="font-size:16px">💬</span>Line 加好友</a>');
       if(s.lineQr)links.push('<div class="qr-block"><img src="'+s.lineQr+'" alt="Line QR"><div class="qr-label">掃描加入 Line</div></div>');
       if(links.length){document.getElementById('social-section').style.display='block';document.getElementById('social-links').innerHTML=links.join('');}
+    }
+
+    function initPano360AndReplace(id) {
+      var wrap = document.getElementById(id);
+      if (!wrap) return;
+      var configUrl = wrap.dataset.configUrl;
+      var imageUrl  = wrap.dataset.imageUrl;
+      var cfgRaw    = wrap.dataset.cfg;
+      var gold      = wrap.dataset.gold === 'true';
+      // Convert placeholder to viewer container
+      wrap.className = 'pano-wrap';
+      wrap.style.cssText = 'height:340px;position:relative;border-radius:8px;overflow:hidden;background:#0a0f0a;margin-top:1.25rem;';
+      wrap.onclick = null;
+      wrap.removeAttribute('onclick');
+
+      function startWithConfig(cfg) {
+        _panoViewers[id] = new InlinePano(id, cfg, gold);
+      }
+
+      if (configUrl) {
+        wrap.innerHTML = '<div class="pano-loading"><div class="pano-ring"></div><div class="pano-loading-text">載入設定中...</div></div>';
+        fetch(configUrl)
+          .then(function(r) { return r.json(); })
+          .then(startWithConfig)
+          .catch(function() {
+            wrap.innerHTML = '<div style="padding:2rem;text-align:center;color:#e05c5c;font-size:13px;">⚠️ 無法載入設定<br><small>請確認 GitHub URL 正確且 Repo 為 Public</small></div>';
+          });
+      } else if (cfgRaw) {
+        try { startWithConfig(JSON.parse(decodeURIComponent(cfgRaw))); }
+        catch(e) { wrap.innerHTML = '<div style="padding:2rem;text-align:center;color:#e05c5c;font-size:13px;">⚠️ 設定解析失敗</div>'; }
+      } else if (imageUrl) {
+        startWithConfig({ scenes: [{ id:'s1', name:'360° 環景', imageUrl: imageUrl, hotspots:[] }] });
+      }
     }
 
     async function init(){
