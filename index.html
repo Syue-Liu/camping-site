@@ -221,12 +221,11 @@
         }
       });
       document.addEventListener('fullscreenchange', function() {
-        if (!document.fullscreenElement) {
-          fsBtn.textContent = '⛶';
-          me.resize();
-        } else {
-          setTimeout(function() { me.resize(); }, 100);
-        }
+        var inFs = document.fullscreenElement === wrap;
+        fsBtn.textContent = inFs ? '✕' : '⛶';
+        // 等 CSS 動畫完成後再 resize
+        setTimeout(function() { me.resize(); }, 50);
+        if (inFs) setTimeout(function() { me.resize(); }, 300);
       });
       btnBar.appendChild(fsBtn);
       wrap.appendChild(btnBar);
@@ -249,27 +248,47 @@
       wrap.appendChild(dots);
       me.dotsEl = dots;
 
-      // Three.js init
+      // Three.js init — 行動裝置使用低功耗設定避免閃退
+      var isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
       try {
-        me.renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true });
-        me.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        me.renderer = new THREE.WebGLRenderer({
+          canvas: canvas,
+          antialias: !isMobile,
+          powerPreference: isMobile ? 'low-power' : 'default',
+          preserveDrawingBuffer: false
+        });
+        me.renderer.setPixelRatio(Math.min(window.devicePixelRatio, isMobile ? 1.5 : 2));
         me.camera = new THREE.PerspectiveCamera(75, 1, 0.1, 200);
         me.camera.rotation.order = 'YXZ';
         me.scene = new THREE.Scene();
-        var geo = new THREE.SphereGeometry(100, 60, 40);
+        var segments = isMobile ? 40 : 60;
+        var geo = new THREE.SphereGeometry(100, segments, segments * 2 / 3);
         me.mat = new THREE.MeshBasicMaterial({ side: THREE.BackSide, color: 0x111811 });
         me.sphere = new THREE.Mesh(geo, me.mat);
         me.scene.add(me.sphere);
         me.loader = new THREE.TextureLoader();
         me.loader.crossOrigin = 'anonymous';
+        // Handle context loss on mobile
+        canvas.addEventListener('webglcontextlost', function(e) {
+          e.preventDefault();
+          cancelAnimationFrame(me.raf);
+          me.raf = null;
+        });
+        canvas.addEventListener('webglcontextrestored', function() {
+          me.goScene(me.currentIdx);
+          loop();
+        });
       } catch(e) {
         wrap.innerHTML = '<div style="padding:2rem;text-align:center;color:#8a9088;font-size:13px;">⚠️ WebGL 不支援</div>';
         return;
       }
 
-      // Resize
+      // Resize — 正確處理全螢幕
       me.resize = function() {
-        var w = wrap.clientWidth, h = 340;
+        var inFs = document.fullscreenElement === wrap;
+        var w = inFs ? window.innerWidth : wrap.clientWidth;
+        var h = inFs ? window.innerHeight : 340;
+        canvas.style.height = h + 'px';
         me.renderer.setSize(w, h, false);
         me.camera.aspect = w / h;
         me.camera.updateProjectionMatrix();
@@ -418,8 +437,10 @@
     InlinePano.prototype.updateHs = function() {
       var me = this;
       var hots = me.hotspots || [];
-      var w = me.renderer.domElement.clientWidth;
-      var h = me.renderer.domElement.clientHeight;
+      // 全螢幕時用視窗大小，否則用 canvas 實際大小
+      var inFs = document.fullscreenElement === document.getElementById(me.containerId);
+      var w = inFs ? window.innerWidth : me.renderer.domElement.clientWidth;
+      var h = inFs ? window.innerHeight : me.renderer.domElement.clientHeight;
       hots.forEach(function(hs) {
         var el = me.hsLayer.querySelector('[data-hsid="'+hs.id+'"]');
         if (!el) return;
