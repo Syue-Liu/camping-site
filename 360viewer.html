@@ -305,6 +305,11 @@ canvas.edit-mode{cursor:default;}
       <input type="hidden" id="new-scene-img-url">
       <div class="or-div">或貼上圖片直連網址</div>
       <input class="fi" id="new-scene-url" placeholder="https://..." style="margin-bottom:6px;">
+      <!-- 新增場景時選資料夾 -->
+      <div id="new-scene-folder-row" style="display:none;margin-bottom:6px;">
+        <label class="fl">放入資料夾（選填）</label>
+        <div id="new-scene-folder-btns" style="display:flex;gap:6px;flex-wrap:wrap;"></div>
+      </div>
       <button class="btn-primary" id="add-scene-btn">+ 新增場景</button>
       <div class="dv"></div>
       <div class="st">場景列表</div>
@@ -373,39 +378,52 @@ canvas.edit-mode{cursor:default;}
 
     <!-- 嵌入 Tab -->
     <div class="tab-pane" id="tab-embed">
-      <!-- GitHub 設定 -->
-      <div class="st">🐱 GitHub 圖片 &amp; 設定儲存</div>
-      <div class="hint" style="margin-bottom:8px;">設定 GitHub 後，圖片和 360° 設定都存在 GitHub，嵌入代碼穩定可靠。</div>
-      <div class="fg"><label class="fl">GitHub 使用者名稱</label><input class="fi" id="gh-user" placeholder="例：syuelynn"></div>
-      <div class="fg"><label class="fl">Repository 名稱</label><input class="fi" id="gh-repo" placeholder="例：360-images（設為 Public）"></div>
-      <div class="fg"><label class="fl">Personal Access Token</label><input class="fi" type="password" id="gh-token" placeholder="ghp_xxxxxxxxxxxxxxxx"></div>
-      <div class="hint" style="margin-bottom:6px;">需開啟 <b>repo</b> 權限。<a href="https://github.com/settings/tokens/new" target="_blank" style="color:#7eb87a;">點此建立 Token ↗</a></div>
-      <button class="btn-green" id="gh-save-btn" style="width:100%;padding:9px;border-radius:8px;margin-top:4px;">💾 儲存 GitHub 設定</button>
-      <div id="gh-status"></div>
-      <button class="btn-export" id="gh-upload-config-btn" style="margin-top:8px;">⬆️ 上傳設定 JSON 到 GitHub</button>
-      <div id="gh-upload-status" style="font-size:12px;margin-top:6px;"></div>
-      <div class="dv"></div>
 
-      <!-- ★ 給 Syue & Lynn 後台用 -->
-      <div class="st">⭐ 貼到後台「Kuula 360 嵌入碼」</div>
-      <div class="info-note" style="margin-bottom:8px;">
-        前台 index.html 已內建 360° 檢視器，<b>不需要 iframe</b>。<br>
-        直接把下方網址貼到後台的「Kuula 360 嵌入碼」欄位即可。
+      <!-- STEP 1 -->
+      <div style="background:rgba(126,184,122,.06);border:1px solid rgba(126,184,122,.18);border-radius:10px;padding:13px;margin-bottom:10px;">
+        <div style="font-size:11px;color:#7eb87a;font-weight:700;letter-spacing:.1em;margin-bottom:10px;">STEP 1 — GitHub 設定</div>
+        <div class="fg"><label class="fl">使用者名稱</label><input class="fi" id="gh-user" placeholder="例：Syue-Liu"></div>
+        <div class="fg"><label class="fl">Repository</label><input class="fi" id="gh-repo" placeholder="例：360-images"></div>
+        <div class="fg" style="margin-bottom:6px;"><label class="fl">Personal Access Token</label><input class="fi" type="password" id="gh-token" placeholder="ghp_xxxxxxxx"></div>
+        <div style="font-size:11px;color:#4a5448;margin-bottom:8px;">需開啟 repo 權限。<a href="https://github.com/settings/tokens/new" target="_blank" style="color:#7eb87a;">點此建立 ↗</a></div>
+        <button class="btn-green" id="gh-save-btn" style="width:100%;padding:8px;border-radius:8px;">💾 儲存設定</button>
+        <div id="gh-status" style="margin-top:6px;"></div>
       </div>
-      <div class="code-block" id="kuula-url-code" style="font-size:12px;word-break:break-all;">（請先設定 GitHub 並上傳 JSON）</div>
-      <button class="btn-primary" id="copy-kuula-url-btn" style="margin-top:8px;">📋 複製網址（貼到後台）</button>
 
-      <div class="dv"></div>
-      <div class="st">嵌入到其他任何網站（需 iframe）</div>
-      <div class="hint" style="margin-bottom:6px;">如果是其他網站，才用這個 iframe 代碼：</div>
-      <div id="embed-size-warn" class="gh-status gh-warn" style="display:none;margin-bottom:8px;"></div>
-      <div class="code-block" id="embed-code"></div>
-      <button class="btn-green" style="margin-top:8px;" id="copy-embed-btn">複製 iframe 代碼</button>
+      <!-- STEP 2 -->
+      <div style="background:rgba(196,163,90,.06);border:1px solid rgba(196,163,90,.2);border-radius:10px;padding:13px;margin-bottom:10px;">
+        <div style="font-size:11px;color:#c4a35a;font-weight:700;letter-spacing:.1em;margin-bottom:8px;">STEP 2 — 上傳設定到 GitHub</div>
+        <button class="btn-export" id="gh-upload-config-btn" style="width:100%;padding:9px;margin:0;">⬆️ 上傳設定 JSON 到 GitHub</button>
+        <div id="gh-upload-status" style="font-size:12px;margin-top:6px;"></div>
+      </div>
 
-      <div class="dv"></div>
-      <div class="st">儲存 / 讀取設定</div>
-      <button class="btn-export" id="btn-export">📤 匯出 JSON 設定</button>
-      <button class="btn-export" style="background:rgba(126,184,122,.07);border-color:rgba(126,184,122,.22);color:#7eb87a;margin-top:6px;" id="btn-import">📥 匯入 JSON 設定</button>
+      <!-- STEP 3 (主要動作) -->
+      <div style="background:rgba(126,184,122,.1);border:2px solid rgba(126,184,122,.4);border-radius:10px;padding:13px;margin-bottom:10px;">
+        <div style="font-size:11px;color:#7eb87a;font-weight:700;letter-spacing:.1em;margin-bottom:6px;">STEP 3 — 複製網址貼到後台</div>
+        <div style="font-size:12px;color:#8a9088;margin-bottom:8px;">貼到後台地點編輯的「Kuula 360 嵌入碼」欄位</div>
+        <div id="kuula-url-code" style="background:rgba(0,0,0,.3);border:1px solid rgba(255,255,255,.08);border-radius:7px;padding:9px 12px;font-family:monospace;font-size:11px;color:#7eb87a;word-break:break-all;margin-bottom:8px;min-height:32px;">（請先完成 Step 1 & 2）</div>
+        <button class="btn-primary" id="copy-kuula-url-btn" style="margin:0;">📋 複製網址</button>
+      </div>
+
+      <!-- 備用：其他網站 iframe -->
+      <details style="margin-bottom:10px;">
+        <summary style="font-size:12px;color:#8a9088;cursor:pointer;padding:6px;border-radius:6px;background:rgba(255,255,255,.03);">▶ 嵌入其他網站（iframe 代碼）</summary>
+        <div style="margin-top:8px;">
+          <div id="embed-size-warn" class="gh-status gh-warn" style="display:none;margin-bottom:8px;"></div>
+          <div class="code-block" id="embed-code" style="font-size:11px;"></div>
+          <button class="btn-green" style="margin-top:6px;width:100%;padding:8px;border-radius:8px;" id="copy-embed-btn">複製 iframe 代碼</button>
+        </div>
+      </details>
+
+      <!-- 備份 -->
+      <details>
+        <summary style="font-size:12px;color:#8a9088;cursor:pointer;padding:6px;border-radius:6px;background:rgba(255,255,255,.03);">▶ 匯出 / 匯入 JSON 備份</summary>
+        <div style="margin-top:8px;display:flex;flex-direction:column;gap:6px;">
+          <button class="btn-export" id="btn-export" style="width:100%;padding:8px;margin:0;">📤 匯出 JSON</button>
+          <button class="btn-export" id="btn-import" style="width:100%;padding:8px;margin:0;background:rgba(126,184,122,.07);border-color:rgba(126,184,122,.22);color:#7eb87a;">📥 匯入 JSON</button>
+        </div>
+      </details>
+
     </div>
 
   </div>
@@ -659,7 +677,7 @@ function buildHotspotEl(hs) {
   div.addEventListener('click', function(e) {
     e.stopPropagation();
     if (placingMode) return;
-    if (hs.targetScene) switchScene(hs.targetScene);
+    if (hs.targetScene) switchSceneWithZoom(hs.targetScene);
   });
   hsLayer.appendChild(div);
   return div;
@@ -701,6 +719,24 @@ function updateHotspotPositions() {
 }
 
 // ── Scene Switch ──────────────────────────────────────────
+// Zoom in → fade → load 效果（傳送點呼叫時）
+function switchSceneWithZoom(id) {
+  if (!id) return;
+  var startFov = fov;
+  var targetFov = 28;
+  var dur = 350;
+  var t0 = Date.now();
+  function step() {
+    var p = Math.min((Date.now() - t0) / dur, 1);
+    var ease = 1 - Math.pow(1 - p, 3);
+    fov = startFov + (targetFov - startFov) * ease;
+    camera.fov = fov; camera.updateProjectionMatrix();
+    if (p < 1) requestAnimationFrame(step);
+    else switchScene(id);
+  }
+  step();
+}
+
 function switchScene(id) {
   var sc = getScene(id); if (!sc) return;
   var fade = ge('fade');
@@ -867,7 +903,7 @@ buildHotspotEl = function(hs) {
     div.addEventListener('click', function(e) {
       e.stopPropagation();
       if (placingMode) return;
-      if (hs.targetScene) switchScene(hs.targetScene);
+      if (hs.targetScene) switchSceneWithZoom(hs.targetScene);
     });
   }
 
@@ -1105,12 +1141,38 @@ ge('gh-img-file') && ge('gh-img-file').addEventListener('change', function() {
 });
 
 // ── Scene CRUD ────────────────────────────────────────────
+var _newSceneFolder = '';
+
+function refreshNewSceneFolderPicker() {
+  var row = ge('new-scene-folder-row');
+  var btns = ge('new-scene-folder-btns');
+  if (!row || !btns) return;
+  var folders = config.folders || [];
+  if (!folders.length) { row.style.display = 'none'; return; }
+  row.style.display = 'block';
+  btns.innerHTML = '';
+  // 「不分類」按鈕
+  var noneBtn = document.createElement('button');
+  noneBtn.style.cssText = 'padding:5px 12px;border-radius:20px;font-size:12px;cursor:pointer;font-family:inherit;border:1px solid rgba(255,255,255,.15);background:' + (!_newSceneFolder ? 'rgba(126,184,122,.2)' : 'transparent') + ';color:' + (!_newSceneFolder ? '#7eb87a' : '#8a9088') + ';';
+  noneBtn.textContent = '不分類';
+  noneBtn.addEventListener('click', function(e) { e.stopPropagation(); _newSceneFolder = ''; refreshNewSceneFolderPicker(); });
+  btns.appendChild(noneBtn);
+  folders.forEach(function(f) {
+    var btn = document.createElement('button');
+    var isSelected = _newSceneFolder === f.id;
+    btn.style.cssText = 'padding:5px 12px;border-radius:20px;font-size:12px;cursor:pointer;font-family:inherit;border:1px solid ' + (isSelected ? 'rgba(196,163,90,.5)' : 'rgba(196,163,90,.25)') + ';background:' + (isSelected ? 'rgba(196,163,90,.2)' : 'rgba(196,163,90,.06)') + ';color:#c4a35a;';
+    btn.textContent = '📁 ' + f.name;
+    btn.addEventListener('click', function(e) { e.stopPropagation(); _newSceneFolder = f.id; refreshNewSceneFolderPicker(); });
+    btns.appendChild(btn);
+  });
+}
+
 ge('add-scene-btn').addEventListener('click', function() {
   var name = ge('new-scene-name').value.trim();
   var url = ge('new-scene-img-url').value.trim() || ge('new-scene-url').value.trim();
-  if (!name) { alert('請輸入場景名稱'); return; }
-  if (!url) { alert('請上傳圖片或貼上圖片網址'); return; }
-  var sc = { id: uid(), name: name, imageUrl: url, hotspots: [] };
+  if (!name) { toast('請輸入場景名稱', 1); return; }
+  if (!url) { toast('請上傳圖片或貼上圖片網址', 1); return; }
+  var sc = { id: uid(), name: name, imageUrl: url, hotspots: [], folder: _newSceneFolder || '' };
   config.scenes.push(sc);
   if (!config.startScene) config.startScene = sc.id;
   saveConfig();
@@ -1118,7 +1180,9 @@ ge('add-scene-btn').addEventListener('click', function() {
   updateSceneDots();
   ge('new-scene-name').value = '';
   ge('new-scene-url').value = '';
+  _newSceneFolder = '';
   resetSceneUpload();
+  refreshNewSceneFolderPicker();
   switchScene(sc.id);
 });
 
@@ -1159,6 +1223,7 @@ function doCreateFolder() {
     if (tip) tip.style.display = 'none';
   }, 4000);
   renderAdminSceneList();
+  refreshNewSceneFolderPicker();
 }
 
 ge('confirm-folder-btn') && ge('confirm-folder-btn').addEventListener('click', doCreateFolder);
@@ -1187,6 +1252,8 @@ function makeSceneCard(sc, idx, allIdx) {
   '<div class="sc-url">'+(sc.imageUrl ? sc.imageUrl.replace(/^https?:\/\//,'').substring(0,45)+'...' : '（未設定圖片）')+'</div>'+
   '<div class="sc-actions">'+
     '<button class="btn-green sc-load" style="flex:1">▶ 載入</button>'+
+    '<button class="btn-green sc-up" title="往前">↑</button>'+
+    '<button class="btn-green sc-down" title="往後">↓</button>'+
     '<button class="btn-green sc-edit">✏</button>'+
     '<button class="btn-red sc-del">🗑</button>'+
   '</div>';
@@ -1276,6 +1343,18 @@ function makeSceneCard(sc, idx, allIdx) {
 
   d.querySelector('.sc-load').addEventListener('click', function(e) {
     e.stopPropagation(); switchScene(sc.id); renderAdminSceneList();
+  });
+  d.querySelector('.sc-up').addEventListener('click', function(e) {
+    e.stopPropagation();
+    if (allIdx <= 0) return;
+    var tmp = config.scenes[allIdx]; config.scenes[allIdx] = config.scenes[allIdx-1]; config.scenes[allIdx-1] = tmp;
+    saveConfig(); renderAdminSceneList(); updateSceneDots();
+  });
+  d.querySelector('.sc-down').addEventListener('click', function(e) {
+    e.stopPropagation();
+    if (allIdx >= config.scenes.length - 1) return;
+    var tmp = config.scenes[allIdx]; config.scenes[allIdx] = config.scenes[allIdx+1]; config.scenes[allIdx+1] = tmp;
+    saveConfig(); renderAdminSceneList(); updateSceneDots();
   });
   d.querySelector('.sc-edit').addEventListener('click', function(e) {
     e.stopPropagation();

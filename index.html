@@ -365,25 +365,41 @@
       me.buildHs(sc.hotspots || []);
 
       if (!sc.imageUrl) return;
-      if (loadEl) { loadEl.style.display = 'flex'; }
-      else {
-        var w = document.getElementById(me.containerId);
-        var ld = w && w.querySelector('.pano-loading');
-        if (ld) ld.style.display = 'flex';
-      }
-      me.loader.load(sc.imageUrl, function(tex) {
-        tex.encoding = THREE.sRGBEncoding;
-        tex.wrapS = THREE.RepeatWrapping; tex.repeat.x = -1; tex.offset.x = 1;
-        if (me.mat.map) me.mat.map.dispose();
-        me.mat.map = tex; me.mat.color.set(0xffffff); me.mat.needsUpdate = true;
-        var wrap = document.getElementById(me.containerId);
-        var ld2 = wrap && wrap.querySelector('.pano-loading');
-        if (ld2) ld2.style.display = 'none';
-      }, undefined, function() {
-        var wrap = document.getElementById(me.containerId);
-        var ld2 = wrap && wrap.querySelector('.pano-loading');
-        if (ld2) ld2.innerHTML = '<div style="font-size:12px;color:#e05c5c">⚠️ 圖片載入失敗</div>';
-      });
+      var wrap = document.getElementById(me.containerId);
+      var ld = wrap && wrap.querySelector('.pano-loading');
+      if (ld) { ld.style.display = 'flex'; ld.innerHTML = '<div class="pano-ring"></div><div class="pano-loading-text">載入中...</div>'; }
+
+      var isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+      var maxPx = isMobile ? 2048 : 4096;
+
+      var img = new Image();
+      img.crossOrigin = 'anonymous';
+      img.onload = function() {
+        try {
+          var w = img.naturalWidth, h = img.naturalHeight;
+          if (w > maxPx || h > maxPx) {
+            var r = Math.min(maxPx/w, maxPx/h);
+            w = Math.round(w*r); h = Math.round(h*r);
+          }
+          var c = document.createElement('canvas');
+          c.width = w; c.height = h;
+          c.getContext('2d').drawImage(img, 0, 0, w, h);
+          var tex = new THREE.CanvasTexture(c);
+          tex.encoding = THREE.sRGBEncoding;
+          tex.wrapS = THREE.RepeatWrapping; tex.repeat.x = -1; tex.offset.x = 1;
+          if (me.mat.map) { me.mat.map.dispose(); }
+          me.mat.map = tex; me.mat.color.set(0xffffff); me.mat.needsUpdate = true;
+          var wrap2 = document.getElementById(me.containerId);
+          var ld2 = wrap2 && wrap2.querySelector('.pano-loading');
+          if (ld2) ld2.style.display = 'none';
+        } catch(e) {
+          if (ld) ld.innerHTML = '<div style="font-size:12px;color:#e05c5c">⚠️ 圖片處理失敗</div>';
+        }
+      };
+      img.onerror = function() {
+        if (ld) ld.innerHTML = '<div style="font-size:12px;color:#e05c5c">⚠️ 圖片載入失敗</div>';
+      };
+      img.src = sc.imageUrl;
     };
 
     InlinePano.prototype.buildDots = function() {
