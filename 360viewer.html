@@ -1,0 +1,1646 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>360° 全景環景檢視器</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:#0f1410;overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,"Helvetica Neue",Arial,sans-serif;color:#e8e4dc;}
+
+/* ── Canvas / Wrap ── */
+#wrap{position:relative;width:100vw;height:100vh;}
+canvas{display:block;width:100%;height:100%;cursor:grab;}
+canvas.grabbing{cursor:grabbing;}
+canvas.placing{cursor:crosshair;}
+
+/* ── Fade ── */
+#fade{position:absolute;inset:0;background:#000;opacity:0;pointer-events:none;z-index:10;transition:opacity .45s ease;}
+#fade.in{opacity:1;}
+
+/* ── Loading ── */
+#loading{position:absolute;inset:0;background:#0f1410;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:60;gap:16px;transition:opacity .3s;}
+#loading.hidden{opacity:0;pointer-events:none;}
+.loading-ring{width:48px;height:48px;border:3px solid rgba(126,184,122,0.15);border-top-color:#7eb87a;border-radius:50%;animation:spin .9s linear infinite;}
+.loading-text{font-size:13px;color:#8a9088;letter-spacing:0.1em;}
+@keyframes spin{to{transform:rotate(360deg);}}
+
+/* ── Welcome (no scenes) ── */
+#welcome{position:absolute;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;gap:16px;z-index:55;}
+#welcome.show{display:flex;}
+.welcome-logo{font-size:48px;margin-bottom:4px;}
+.welcome-title{font-size:22px;font-weight:600;color:#e8e4dc;}
+.welcome-sub{font-size:14px;color:#8a9088;text-align:center;line-height:1.7;}
+.welcome-btn{margin-top:8px;padding:12px 28px;background:#7eb87a;color:#0f1410;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;}
+.welcome-btn:hover{opacity:.9;}
+
+/* ── Scene label ── */
+#scene-label{position:absolute;bottom:2.25rem;left:50%;transform:translateX(-50%);color:rgba(255,255,255,.85);font-size:13px;background:rgba(0,0,0,.55);padding:6px 20px;border-radius:20px;backdrop-filter:blur(8px);letter-spacing:.05em;pointer-events:none;z-index:5;white-space:nowrap;}
+
+/* ── Scene dots ── */
+#scene-dots{position:absolute;bottom:2.25rem;right:1.5rem;display:flex;flex-direction:column;gap:8px;z-index:5;}
+.sdot{width:9px;height:9px;border-radius:50%;background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.4);cursor:pointer;transition:all .2s;}
+.sdot.active{background:#7eb87a;border-color:#7eb87a;transform:scale(1.4);}
+
+/* ── Top controls ── */
+#top-ctrl{position:absolute;top:1rem;right:1rem;display:flex;gap:8px;z-index:85;}
+.cb{width:40px;height:40px;border-radius:10px;border:1px solid rgba(255,255,255,.15);background:rgba(0,0,0,.55);color:#fff;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(10px);transition:all .15s;}
+.cb:hover{background:rgba(255,255,255,.18);}
+.cb.active{background:rgba(126,184,122,.3);border-color:#7eb87a;}
+
+/* ── Place banner ── */
+#place-banner{position:absolute;top:1rem;left:50%;transform:translateX(-50%);background:rgba(126,184,122,.95);color:#0f1410;padding:8px 22px;border-radius:20px;font-size:13px;font-weight:700;z-index:25;display:none;letter-spacing:.03em;white-space:nowrap;}
+
+/* ── Hotspot layer ── */
+#hs-layer{position:absolute;inset:0;pointer-events:none;z-index:8;}
+.hs{position:absolute;transform:translate(-50%,-50%);cursor:pointer;pointer-events:auto;transition:transform .15s;}
+.hs:hover{transform:translate(-50%,-50%) scale(1.18);}
+.hs-inner{border-radius:50%;display:flex;align-items:center;justify-content:center;position:relative;box-shadow:0 3px 14px rgba(0,0,0,.5);}
+.hs-label{position:absolute;bottom:calc(100% + 7px);left:50%;transform:translateX(-50%);white-space:nowrap;background:rgba(0,0,0,.75);color:#fff;font-size:11px;padding:4px 10px;border-radius:12px;pointer-events:none;opacity:0;transition:opacity .2s;}
+.hs:hover .hs-label{opacity:1;}
+.hs-pulse{position:absolute;inset:0;border-radius:50%;animation:pr 1.9s ease-out infinite;}
+@keyframes pr{0%{transform:scale(1);opacity:.7;}100%{transform:scale(2.4);opacity:0;}}
+
+/* ── Admin Panel ── */
+#admin{position:absolute;top:0;right:0;width:350px;height:100vh;background:rgba(13,18,14,.97);border-left:1px solid rgba(255,255,255,.07);backdrop-filter:blur(18px);z-index:80;display:flex;flex-direction:column;transform:translateX(100%);transition:transform .3s ease;}
+#admin.open{transform:translateX(0);}
+.ph{padding:1rem 1.5rem;border-bottom:1px solid rgba(255,255,255,.06);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+.ph-logo{font-size:12px;color:#7eb87a;letter-spacing:.1em;text-transform:uppercase;font-weight:600;}
+.ph-close{background:none;border:none;color:#8a9088;cursor:pointer;font-size:22px;line-height:1;}
+.ph-close:hover{color:#e8e4dc;}
+.pt{display:flex;border-bottom:1px solid rgba(255,255,255,.06);flex-shrink:0;overflow-x:auto;}
+.ptab{flex:1;padding:10px 6px;text-align:center;font-size:11px;color:#8a9088;cursor:pointer;border-bottom:2px solid transparent;transition:all .15s;white-space:nowrap;}
+.ptab.active{color:#7eb87a;border-bottom-color:#7eb87a;}
+.pb{flex:1;overflow-y:auto;padding:1rem;}
+.pb::-webkit-scrollbar{width:4px;}
+.pb::-webkit-scrollbar-thumb{background:rgba(255,255,255,.1);border-radius:4px;}
+.tab-pane{display:none;}.tab-pane.active{display:block;}
+
+/* Fields */
+.fg{margin-bottom:11px;}
+.fl{font-size:11px;color:#8a9088;text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;display:block;}
+.fi{width:100%;padding:8px 12px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.09);border-radius:8px;color:#e8e4dc;font-size:13px;font-family:inherit;box-sizing:border-box;}
+.fi:focus{outline:none;border-color:#7eb87a;}
+select.fi{cursor:pointer;}
+textarea.fi{resize:vertical;min-height:60px;}
+.fi-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.dv{height:1px;background:rgba(255,255,255,.05);margin:13px 0;}
+.st{font-size:11px;color:#8a9088;text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px;}
+.hint{font-size:12px;color:#8a9088;line-height:1.6;}
+
+/* Cards */
+.scene-card{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:10px;padding:11px 13px;margin-bottom:8px;cursor:pointer;transition:all .15s;}
+.scene-card:hover{border-color:rgba(255,255,255,.18);}
+.scene-card.active{border-color:#7eb87a;background:rgba(126,184,122,.07);}
+.sc-name{font-size:13px;color:#e8e4dc;font-weight:500;margin-bottom:3px;}
+.sc-thumb{width:100%;height:70px;border-radius:7px;object-fit:cover;margin-bottom:8px;display:block;background:rgba(255,255,255,.04);}
+.sc-url{font-size:11px;color:#8a9088;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-bottom:8px;}
+.sc-actions{display:flex;gap:6px;}
+.hs-card{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:10px;padding:11px 13px;margin-bottom:8px;}
+.hs-card-top{display:flex;align-items:center;gap:9px;margin-bottom:9px;}
+.hs-icon-prev{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;}
+.hs-card-title{font-size:13px;color:#e8e4dc;flex:1;font-weight:500;}
+.hs-del{background:none;border:none;color:#e05c5c;cursor:pointer;font-size:16px;line-height:1;padding:2px;}
+.hs-detail{display:grid;grid-template-columns:1fr 1fr;gap:5px;}
+.hdd{font-size:11px;color:#8a9088;}
+.hdd span{color:#e8e4dc;}
+
+/* Buttons */
+.btn-add{width:100%;padding:9px;background:rgba(126,184,122,.07);border:1.5px dashed rgba(126,184,122,.3);border-radius:8px;color:#7eb87a;font-size:13px;cursor:pointer;transition:background .15s;}
+.btn-add:hover{background:rgba(126,184,122,.15);}
+.btn-green{padding:6px 13px;background:rgba(126,184,122,.1);border:1px solid rgba(126,184,122,.28);border-radius:7px;color:#7eb87a;font-size:12px;cursor:pointer;transition:background .15s;}
+.btn-green:hover{background:rgba(126,184,122,.22);}
+.btn-red{padding:6px 13px;background:rgba(224,92,92,.07);border:1px solid rgba(224,92,92,.28);border-radius:7px;color:#e05c5c;font-size:12px;cursor:pointer;}
+.btn-gold{padding:6px 13px;background:rgba(196,163,90,.07);border:1px solid rgba(196,163,90,.28);border-radius:7px;color:#c4a35a;font-size:12px;cursor:pointer;}
+.btn-primary{width:100%;padding:10px;background:#7eb87a;border:none;border-radius:8px;color:#0f1410;font-size:14px;font-weight:700;cursor:pointer;margin-top:8px;transition:opacity .15s;}
+.btn-primary:hover{opacity:.88;}
+.btn-primary:disabled{opacity:.4;cursor:not-allowed;}
+.btn-outline{width:100%;padding:9px;background:transparent;border:1px solid rgba(255,255,255,.13);border-radius:8px;color:#8a9088;font-size:13px;cursor:pointer;margin-top:6px;}
+.btn-outline:hover{border-color:rgba(255,255,255,.28);color:#e8e4dc;}
+.btn-export{width:100%;padding:9px;background:rgba(196,163,90,.07);border:1px solid rgba(196,163,90,.22);border-radius:8px;color:#c4a35a;font-size:13px;cursor:pointer;margin-top:6px;}
+
+/* Upload zone */
+.uz{border:1.5px dashed rgba(126,184,122,.3);border-radius:10px;padding:1.3rem;text-align:center;cursor:pointer;background:rgba(126,184,122,.03);transition:all .15s;margin-top:6px;}
+.uz:hover{border-color:#7eb87a;background:rgba(126,184,122,.06);}
+.uz.uploading{border-color:#c4a35a;cursor:default;background:rgba(196,163,90,.04);}
+.uz.has-img{padding:0;border-color:#7eb87a;cursor:pointer;overflow:hidden;}
+.uz.has-img img{width:100%;max-height:130px;object-fit:cover;border-radius:9px;display:block;}
+.uz.error-state{border-color:#e05c5c;background:rgba(224,92,92,.04);}
+.uz-icon{font-size:26px;margin-bottom:5px;}
+.uz-text{font-size:12px;color:#8a9088;}
+.uz-hint{font-size:11px;color:#4a5448;margin-top:3px;}
+.url-replace{font-size:11px;color:#8a9088;text-align:center;margin-top:5px;cursor:pointer;}
+.url-replace:hover{color:#7eb87a;}
+.or-div{text-align:center;font-size:11px;color:#4a5448;margin:8px 0;position:relative;}
+.or-div::before,.or-div::after{content:'';position:absolute;top:50%;width:38%;height:1px;background:rgba(255,255,255,.05);}
+.or-div::before{left:0;}.or-div::after{right:0;}
+
+/* Hotspot form */
+#hs-form{background:rgba(126,184,122,.04);border:1px solid rgba(126,184,122,.18);border-radius:10px;padding:14px;margin-bottom:12px;display:none;}
+#hs-form.show{display:block;}
+.hf-title{font-size:13px;color:#7eb87a;font-weight:600;margin-bottom:12px;}
+
+/* Icon/Color pickers */
+.ip-row{display:flex;gap:6px;flex-wrap:wrap;margin-top:5px;}
+.ib{width:36px;height:36px;border-radius:8px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.09);font-size:17px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;}
+.ib:hover{background:rgba(255,255,255,.1);}
+.ib.sel{border-color:#7eb87a;background:rgba(126,184,122,.15);}
+.cs-row{display:flex;gap:7px;flex-wrap:wrap;margin-top:5px;}
+.cs{width:27px;height:27px;border-radius:50%;cursor:pointer;border:2px solid transparent;transition:transform .15s;}
+.cs.sel{border-color:#fff;transform:scale(1.2);}
+
+/* Range */
+.range{width:100%;accent-color:#7eb87a;cursor:pointer;}
+.range-row{display:flex;align-items:center;gap:10px;}
+.range-val{font-size:12px;color:#7eb87a;min-width:28px;text-align:right;font-weight:600;}
+
+/* Toggle */
+.tog-row{display:flex;align-items:center;justify-content:space-between;padding:5px 0;}
+.tog-label{font-size:13px;color:#e8e4dc;}
+.tog{position:relative;width:40px;height:22px;flex-shrink:0;}
+.tog input{opacity:0;width:0;height:0;}
+.tog-slider{position:absolute;inset:0;background:rgba(255,255,255,.12);border-radius:22px;cursor:pointer;transition:background .2s;}
+.tog-slider:before{content:'';position:absolute;width:16px;height:16px;left:3px;top:3px;background:#fff;border-radius:50%;transition:transform .2s;}
+.tog input:checked+.tog-slider{background:#7eb87a;}
+.tog input:checked+.tog-slider:before{transform:translateX(18px);}
+
+/* Info notes */
+.info-note{background:rgba(126,184,122,.05);border:1px solid rgba(126,184,122,.14);border-radius:8px;padding:10px 12px;font-size:12px;color:#7eb87a;line-height:1.6;margin-bottom:12px;}
+.warn-note{background:rgba(196,163,90,.05);border:1px solid rgba(196,163,90,.2);border-radius:8px;padding:10px 12px;font-size:12px;color:#c4a35a;line-height:1.6;margin-bottom:10px;}
+
+/* Code block */
+.code-block{background:rgba(0,0,0,.45);border:1px solid rgba(255,255,255,.07);border-radius:8px;padding:12px;font-family:monospace;font-size:11px;color:#7eb87a;line-height:1.7;word-break:break-all;white-space:pre-wrap;margin-top:8px;user-select:all;}
+
+/* Media manager */
+.media-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px;}
+.media-item{position:relative;border-radius:8px;overflow:hidden;border:1px solid rgba(255,255,255,.08);}
+.media-item img{width:100%;height:80px;object-fit:cover;display:block;}
+.media-badge{position:absolute;top:4px;right:4px;font-size:10px;padding:2px 6px;border-radius:10px;font-weight:600;}
+.badge-used{background:rgba(126,184,122,.9);color:#0f1410;}
+.badge-unused{background:rgba(224,92,92,.9);color:#fff;}
+.media-name{font-size:10px;color:#8a9088;padding:4px 6px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+
+/* Hotspot placement preview */
+#hs-preview{position:absolute;transform:translate(-50%,-50%);pointer-events:none;z-index:15;display:none;}
+#hs-preview .hs-inner{animation:pr-preview .8s ease-in-out infinite alternate;}
+@keyframes pr-preview{0%{transform:scale(0.9);opacity:0.7;}100%{transform:scale(1.1);opacity:1;}}
+canvas.edit-mode{cursor:default;}
+.hs.editable{cursor:move !important;}
+.hs.editable .hs-inner{border-style:dashed !important;box-shadow:0 0 0 3px rgba(196,163,90,.5);}
+.hs-edit-handle{position:absolute;top:-8px;right:-8px;width:20px;height:20px;background:#c4a35a;border-radius:50%;border:2px solid #fff;display:flex;align-items:center;justify-content:center;font-size:10px;cursor:pointer;z-index:2;}
+#edit-mode-bar{position:absolute;top:1rem;left:50%;transform:translateX(-50%);background:rgba(196,163,90,.95);color:#0f1410;padding:8px 22px;border-radius:20px;font-size:13px;font-weight:700;z-index:25;display:none;gap:12px;align-items:center;white-space:nowrap;}
+#edit-mode-bar.show{display:flex;}
+#edit-mode-bar button{background:rgba(0,0,0,.15);border:1px solid rgba(0,0,0,.2);color:#0f1410;padding:4px 12px;border-radius:12px;font-size:12px;font-weight:700;cursor:pointer;}
+.gh-status{font-size:12px;padding:6px 10px;border-radius:7px;margin-top:6px;}
+.gh-ok{background:rgba(126,184,122,.1);color:#7eb87a;border:1px solid rgba(126,184,122,.25);}
+.gh-err{background:rgba(224,92,92,.1);color:#e05c5c;border:1px solid rgba(224,92,92,.25);}
+.gh-warn{background:rgba(196,163,90,.1);color:#c4a35a;border:1px solid rgba(196,163,90,.25);}
+/* Folder system */
+.folder-header{display:flex;align-items:center;gap:8px;padding:8px 10px;background:rgba(196,163,90,.06);border:1px solid rgba(196,163,90,.2);border-radius:8px;margin-bottom:5px;cursor:pointer;user-select:none;}
+.folder-toggle{font-size:11px;color:#c4a35a;transition:transform .15s;flex-shrink:0;}
+.folder-header.open .folder-toggle{transform:rotate(90deg);}
+.folder-name{font-size:13px;color:#e8e4dc;font-weight:500;flex:1;}
+.folder-count{font-size:11px;color:#8a9088;}
+.folder-scenes{padding-left:10px;margin-bottom:6px;border-left:2px solid rgba(196,163,90,.15);}
+.folder-scenes.hidden{display:none;}
+.btn-new-folder{width:100%;padding:7px;background:transparent;border:1px dashed rgba(196,163,90,.3);border-radius:8px;color:#c4a35a;font-size:12px;cursor:pointer;margin-bottom:8px;font-family:inherit;}
+.btn-new-folder:hover{background:rgba(196,163,90,.06);}
+/* Drag sort */
+.scene-card{transition:box-shadow .15s,opacity .15s;}
+.scene-card[draggable]{cursor:default;}
+.scene-card.drag-over{border-color:#7eb87a !important;box-shadow:0 -3px 0 #7eb87a;}
+.scene-card.dragging{opacity:.35;}
+.drag-handle{cursor:grab;color:#4a5448;font-size:16px;padding:0 4px;flex-shrink:0;line-height:1;}
+.drag-handle:hover{color:#8a9088;}
+.source-tabs{display:flex;gap:6px;margin-bottom:10px;}
+.stab{flex:1;padding:7px;text-align:center;font-size:12px;border-radius:8px;cursor:pointer;border:1px solid rgba(255,255,255,.09);color:#8a9088;background:rgba(255,255,255,.03);transition:all .15s;}
+.stab.active{border-color:#7eb87a;color:#7eb87a;background:rgba(126,184,122,.08);}
+.source-pane{display:none;}.source-pane.active{display:block;}
+#io-modal{display:none;position:absolute;inset:0;background:rgba(0,0,0,.75);z-index:50;align-items:center;justify-content:center;}
+#io-modal.open{display:flex;}
+.io-box{background:#1a1f1b;border:1px solid rgba(255,255,255,.1);border-radius:14px;padding:1.5rem;width:560px;max-width:95vw;max-height:85vh;display:flex;flex-direction:column;}
+.io-box h3{color:#e8e4dc;font-size:15px;margin-bottom:12px;}
+.io-box textarea{flex:1;min-height:200px;background:rgba(0,0,0,.4);border:1px solid rgba(255,255,255,.1);border-radius:8px;color:#7eb87a;font-family:monospace;font-size:12px;padding:12px;resize:vertical;}
+.io-footer{display:flex;gap:10px;margin-top:12px;justify-content:flex-end;}
+.io-btn{padding:9px 22px;border-radius:8px;font-size:13px;cursor:pointer;border:none;font-weight:600;}
+.io-btn.cancel{background:rgba(255,255,255,.07);color:#8a9088;}
+.io-btn.ok{background:#7eb87a;color:#0f1410;}
+
+/* Empty state */
+.empty{text-align:center;padding:2.5rem 1rem;color:#8a9088;font-size:13px;}
+.empty-icon{font-size:32px;margin-bottom:8px;}
+</style>
+</head>
+<body>
+<div id="wrap">
+  <canvas id="c"></canvas>
+  <div id="hs-layer"></div>
+  <div id="fade"></div>
+
+  <!-- Loading -->
+  <div id="loading">
+    <div class="loading-ring"></div>
+    <div class="loading-text" id="loading-text">初始化中...</div>
+  </div>
+
+  <!-- Welcome (no scenes) -->
+  <div id="welcome">
+    <div class="welcome-logo">🌐</div>
+    <div class="welcome-title">360° 環景檢視器</div>
+    <div class="welcome-sub">點擊右上角 ⚙ 開啟管理面板<br>新增場景並上傳全景圖片即可開始</div>
+    <button class="welcome-btn" id="welcome-open-btn">⚙ 開啟管理面板</button>
+  </div>
+
+  <!-- Scene label -->
+  <div id="scene-label" style="display:none"></div>
+
+  <!-- Scene dots -->
+  <div id="scene-dots"></div>
+
+  <!-- Top controls -->
+  <div id="top-ctrl">
+    <button class="cb" id="btn-preview" title="預覽模式">👁</button>
+    <button class="cb" id="btn-help" title="說明">❓</button>
+    <button class="cb" id="btn-fs" title="全螢幕">⛶</button>
+    <button class="cb" id="btn-admin" title="管理面板">⚙</button>
+  </div>
+
+  <!-- Hotspot placement preview -->
+  <div id="hs-preview">
+    <div class="hs-inner" id="hs-preview-inner" style="width:44px;height:44px;background:#7eb87a22;border:2.5px solid #7eb87a;font-size:18px;display:flex;align-items:center;justify-content:center;border-radius:50%;box-shadow:0 3px 14px rgba(0,0,0,.5);">🔵</div>
+  </div>
+
+  <!-- Place banner -->
+  <div id="place-banner">📍 點擊畫面放置傳送點位</div>
+
+  <!-- Edit mode bar -->
+  <div id="edit-mode-bar">✏️ 傳送點編輯模式 — 拖曳點位可移動位置 <button id="edit-mode-done">完成</button></div>
+</div>
+
+<!-- Admin Panel -->
+<div id="admin">
+  <div class="ph">
+    <span class="ph-logo">◈ 360° 管理面板</span>
+    <button class="ph-close" id="admin-close">×</button>
+  </div>
+  <div class="pt">
+    <div class="ptab active" data-tab="scenes">🗺 場景</div>
+    <div class="ptab" data-tab="hotspots">📍 傳送點</div>
+    <div class="ptab" data-tab="media">🖼 圖片</div>
+    <div class="ptab" data-tab="embed">🔗 嵌入</div>
+  </div>
+  <div class="pb">
+
+    <!-- 場景 Tab -->
+    <div class="tab-pane active" id="tab-scenes">
+      <div class="st">新增場景</div>
+      <div class="fg"><label class="fl">場景名稱</label><input class="fi" id="new-scene-name" placeholder="例：入口廣場"></div>
+      <label class="fl">360° 全景圖片</label>
+      <div class="uz" id="gh-upload-zone" style="margin-top:6px;">
+        <div class="uz-icon">🐱</div>
+        <div class="uz-text">點擊選擇圖片上傳至 GitHub</div>
+        <div class="uz-hint">需先在「嵌入」頁設定 GitHub Token</div>
+      </div>
+      <input type="file" id="gh-img-file" accept="image/*" style="display:none">
+      <input type="hidden" id="new-scene-img-url">
+      <div class="or-div">或貼上圖片直連網址</div>
+      <input class="fi" id="new-scene-url" placeholder="https://..." style="margin-bottom:6px;">
+      <button class="btn-primary" id="add-scene-btn">+ 新增場景</button>
+      <div class="dv"></div>
+      <div class="st">場景列表</div>
+      <button class="btn-new-folder" id="new-folder-btn">📁 + 新增資料夾</button>
+      <div id="scenes-list"></div>
+    </div>
+
+    <!-- 傳送點 Tab -->
+    <div class="tab-pane" id="tab-hotspots">
+      <div class="info-note" id="hs-scene-hint">請先在「場景」頁載入一個場景</div>
+      <div id="hs-form">
+        <div class="hf-title">📍 設定傳送點</div>
+        <input type="hidden" id="hs-phi">
+        <input type="hidden" id="hs-theta">
+        <div class="fg"><label class="fl">標籤</label><input class="fi" id="hs-label" placeholder="例：前往下一區"></div>
+        <div class="fg"><label class="fl">目標場景</label><select class="fi" id="hs-target"></select></div>
+        <div class="fg">
+          <label class="fl">圖示</label>
+          <div class="ip-row" id="icon-picker"></div>
+          <input class="fi" id="hs-icon-custom" placeholder="或輸入 emoji" style="margin-top:7px;">
+        </div>
+        <div class="fg">
+          <label class="fl">顏色</label>
+          <div class="cs-row" id="color-picker"></div>
+        </div>
+        <div class="fg">
+          <label class="fl">大小</label>
+          <div class="range-row"><input type="range" class="range" id="hs-size" min="28" max="80" value="44"><span class="range-val" id="hs-size-val">44</span>px</div>
+        </div>
+        <div class="tog-row">
+          <span class="tog-label">閃動光環</span>
+          <label class="tog"><input type="checkbox" id="hs-pulse" checked><span class="tog-slider"></span></label>
+        </div>
+        <button class="btn-primary" id="hs-save-btn">儲存傳送點</button>
+        <button class="btn-outline" id="hs-cancel-btn">取消</button>
+      </div>
+      <button class="btn-add" id="hs-place-btn">+ 點擊畫面放置傳送點</button>
+      <button class="btn-add" id="hs-edit-mode-btn" style="margin-top:6px;border-color:rgba(196,163,90,.3);color:#c4a35a;background:rgba(196,163,90,.05);">✏️ 拖曳編輯傳送點位置</button>
+      <p class="hint" style="margin-top:6px;">點下方按鈕後，點擊 360° 畫面任意位置放置</p>
+      <div class="dv"></div>
+      <div class="st" id="hs-list-title">傳送點列表</div>
+      <div id="hotspots-list"></div>
+    </div>
+
+    <!-- 圖片管理 Tab -->
+    <div class="tab-pane" id="tab-media">
+      <div class="info-note">GitHub Repo 中的所有 360° 圖片與設定</div>
+      <button class="btn-green" id="open-gh-repo-btn" style="width:100%;padding:9px;border-radius:8px;margin-bottom:8px;">🐱 開啟 GitHub Repo ↗</button>
+      <div class="st">場景使用的圖片</div>
+      <div id="media-grid-el"></div>
+    </div>
+
+    <!-- 嵌入 Tab -->
+    <div class="tab-pane" id="tab-embed">
+      <!-- GitHub 設定 -->
+      <div class="st">🐱 GitHub 圖片 &amp; 設定儲存</div>
+      <div class="hint" style="margin-bottom:8px;">設定 GitHub 後，圖片和 360° 設定都存在 GitHub，嵌入代碼穩定可靠。</div>
+      <div class="fg"><label class="fl">GitHub 使用者名稱</label><input class="fi" id="gh-user" placeholder="例：syuelynn"></div>
+      <div class="fg"><label class="fl">Repository 名稱</label><input class="fi" id="gh-repo" placeholder="例：360-images（設為 Public）"></div>
+      <div class="fg"><label class="fl">Personal Access Token</label><input class="fi" type="password" id="gh-token" placeholder="ghp_xxxxxxxxxxxxxxxx"></div>
+      <div class="hint" style="margin-bottom:6px;">需開啟 <b>repo</b> 權限。<a href="https://github.com/settings/tokens/new" target="_blank" style="color:#7eb87a;">點此建立 Token ↗</a></div>
+      <button class="btn-green" id="gh-save-btn" style="width:100%;padding:9px;border-radius:8px;margin-top:4px;">💾 儲存 GitHub 設定</button>
+      <div id="gh-status"></div>
+      <button class="btn-export" id="gh-upload-config-btn" style="margin-top:8px;">⬆️ 上傳設定 JSON 到 GitHub</button>
+      <div id="gh-upload-status" style="font-size:12px;margin-top:6px;"></div>
+      <div class="dv"></div>
+
+      <!-- ★ 給 Syue & Lynn 後台用 -->
+      <div class="st">⭐ 貼到後台「Kuula 360 嵌入碼」</div>
+      <div class="info-note" style="margin-bottom:8px;">
+        前台 index.html 已內建 360° 檢視器，<b>不需要 iframe</b>。<br>
+        直接把下方網址貼到後台的「Kuula 360 嵌入碼」欄位即可。
+      </div>
+      <div class="code-block" id="kuula-url-code" style="font-size:12px;word-break:break-all;">（請先設定 GitHub 並上傳 JSON）</div>
+      <button class="btn-primary" id="copy-kuula-url-btn" style="margin-top:8px;">📋 複製網址（貼到後台）</button>
+
+      <div class="dv"></div>
+      <div class="st">嵌入到其他任何網站（需 iframe）</div>
+      <div class="hint" style="margin-bottom:6px;">如果是其他網站，才用這個 iframe 代碼：</div>
+      <div id="embed-size-warn" class="gh-status gh-warn" style="display:none;margin-bottom:8px;"></div>
+      <div class="code-block" id="embed-code"></div>
+      <button class="btn-green" style="margin-top:8px;" id="copy-embed-btn">複製 iframe 代碼</button>
+
+      <div class="dv"></div>
+      <div class="st">儲存 / 讀取設定</div>
+      <button class="btn-export" id="btn-export">📤 匯出 JSON 設定</button>
+      <button class="btn-export" style="background:rgba(126,184,122,.07);border-color:rgba(126,184,122,.22);color:#7eb87a;margin-top:6px;" id="btn-import">📥 匯入 JSON 設定</button>
+    </div>
+
+  </div>
+</div>
+
+<!-- IO Modal -->
+<div id="io-modal">
+  <div class="io-box">
+    <h3 id="io-title">匯出設定</h3>
+    <textarea id="io-text" spellcheck="false"></textarea>
+    <div class="io-footer">
+      <button class="io-btn cancel" id="io-cancel">關閉</button>
+      <button class="io-btn ok" id="io-ok">確認</button>
+    </div>
+  </div>
+</div>
+
+<!-- Three.js -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+(function() {
+'use strict';
+
+// ── 安全防護：確保 loading 最多顯示 8 秒 ────────────────
+var loadingTimeout = setTimeout(function() {
+  var el = document.getElementById('loading');
+  if (el) el.classList.add('hidden');
+}, 8000);
+
+function hideLoading() {
+  clearTimeout(loadingTimeout);
+  var el = document.getElementById('loading');
+  if (el) {
+    el.classList.add('hidden');
+    setTimeout(function() { el.style.display = 'none'; }, 350);
+  }
+}
+
+function setLoadingText(t) {
+  var el = document.getElementById('loading-text');
+  if (el) el.textContent = t;
+}
+
+// ── 檢查 Three.js ────────────────────────────────────────
+if (typeof THREE === 'undefined') {
+  hideLoading();
+  document.getElementById('welcome').classList.add('show');
+  document.getElementById('welcome').querySelector('.welcome-sub').textContent =
+    '⚠️ 3D 函式庫載入失敗，請確認網路連線後重新整理頁面';
+  document.getElementById('welcome-btn') && (document.getElementById('welcome-btn').style.display = 'none');
+  return;
+}
+
+// ── 常數 ─────────────────────────────────────────────────
+var ICONS  = ['🔵','🟢','⭕','✨','🚀','🏔','🌿','🔆','🏠','📍','⬆','➡'];
+var COLORS = ['#7eb87a','#c4a35a','#5ab8c4','#e05c5c','#9b5ac4','#ffffff','#f0a030','#30d0f0'];
+
+// ── State ─────────────────────────────────────────────────
+var config = { scenes: [], startScene: null };
+var currentSceneId = null;
+var placingMode = false;
+var editingHsId = null;
+var selectedIcon = ICONS[0];
+var selectedColor = COLORS[0];
+var pendingSceneImgUrl = '';
+
+try {
+  var saved = localStorage.getItem('pano360_config');
+  if (saved) config = JSON.parse(saved);
+} catch(e) {}
+
+function saveConfig() {
+  try { localStorage.setItem('pano360_config', JSON.stringify(config)); } catch(e) {}
+}
+function ge(id) { return document.getElementById(id); }
+function uid() { return 'id_' + Math.random().toString(36).substr(2,9); }
+
+// ── Three.js Setup ────────────────────────────────────────
+setLoadingText('初始化 3D 場景...');
+var canvas = ge('c');
+var wrap = ge('wrap');
+var renderer, camera, scene3, sphere, mat;
+
+try {
+  renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  camera = new THREE.PerspectiveCamera(75, 1, 0.1, 200);
+  camera.rotation.order = 'YXZ';
+  scene3 = new THREE.Scene();
+  var geo = new THREE.SphereGeometry(100, 64, 48);
+  mat = new THREE.MeshBasicMaterial({ side: THREE.BackSide, color: 0x1a2a1a });
+  sphere = new THREE.Mesh(geo, mat);
+  scene3.add(sphere);
+} catch(e) {
+  hideLoading();
+  alert('⚠️ WebGL 初始化失敗，請使用支援 WebGL 的瀏覽器');
+  return;
+}
+
+function resize() {
+  var w = window.innerWidth, h = window.innerHeight;
+  renderer.setSize(w, h);
+  camera.aspect = w / h;
+  camera.updateProjectionMatrix();
+}
+resize();
+window.addEventListener('resize', resize);
+
+// ── Texture Loader ────────────────────────────────────────
+var txLoader = new THREE.TextureLoader();
+txLoader.crossOrigin = 'anonymous';
+
+function loadPanoTexture(url, onDone) {
+  if (!url) { hideLoading(); if (onDone) onDone(false); return; }
+  document.getElementById('loading').classList.remove('hidden');
+  document.getElementById('loading').style.display = 'flex';
+  setLoadingText('載入全景圖片...');
+  // Per-texture timeout
+  var txTimeout = setTimeout(function() {
+    hideLoading();
+    ge('scene-label').style.display = 'block';
+    ge('scene-label').textContent = '⚠️ 圖片載入逾時';
+    if (onDone) onDone(false);
+  }, 15000);
+  txLoader.load(
+    url,
+    function(tex) {
+      clearTimeout(txTimeout);
+      tex.encoding = THREE.sRGBEncoding;
+      // 修正左右相反：equirectangular 全景圖需要水平翻轉
+      tex.wrapS = THREE.RepeatWrapping;
+      tex.repeat.x = -1;
+      tex.offset.x = 1;
+      if (mat.map) mat.map.dispose();
+      mat.map = tex;
+      mat.color.set(0xffffff);
+      mat.needsUpdate = true;
+      hideLoading();
+      if (onDone) onDone(true);
+    },
+    undefined,
+    function() {
+      clearTimeout(txTimeout);
+      hideLoading();
+      ge('scene-label').style.display = 'block';
+      ge('scene-label').textContent = '⚠️ 圖片載入失敗';
+      if (onDone) onDone(false);
+    }
+  );
+}
+
+// ── Mouse / Touch Controls ────────────────────────────────
+var isDragging = false, prevX = 0, prevY = 0, velX = 0, velY = 0, fov = 75;
+
+canvas.addEventListener('mousedown', function(e) {
+  if (placingMode) return;
+  isDragging = true; prevX = e.clientX; prevY = e.clientY;
+  canvas.classList.add('grabbing'); canvas.classList.remove('placing');
+});
+window.addEventListener('mouseup', function() {
+  isDragging = false; canvas.classList.remove('grabbing');
+});
+window.addEventListener('mousemove', function(e) {
+  if (!isDragging || placingMode) return;
+  var dx = e.clientX - prevX, dy = e.clientY - prevY;
+  velX = dx; velY = dy;
+  camera.rotation.y += dx * 0.004;
+  camera.rotation.x = Math.max(-Math.PI/2, Math.min(Math.PI/2, camera.rotation.x + dy * 0.004));
+  prevX = e.clientX; prevY = e.clientY;
+});
+
+// Placing mode: follow mouse with preview dot
+window.addEventListener('mousemove', function(e) {
+  if (!placingMode) return;
+  updateHsPreview(e.clientX, e.clientY);
+});
+canvas.addEventListener('click', function(e) {
+  if (placingMode) handlePlaceClick(e.clientX, e.clientY);
+});
+canvas.addEventListener('wheel', function(e) {
+  fov = Math.max(40, Math.min(100, fov + e.deltaY * 0.03));
+  camera.fov = fov; camera.updateProjectionMatrix();
+});
+
+// Touch
+var lastTouch = null, lastPinch = null;
+canvas.addEventListener('touchstart', function(e) {
+  e.preventDefault();
+  if (e.touches.length === 1) { lastTouch = { x: e.touches[0].clientX, y: e.touches[0].clientY }; lastPinch = null; }
+  else if (e.touches.length === 2) { lastPinch = Math.hypot(e.touches[0].clientX-e.touches[1].clientX, e.touches[0].clientY-e.touches[1].clientY); }
+}, { passive: false });
+canvas.addEventListener('touchmove', function(e) {
+  e.preventDefault();
+  if (e.touches.length === 1 && lastTouch && !placingMode) {
+    var dx = e.touches[0].clientX - lastTouch.x, dy = e.touches[0].clientY - lastTouch.y;
+    camera.rotation.y += dx * 0.006;
+    camera.rotation.x = Math.max(-Math.PI/2, Math.min(Math.PI/2, camera.rotation.x + dy * 0.006));
+    lastTouch = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+  } else if (e.touches.length === 2 && lastPinch) {
+    var dist = Math.hypot(e.touches[0].clientX-e.touches[1].clientX, e.touches[0].clientY-e.touches[1].clientY);
+    fov = Math.max(40, Math.min(100, fov * (lastPinch / dist)));
+    camera.fov = fov; camera.updateProjectionMatrix(); lastPinch = dist;
+  }
+}, { passive: false });
+canvas.addEventListener('touchend', function(e) {
+  if (placingMode && e.changedTouches.length > 0) handlePlaceClick(e.changedTouches[0].clientX, e.changedTouches[0].clientY);
+  lastTouch = null; lastPinch = null;
+});
+
+// ── Render Loop ───────────────────────────────────────────
+function animate() {
+  requestAnimationFrame(animate);
+  if (!isDragging) {
+    velX *= 0.9; velY *= 0.9;
+    if (Math.abs(velX) > 0.01) camera.rotation.y += velX * 0.0005;
+    if (Math.abs(velY) > 0.01) camera.rotation.x = Math.max(-Math.PI/2, Math.min(Math.PI/2, camera.rotation.x + velY * 0.0005));
+  }
+  if (renderer && scene3 && camera) renderer.render(scene3, camera);
+  updateHotspotPositions();
+}
+animate();
+
+// ── Hotspot Layer ─────────────────────────────────────────
+var hsLayer = ge('hs-layer');
+var raycaster = new THREE.Raycaster();
+
+function getSceneHotspots() {
+  var sc = config.scenes.find(function(s) { return s.id === currentSceneId; });
+  return sc ? (sc.hotspots || []) : [];
+}
+function getScene(id) { return config.scenes.find(function(s) { return s.id === id; }); }
+
+function buildHotspotEl(hs) {
+  var div = document.createElement('div');
+  div.className = 'hs'; div.dataset.id = hs.id;
+  var size = hs.size || 44, color = hs.color || '#7eb87a', icon = hs.icon || '🔵';
+  var inner = document.createElement('div');
+  inner.className = 'hs-inner';
+  inner.style.cssText = 'width:'+size+'px;height:'+size+'px;background:'+color+'22;border:2.5px solid '+color+';font-size:'+Math.round(size*.42)+'px;';
+  if (hs.pulse !== false) {
+    var pulse = document.createElement('div');
+    pulse.className = 'hs-pulse';
+    pulse.style.background = color + '55';
+    inner.appendChild(pulse);
+  }
+  inner.appendChild(document.createTextNode(icon));
+  var label = document.createElement('div');
+  label.className = 'hs-label';
+  label.textContent = hs.label || '前往';
+  div.appendChild(inner); div.appendChild(label);
+  div.addEventListener('click', function(e) {
+    e.stopPropagation();
+    if (placingMode) return;
+    if (hs.targetScene) switchScene(hs.targetScene);
+  });
+  hsLayer.appendChild(div);
+  return div;
+}
+
+function rebuildHotspotEls() {
+  hsLayer.innerHTML = '';
+  getSceneHotspots().forEach(buildHotspotEl);
+}
+
+function sphericalToVec(phi, theta) {
+  return new THREE.Vector3(Math.sin(phi)*Math.sin(theta), Math.cos(phi), Math.sin(phi)*Math.cos(theta));
+}
+
+function updateHotspotPositions() {
+  var hots = getSceneHotspots();
+  var w = window.innerWidth, h = window.innerHeight;
+  hots.forEach(function(hs) {
+    var el = hsLayer.querySelector('[data-id="'+hs.id+'"]');
+    if (!el) return;
+    // 拖曳中的點位保持顯示，不更新位置
+    if (hs.id === draggingHsId) {
+      el.style.display = 'block';
+      el.style.opacity = '1';
+      return;
+    }
+    var pos = sphericalToVec(hs.phi, hs.theta);
+    var fwd = new THREE.Vector3(0, 0, -1).applyEuler(camera.rotation);
+    var dot = fwd.dot(pos.clone().normalize());
+    if (dot < 0.1) { el.style.display = 'none'; return; }
+    var proj = pos.clone().project(camera);
+    var sx = (proj.x + 1) / 2 * w, sy = -(proj.y - 1) / 2 * h;
+    if (sx < -60 || sx > w+60 || sy < -60 || sy > h+60) { el.style.display = 'none'; return; }
+    el.style.display = 'block';
+    el.style.left = sx + 'px';
+    el.style.top = sy + 'px';
+    el.style.opacity = Math.min(1, (dot - 0.1) / 0.25);
+  });
+}
+
+// ── Scene Switch ──────────────────────────────────────────
+function switchScene(id) {
+  var sc = getScene(id); if (!sc) return;
+  var fade = ge('fade');
+  fade.classList.add('in');
+  setTimeout(function() {
+    currentSceneId = id;
+    ge('scene-label').style.display = 'block';
+    ge('scene-label').textContent = sc.name || id;
+    ge('welcome').classList.remove('show');
+    rebuildHotspotEls();
+    updateSceneDots();
+    camera.rotation.set(0,0,0); fov = 75; camera.fov = 75; camera.updateProjectionMatrix();
+    if (sc.imageUrl) {
+      loadPanoTexture(sc.imageUrl, function() { fade.classList.remove('in'); });
+    } else {
+      mat.map = null; mat.color.set(0x1a2a1a); mat.needsUpdate = true;
+      hideLoading(); fade.classList.remove('in');
+    }
+    renderAdminHotspotList(); updateHsSceneHint();
+  }, 380);
+}
+
+function updateSceneDots() {
+  var el = ge('scene-dots'); el.innerHTML = '';
+  config.scenes.forEach(function(sc) {
+    var d = document.createElement('div');
+    d.className = 'sdot' + (sc.id === currentSceneId ? ' active' : '');
+    d.title = sc.name || sc.id;
+    d.addEventListener('click', function() { switchScene(sc.id); renderAdminSceneList(); });
+    el.appendChild(d);
+  });
+}
+
+// ── Placing Mode ──────────────────────────────────────────
+function startPlacing() {
+  placingMode = true;
+  canvas.classList.add('placing');
+  ge('place-banner').style.display = 'block';
+  ge('place-banner').textContent = '📍 點擊畫面放置傳送點位';
+  ge('hs-form').classList.add('show');
+  ge('hs-phi').value = ''; ge('hs-theta').value = '';
+  ge('hs-save-btn').disabled = true;
+  syncPreviewStyle();
+  hsPreviewEl.style.display = 'block';
+}
+function stopPlacing() {
+  placingMode = false;
+  canvas.classList.remove('placing');
+  hsPreviewEl.style.display = 'none';
+}
+function handlePlaceClick(cx, cy) {
+  var ndc = { x: (cx/window.innerWidth)*2-1, y: -(cy/window.innerHeight)*2+1 };
+  raycaster.setFromCamera(ndc, camera);
+  var hits = raycaster.intersectObject(sphere);
+  if (!hits.length) return;
+  var p = hits[0].point.normalize();
+  var phi = Math.acos(Math.max(-1, Math.min(1, p.y)));
+  var theta = Math.atan2(p.x, p.z);
+  ge('hs-phi').value = phi.toFixed(4);
+  ge('hs-theta').value = theta.toFixed(4);
+  ge('hs-save-btn').disabled = false;
+  stopPlacing();
+  ge('place-banner').textContent = '✅ 位置設定完成，請填寫點位資訊';
+  ge('place-banner').style.background = 'rgba(126,184,122,.95)';
+  setTimeout(function() { ge('place-banner').style.display = 'none'; }, 2500);
+  // Re-open admin
+  ge('admin').classList.add('open');
+  ge('btn-admin').classList.add('active');
+}
+
+// ── Hotspot Placement Preview ─────────────────────────────
+var hsPreviewEl = document.getElementById('hs-preview');
+var hsPreviewInner = document.getElementById('hs-preview-inner');
+
+function updateHsPreview(cx, cy) {
+  if (!placingMode) { hsPreviewEl.style.display = 'none'; return; }
+  hsPreviewEl.style.display = 'block';
+  hsPreviewEl.style.left = cx + 'px';
+  hsPreviewEl.style.top = cy + 'px';
+}
+
+function syncPreviewStyle() {
+  if (!hsPreviewInner) return;
+  var size = parseInt(document.getElementById('hs-size') ? document.getElementById('hs-size').value : 44);
+  var color = selectedColor || '#7eb87a';
+  var icon = (document.getElementById('hs-icon-custom') && document.getElementById('hs-icon-custom').value.trim()) || selectedIcon || '🔵';
+  hsPreviewInner.style.width = size + 'px';
+  hsPreviewInner.style.height = size + 'px';
+  hsPreviewInner.style.background = color + '22';
+  hsPreviewInner.style.border = '2.5px solid ' + color;
+  hsPreviewInner.style.fontSize = Math.round(size * 0.42) + 'px';
+  hsPreviewInner.textContent = icon;
+}
+
+// ── Hotspot Drag-to-Move ──────────────────────────────────
+var editModeActive = false;
+var draggingHsId = null;
+var hsDragStart = null;
+
+function enterEditMode() {
+  editModeActive = true;
+  ge('edit-mode-bar').classList.add('show');
+  ge('admin').classList.remove('open');
+  ge('btn-admin').classList.remove('active');
+  rebuildHotspotEls(); // rebuild with drag handles
+}
+function exitEditMode() {
+  editModeActive = false;
+  draggingHsId = null;
+  ge('edit-mode-bar').classList.remove('show');
+  rebuildHotspotEls();
+}
+ge('edit-mode-done') && ge('edit-mode-done').addEventListener('click', exitEditMode);
+
+ge('hs-edit-mode-btn') && ge('hs-edit-mode-btn').addEventListener('click', function() {
+  if (!currentSceneId) { alert('請先載入一個場景'); return; }
+  if (!getSceneHotspots().length) { alert('此場景尚無傳送點'); return; }
+  enterEditMode();
+});
+
+// Override buildHotspotEl to support drag when in editMode
+var _origBuildHotspotEl = buildHotspotEl;
+buildHotspotEl = function(hs) {
+  var div = document.createElement('div');
+  div.className = 'hs' + (editModeActive ? ' editable' : '');
+  div.dataset.id = hs.id;
+  var size = hs.size || 44, color = hs.color || '#7eb87a', icon = hs.icon || '🔵';
+  var inner = document.createElement('div');
+  inner.className = 'hs-inner';
+  inner.style.cssText = 'width:'+size+'px;height:'+size+'px;background:'+color+'22;border:2.5px solid '+color+';font-size:'+Math.round(size*.42)+'px;';
+  if (hs.pulse !== false && !editModeActive) {
+    var pulse = document.createElement('div');
+    pulse.className = 'hs-pulse';
+    pulse.style.background = color + '55';
+    inner.appendChild(pulse);
+  }
+  inner.appendChild(document.createTextNode(icon));
+  var label = document.createElement('div');
+  label.className = 'hs-label';
+  label.textContent = hs.label || '前往';
+
+  if (editModeActive) {
+    // 拖曳手把
+    var handle = document.createElement('div');
+    handle.className = 'hs-edit-handle';
+    handle.textContent = '✥';
+    handle.title = '拖曳移動';
+    div.appendChild(handle);
+
+    var isDraggingHs = false;
+    handle.addEventListener('mousedown', function(e) {
+      e.stopPropagation();
+      isDraggingHs = true;
+      draggingHsId = hs.id;
+      hsDragStart = { x: e.clientX, y: e.clientY };
+      document.body.style.userSelect = 'none';
+    });
+    handle.addEventListener('touchstart', function(e) {
+      e.stopPropagation();
+      isDraggingHs = true;
+      draggingHsId = hs.id;
+    }, { passive: true });
+  } else {
+    div.addEventListener('click', function(e) {
+      e.stopPropagation();
+      if (placingMode) return;
+      if (hs.targetScene) switchScene(hs.targetScene);
+    });
+  }
+
+  div.appendChild(inner); div.appendChild(label);
+  hsLayer.appendChild(div);
+  return div;
+};
+
+// Global mouse/touch move for dragging hotspot
+window.addEventListener('mousemove', function(e) {
+  if (!editModeActive || !draggingHsId) return;
+  moveHsDrag(e.clientX, e.clientY);
+});
+window.addEventListener('mouseup', function(e) {
+  if (draggingHsId) { finishHsDrag(e.clientX, e.clientY); draggingHsId = null; document.body.style.userSelect = ''; }
+});
+window.addEventListener('touchmove', function(e) {
+  if (!editModeActive || !draggingHsId) return;
+  moveHsDrag(e.touches[0].clientX, e.touches[0].clientY);
+}, { passive: true });
+window.addEventListener('touchend', function(e) {
+  if (draggingHsId) {
+    var t = e.changedTouches[0];
+    finishHsDrag(t.clientX, t.clientY);
+    draggingHsId = null;
+  }
+});
+
+function moveHsDrag(cx, cy) {
+  var el = hsLayer.querySelector('[data-id="'+draggingHsId+'"]');
+  if (!el) return;
+  el.style.left = cx + 'px';
+  el.style.top = cy + 'px';
+}
+
+function finishHsDrag(cx, cy) {
+  // Raycast to get new 3D position
+  var ndc = { x: (cx/window.innerWidth)*2-1, y: -(cy/window.innerHeight)*2+1 };
+  raycaster.setFromCamera(ndc, camera);
+  var hits = raycaster.intersectObject(sphere);
+  if (!hits.length) return;
+  var p = hits[0].point.normalize();
+  var phi = Math.acos(Math.max(-1, Math.min(1, p.y)));
+  var theta = Math.atan2(p.x, p.z);
+  // Update config
+  var sc = getScene(currentSceneId); if (!sc || !sc.hotspots) return;
+  var hsDef = sc.hotspots.find(function(h) { return h.id === draggingHsId; });
+  if (hsDef) { hsDef.phi = phi; hsDef.theta = theta; saveConfig(); }
+}
+
+// ── Preview Mode ──────────────────────────────────────────
+var previewActive = false;
+ge('btn-preview').addEventListener('click', function() {
+  previewActive = !previewActive;
+  ge('btn-preview').classList.toggle('active', previewActive);
+  if (previewActive) {
+    // Hide all UI except scene dots and label
+    ge('admin').classList.remove('open');
+    ge('btn-admin').classList.remove('active');
+    ge('top-ctrl').style.opacity = '0';
+    ge('top-ctrl').style.pointerEvents = 'none';
+    ge('scene-dots').style.display = 'flex';
+    // Show exit preview btn after 1s
+    setTimeout(function() {
+      ge('top-ctrl').style.opacity = '0.35';
+      ge('top-ctrl').style.pointerEvents = 'auto';
+    }, 1500);
+    ge('btn-preview').style.opacity = '1';
+    ge('btn-preview').style.pointerEvents = 'auto';
+    ge('btn-preview').textContent = '✕';
+    ge('btn-preview').title = '退出預覽';
+  } else {
+    ge('top-ctrl').style.opacity = '1';
+    ge('top-ctrl').style.pointerEvents = 'auto';
+    ge('btn-preview').textContent = '👁';
+    ge('btn-preview').title = '預覽模式';
+  }
+});
+var ghConfig = { user:'', repo:'', token:'' };
+try { var ghSaved = localStorage.getItem('pano360_gh'); if (ghSaved) ghConfig = JSON.parse(ghSaved); } catch(e) {}
+
+function saveGhConfig() { try { localStorage.setItem('pano360_gh', JSON.stringify(ghConfig)); } catch(e) {} }
+
+function getGhStatus() {
+  if (!ghConfig.user || !ghConfig.repo || !ghConfig.token) return null;
+  return ghConfig;
+}
+
+// Load GitHub settings into form when embed tab opens
+function loadGhForm() {
+  if (ge('gh-user')) {
+    ge('gh-user').value  = ghConfig.user  || '';
+    ge('gh-repo').value  = ghConfig.repo  || '';
+    ge('gh-token').value = ghConfig.token || '';
+    var gh = getGhStatus();
+    var st = ge('gh-status');
+    if (st) {
+      if (gh) {
+        st.className = 'gh-status gh-ok';
+        st.textContent = '✅ 已設定：' + gh.user + '/' + gh.repo;
+      } else {
+        st.className = 'gh-status gh-warn';
+        st.textContent = '⚠️ 尚未設定，請填寫 GitHub 設定';
+      }
+    }
+  }
+}
+
+ge('gh-save-btn') && ge('gh-save-btn').addEventListener('click', function() {
+  ghConfig.user  = ge('gh-user').value.trim();
+  ghConfig.repo  = ge('gh-repo').value.trim();
+  ghConfig.token = ge('gh-token').value.trim();
+  if (!ghConfig.user || !ghConfig.repo || !ghConfig.token) {
+    ge('gh-status').className = 'gh-status gh-err';
+    ge('gh-status').textContent = '❌ 請填寫所有欄位';
+    return;
+  }
+  saveGhConfig();
+  ge('gh-status').className = 'gh-status gh-ok';
+  ge('gh-status').textContent = '✅ 已儲存！可在場景頁選擇 GitHub 上傳';
+});
+
+ge('gh-upload-config-btn') && ge('gh-upload-config-btn').addEventListener('click', async function() {
+  var gh = getGhStatus();
+  if (!gh) { alert('請先儲存 GitHub 設定'); return; }
+  var statusEl = ge('gh-upload-status');
+  statusEl.textContent = '⏳ 上傳 config.json 到 GitHub...';
+  statusEl.style.color = '#c4a35a';
+
+  var jsonStr = JSON.stringify(config, null, 2);
+  var b64 = btoa(unescape(encodeURIComponent(jsonStr)));
+  var apiUrl = 'https://api.github.com/repos/' + gh.user + '/' + gh.repo + '/contents/360/config.json';
+
+  try {
+    // 先取得現有檔案的 sha（如果存在）
+    var shaRes = await fetch(apiUrl, {
+      headers: { 'Authorization': 'Bearer ' + gh.token }
+    });
+    var shaData = await shaRes.json();
+    var sha = shaData.sha || undefined;
+
+    var body = { message: 'Update 360° config', content: b64 };
+    if (sha) body.sha = sha;
+
+    var res = await fetch(apiUrl, {
+      method: 'PUT',
+      headers: { 'Authorization': 'Bearer ' + gh.token, 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+    var data = await res.json();
+    if (data.content) {
+      statusEl.textContent = '✅ config.json 已上傳到 GitHub！現在可以複製嵌入碼了。';
+      statusEl.style.color = '#7eb87a';
+      renderEmbedTab(); // 重新產生嵌入碼
+    } else {
+      throw new Error(data.message || '未知錯誤');
+    }
+  } catch(e) {
+    statusEl.textContent = '❌ 上傳失敗：' + (e.message || e);
+    statusEl.style.color = '#e05c5c';
+  }
+});
+// ── GitHub Upload ─────────────────────────────────────────
+function uploadToGitHub(file) {
+  return new Promise(function(resolve, reject) {
+    var gh = getGhStatus();
+    if (!gh) { reject(new Error('GitHub 未設定，請至「嵌入」頁填寫設定')); return; }
+
+    // 讀取檔案為 base64
+    var reader = new FileReader();
+    reader.onload = function(e) {
+      // e.target.result = "data:image/jpeg;base64,XXXXX"
+      var b64 = e.target.result.split(',')[1];
+      var ext = file.name.split('.').pop() || 'jpg';
+      var fname = 'pano_' + Date.now() + '.' + ext;
+      var apiUrl = 'https://api.github.com/repos/' + gh.user + '/' + gh.repo + '/contents/360/' + fname;
+
+      fetch(apiUrl, {
+        method: 'PUT',
+        headers: {
+          'Authorization': 'Bearer ' + gh.token,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          message: 'Upload 360° image: ' + fname,
+          content: b64
+        })
+      })
+      .then(function(r) { return r.json(); })
+      .then(function(d) {
+        if (d.content && d.content.download_url) {
+          // 轉成 raw URL
+          var rawUrl = 'https://raw.githubusercontent.com/' + gh.user + '/' + gh.repo + '/main/360/' + fname;
+          resolve(rawUrl);
+        } else if (d.message) {
+          reject(new Error('GitHub 錯誤：' + d.message));
+        } else {
+          reject(new Error('未知錯誤'));
+        }
+      })
+      .catch(reject);
+    };
+    reader.onerror = function() { reject(new Error('讀取檔案失敗')); };
+    reader.readAsDataURL(file);
+  });
+}
+
+// GitHub upload zone
+ge('gh-upload-zone') && ge('gh-upload-zone').addEventListener('click', function() {
+  ge('gh-img-file').click();
+});
+ge('gh-img-file') && ge('gh-img-file').addEventListener('change', function() {
+  var file = this.files[0]; if (!file) return;
+  var z = ge('gh-upload-zone');
+  var gh = getGhStatus();
+  if (!gh) {
+    z.className = 'uz error-state';
+    z.innerHTML = '<div class="uz-icon">⚠️</div><div class="uz-text">請先設定 GitHub Token</div><div class="uz-hint">至「嵌入」頁填寫設定</div>';
+    return;
+  }
+  z.className = 'uz uploading';
+  z.innerHTML = '<div class="uz-icon">⏫</div><div class="uz-text">上傳至 GitHub...</div><div class="uz-hint">'+gh.user+'/'+gh.repo+'</div>';
+  uploadToGitHub(file)
+    .then(function(url) {
+      // uploaded
+      ge('new-scene-img-url').value = url;
+      z.className = 'uz has-img';
+      z.innerHTML = '<div style="padding:10px 12px;"><div style="font-size:11px;color:#7eb87a;font-weight:600;margin-bottom:4px;">✅ 已上傳到 GitHub</div><div style="font-size:10px;color:#8a9088;word-break:break-all;">'+url+'</div></div>';
+    })
+    .catch(function(err) {
+      z.className = 'uz error-state';
+      var msg = err && err.message ? err.message : '未知錯誤';
+      z.innerHTML = '<div class="uz-icon">❌</div><div class="uz-text" style="color:#e05c5c">上傳失敗</div><div class="uz-hint" style="color:#e05c5c80;font-size:10px;">'+msg+'</div><div class="uz-hint">點擊重試</div>';
+    });
+});
+
+// ── Scene CRUD ────────────────────────────────────────────
+ge('add-scene-btn').addEventListener('click', function() {
+  var name = ge('new-scene-name').value.trim();
+  var url = ge('new-scene-img-url').value.trim() || ge('new-scene-url').value.trim();
+  if (!name) { alert('請輸入場景名稱'); return; }
+  if (!url) { alert('請上傳圖片或貼上圖片網址'); return; }
+  var sc = { id: uid(), name: name, imageUrl: url, hotspots: [] };
+  config.scenes.push(sc);
+  if (!config.startScene) config.startScene = sc.id;
+  saveConfig();
+  renderAdminSceneList();
+  updateSceneDots();
+  ge('new-scene-name').value = '';
+  ge('new-scene-url').value = '';
+  resetSceneUpload();
+  switchScene(sc.id);
+});
+
+// ── Scene folder & drag-sort helpers ──────────────────────
+if (!config.folders) config.folders = []; // [{id, name, open}]
+
+function getFolderScenes(folderId) {
+  return config.scenes.filter(function(sc) { return (sc.folder || '') === (folderId || ''); });
+}
+
+ge('new-folder-btn') && ge('new-folder-btn').addEventListener('click', function() {
+  var name = prompt('資料夾名稱', '新資料夾');
+  if (!name) return;
+  if (!config.folders) config.folders = [];
+  config.folders.push({ id: uid(), name: name, open: true });
+  saveConfig(); renderAdminSceneList();
+});
+
+var _dragSrcIdx = null;
+var _dragSrcFolder = null;
+
+function makeSceneCard(sc, idx, allIdx) {
+  var d = document.createElement('div');
+  d.className = 'scene-card' + (sc.id === currentSceneId ? ' active' : '');
+  d.setAttribute('draggable', 'true');
+  d.dataset.scIdx = allIdx;
+
+  var thumbHtml = sc.imageUrl
+    ? '<img class="sc-thumb" src="'+sc.imageUrl+'" alt="" onerror="this.style.display=\'none\'">'
+    : '<div class="sc-thumb" style="display:flex;align-items:center;justify-content:center;font-size:11px;color:#4a5448">未設定圖片</div>';
+
+  d.innerHTML = '<div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;">'+
+    '<span class="drag-handle" title="拖曳排序">⠿</span>'+
+    '<span style="font-size:13px;font-weight:500;color:#e8e4dc;flex:1">'+sc.name+'</span>'+
+    (config.folders && config.folders.length ? '<select class="fi" style="font-size:11px;padding:3px 6px;width:auto;max-width:90px;" data-folder-sel="'+sc.id+'">'+
+      '<option value=""'+((!sc.folder)?' selected':'')+'>無資料夾</option>'+
+      (config.folders||[]).map(function(f){return'<option value="'+f.id+'"'+(sc.folder===f.id?' selected':'')+'>'+f.name+'</option>';}).join('')+
+    '</select>' : '')+
+  '</div>'+
+  thumbHtml+
+  '<div class="sc-url">'+(sc.imageUrl ? sc.imageUrl.replace(/^https?:\/\//,'').substring(0,45)+'...' : '（未設定圖片）')+'</div>'+
+  '<div class="sc-actions">'+
+    '<button class="btn-green sc-load" style="flex:1">▶ 載入</button>'+
+    '<button class="btn-green sc-edit">✏</button>'+
+    '<button class="btn-red sc-del">🗑</button>'+
+  '</div>';
+
+  // Folder select change
+  var folderSel = d.querySelector('[data-folder-sel]');
+  if (folderSel) {
+    folderSel.addEventListener('change', function(e) {
+      e.stopPropagation();
+      sc.folder = folderSel.value || '';
+      saveConfig(); renderAdminSceneList();
+    });
+  }
+
+  // Drag sort
+  d.addEventListener('dragstart', function(e) {
+    _dragSrcIdx = allIdx;
+    d.classList.add('dragging');
+    e.dataTransfer.effectAllowed = 'move';
+  });
+  d.addEventListener('dragend', function() { d.classList.remove('dragging'); });
+  d.addEventListener('dragover', function(e) {
+    e.preventDefault(); e.dataTransfer.dropEffect = 'move';
+    d.classList.add('drag-over');
+  });
+  d.addEventListener('dragleave', function() { d.classList.remove('drag-over'); });
+  d.addEventListener('drop', function(e) {
+    e.preventDefault(); d.classList.remove('drag-over');
+    if (_dragSrcIdx === null || _dragSrcIdx === allIdx) return;
+    var moved = config.scenes.splice(_dragSrcIdx, 1)[0];
+    var newIdx = parseInt(d.dataset.scIdx);
+    if (_dragSrcIdx < newIdx) newIdx--;
+    config.scenes.splice(newIdx, 0, moved);
+    _dragSrcIdx = null;
+    saveConfig(); renderAdminSceneList(); updateSceneDots();
+  });
+
+  d.querySelector('.sc-load').addEventListener('click', function(e) {
+    e.stopPropagation(); switchScene(sc.id); renderAdminSceneList();
+  });
+  d.querySelector('.sc-edit').addEventListener('click', function(e) {
+    e.stopPropagation();
+    var newName = prompt('場景名稱', sc.name);
+    if (newName === null) return;
+    sc.name = newName || sc.name;
+    var choice = confirm('是否更換圖片？\n確定 = 上傳新圖\n取消 = 手動輸入網址');
+    if (choice) {
+      var inp = document.createElement('input');
+      inp.type = 'file'; inp.accept = 'image/*';
+      inp.onchange = function() {
+        var f = inp.files[0]; if (!f) return;
+        uploadToGitHub(f)
+          .then(function(url) {
+            sc.imageUrl = url; saveConfig(); renderAdminSceneList(); updateSceneDots();
+            if (sc.id === currentSceneId) loadPanoTexture(url, function(){});
+          }).catch(function(e) { alert('上傳失敗：' + (e && e.message ? e.message : '')); });
+      };
+      inp.click();
+    } else {
+      var nu = prompt('圖片網址', sc.imageUrl || '');
+      if (nu !== null) { sc.imageUrl = nu; }
+      saveConfig(); renderAdminSceneList(); updateSceneDots();
+      if (sc.id === currentSceneId && sc.imageUrl) loadPanoTexture(sc.imageUrl, function(){});
+    }
+  });
+  d.querySelector('.sc-del').addEventListener('click', function(e) {
+    e.stopPropagation();
+    if (!confirm('確定刪除「'+sc.name+'」？')) return;
+    config.scenes.splice(allIdx, 1);
+    if (config.startScene === sc.id) config.startScene = config.scenes.length ? config.scenes[0].id : null;
+    if (currentSceneId === sc.id) currentSceneId = null;
+    saveConfig(); renderAdminSceneList(); updateSceneDots();
+  });
+  d.addEventListener('click', function() { switchScene(sc.id); renderAdminSceneList(); });
+  return d;
+}
+
+function renderAdminSceneList() {
+  var el = ge('scenes-list');
+  if (!config.scenes.length) {
+    el.innerHTML = '<div class="empty"><div class="empty-icon">🗺</div>尚無場景，請在上方新增</div>';
+    return;
+  }
+  el.innerHTML = '';
+  var folders = config.folders || [];
+  var hasAnyFolder = folders.length > 0;
+
+  // Group scenes by folder
+  if (hasAnyFolder) {
+    // Scenes without folder first
+    var noFolder = config.scenes.filter(function(sc) { return !sc.folder; });
+    noFolder.forEach(function(sc) {
+      var globalIdx = config.scenes.indexOf(sc);
+      el.appendChild(makeSceneCard(sc, 0, globalIdx));
+    });
+    // Then each folder
+    folders.forEach(function(folder, fi) {
+      var inFolder = config.scenes.filter(function(sc) { return sc.folder === folder.id; });
+      if (!inFolder.length && noFolder.length) return; // skip empty folders if there are ungrouped scenes
+      var header = document.createElement('div');
+      header.className = 'folder-header' + (folder.open !== false ? ' open' : '');
+      header.innerHTML = '<span class="folder-toggle">▶</span>'+
+        '<span class="folder-name">📁 '+folder.name+'</span>'+
+        '<span class="folder-count">'+inFolder.length+'</span>'+
+        '<button class="btn-red" style="padding:2px 8px;font-size:11px;margin-left:4px;" data-del-folder="'+folder.id+'">🗑</button>';
+      var content = document.createElement('div');
+      content.className = 'folder-scenes' + (folder.open === false ? ' hidden' : '');
+      header.addEventListener('click', function(e) {
+        if (e.target.dataset.delFolder) {
+          if (!confirm('刪除資料夾「'+folder.name+'」？（場景不會被刪除，只是取消分類）')) return;
+          config.scenes.forEach(function(sc) { if (sc.folder === folder.id) sc.folder = ''; });
+          config.folders.splice(fi, 1);
+          saveConfig(); renderAdminSceneList(); return;
+        }
+        folder.open = folder.open === false ? true : false;
+        header.classList.toggle('open', folder.open !== false);
+        content.classList.toggle('hidden', folder.open === false);
+        saveConfig();
+      });
+      inFolder.forEach(function(sc) {
+        var globalIdx = config.scenes.indexOf(sc);
+        content.appendChild(makeSceneCard(sc, 0, globalIdx));
+      });
+      el.appendChild(header);
+      el.appendChild(content);
+    });
+  } else {
+    config.scenes.forEach(function(sc, idx) {
+      el.appendChild(makeSceneCard(sc, idx, idx));
+    });
+  }
+}
+
+// ── Hotspot CRUD ──────────────────────────────────────────
+function updateHsSceneHint() {
+  var sc = getScene(currentSceneId);
+  var h = ge('hs-scene-hint');
+  if (sc) { h.textContent = '目前編輯場景：' + sc.name; h.style.color = '#7eb87a'; }
+  else { h.textContent = '請先在「場景」頁載入一個場景'; h.style.color = ''; }
+}
+function populateHsTargets() {
+  var sel = ge('hs-target');
+  var opts = config.scenes.filter(function(s) { return s.id !== currentSceneId; });
+  sel.innerHTML = opts.length
+    ? opts.map(function(s) { return '<option value="'+s.id+'">'+s.name+'</option>'; }).join('')
+    : '<option value="">（需先新增其他場景）</option>';
+}
+
+ge('hs-place-btn').addEventListener('click', function() {
+  if (!currentSceneId) { alert('請先載入一個場景'); return; }
+  populateHsTargets();
+  ge('hs-form').classList.add('show');
+  editingHsId = null;
+  ge('hs-phi').value = ''; ge('hs-theta').value = '';
+  ge('hs-save-btn').disabled = true;
+  ge('admin').classList.remove('open');
+  ge('btn-admin').classList.remove('active');
+  startPlacing();
+});
+ge('hs-cancel-btn').addEventListener('click', function() {
+  stopPlacing();
+  ge('hs-form').classList.remove('show');
+  ge('place-banner').style.display = 'none';
+  editingHsId = null;
+});
+ge('hs-save-btn').addEventListener('click', function() {
+  var phi = parseFloat(ge('hs-phi').value);
+  var theta = parseFloat(ge('hs-theta').value);
+  if (isNaN(phi) || isNaN(theta)) { alert('請先點擊 360° 畫面選擇位置'); return; }
+  var hs = {
+    id: editingHsId || uid(),
+    phi: phi, theta: theta,
+    label: ge('hs-label').value.trim() || '前往',
+    targetScene: ge('hs-target').value,
+    icon: ge('hs-icon-custom').value.trim() || selectedIcon,
+    color: selectedColor,
+    size: parseInt(ge('hs-size').value),
+    pulse: ge('hs-pulse').checked
+  };
+  var sc = getScene(currentSceneId); if (!sc) return;
+  if (!sc.hotspots) sc.hotspots = [];
+  if (editingHsId) {
+    var i = sc.hotspots.findIndex(function(h) { return h.id === editingHsId; });
+    if (i >= 0) sc.hotspots[i] = hs;
+  } else {
+    sc.hotspots.push(hs);
+  }
+  saveConfig(); rebuildHotspotEls(); renderAdminHotspotList();
+  ge('hs-form').classList.remove('show');
+  editingHsId = null;
+  ge('hs-label').value = '';
+  ge('admin').classList.add('open');
+  ge('btn-admin').classList.add('active');
+});
+
+function renderAdminHotspotList() {
+  var el = ge('hotspots-list');
+  var hots = getSceneHotspots();
+  ge('hs-list-title').textContent = '傳送點列表（' + hots.length + '）';
+  if (!hots.length) {
+    el.innerHTML = '<div class="empty"><div class="empty-icon">📍</div>此場景尚無傳送點</div>';
+    return;
+  }
+  el.innerHTML = '';
+  hots.forEach(function(hs, idx) {
+    var target = getScene(hs.targetScene);
+    var d = document.createElement('div');
+    d.className = 'hs-card';
+    d.innerHTML =
+      '<div class="hs-card-top">'+
+        '<div class="hs-icon-prev" style="background:'+hs.color+'22;border:2px solid '+hs.color+'">'+hs.icon+'</div>'+
+        '<div class="hs-card-title">'+hs.label+'</div>'+
+        '<button class="hs-del">🗑</button>'+
+      '</div>'+
+      '<div class="hs-detail">'+
+        '<div class="hdd">→ <span>'+(target?target.name:'未設定')+'</span></div>'+
+        '<div class="hdd">大小 <span>'+hs.size+'px</span></div>'+
+        '<div class="hdd">閃動 <span>'+(hs.pulse!==false?'開':'關')+'</span></div>'+
+        '<div class="hdd">顏色 <span style="color:'+hs.color+'">●</span></div>'+
+      '</div>'+
+      '<div class="sc-actions" style="margin-top:8px;"><button class="btn-green hs-edit-btn">✏ 編輯</button></div>';
+    d.querySelector('.hs-del').addEventListener('click', function() {
+      if (!confirm('確定刪除此傳送點？')) return;
+      getScene(currentSceneId).hotspots.splice(idx, 1);
+      saveConfig(); rebuildHotspotEls(); renderAdminHotspotList();
+    });
+    d.querySelector('.hs-edit-btn').addEventListener('click', function() {
+      editingHsId = hs.id;
+      ge('hs-phi').value = hs.phi; ge('hs-theta').value = hs.theta;
+      ge('hs-label').value = hs.label;
+      ge('hs-size').value = hs.size; ge('hs-size-val').textContent = hs.size;
+      ge('hs-pulse').checked = hs.pulse !== false;
+      selectedIcon = hs.icon; selectedColor = hs.color;
+      ge('hs-icon-custom').value = '';
+      ge('ip-row') && ge('ip-row').querySelectorAll('.ib').forEach(function(b) { b.classList.toggle('sel', b.textContent===hs.icon); });
+      document.getElementById('icon-picker').querySelectorAll('.ib').forEach(function(b) { b.classList.toggle('sel', b.textContent===hs.icon); });
+      document.getElementById('color-picker').querySelectorAll('.cs').forEach(function(b) { b.classList.toggle('sel', b.title===hs.color); });
+      populateHsTargets();
+      ge('hs-target').value = hs.targetScene;
+      ge('hs-save-btn').disabled = false;
+      ge('hs-form').classList.add('show');
+    });
+    el.appendChild(d);
+  });
+}
+
+// ── Media Manager ─────────────────────────────────────────
+function getUsedUrls() {
+  var used = new Set();
+  config.scenes.forEach(function(sc) { if (sc.imageUrl) used.add(sc.imageUrl); });
+  return used;
+}
+
+function renderMediaGrid() {
+  var el = ge('media-grid-el');
+  var used = getUsedUrls();
+  if (!used.size) { el.innerHTML = '<div class="empty"><div class="empty-icon">🖼</div>尚無場景圖片</div>'; return; }
+  var html = '<div class="media-grid">';
+  used.forEach(function(url) {
+    var fname = url.split('/').pop().split('?')[0].substring(0, 24);
+    html += '<div class="media-item"><img src="'+url+'" alt="" onerror="this.style.display=\'none\'"><div class="media-badge badge-used">使用中</div><div class="media-name">'+fname+'</div></div>';
+  });
+  html += '</div>';
+  el.innerHTML = html;
+}
+
+ge('open-gh-repo-btn') && ge('open-gh-repo-btn').addEventListener('click', function() {
+  var gh = getGhStatus();
+  if (gh) window.open('https://github.com/' + gh.user + '/' + gh.repo + '/tree/main/360', '_blank');
+  else alert('請先在「嵌入」頁設定 GitHub 資訊');
+});
+
+// ── Picker Setup ──────────────────────────────────────────
+var ipRow = ge('icon-picker');
+ICONS.forEach(function(ic) {
+  var b = document.createElement('button');
+  b.className = 'ib' + (ic===selectedIcon?' sel':'');
+  b.textContent = ic;
+  b.addEventListener('click', function() {
+    selectedIcon = ic;
+    ipRow.querySelectorAll('.ib').forEach(function(x) { x.classList.remove('sel'); });
+    b.classList.add('sel');
+    ge('hs-icon-custom').value = '';
+    syncPreviewStyle();
+  });
+  ipRow.appendChild(b);
+});
+ge('hs-icon-custom').addEventListener('input', function(e) {
+  if (e.target.value.trim()) {
+    selectedIcon = e.target.value.trim();
+    ipRow.querySelectorAll('.ib').forEach(function(x) { x.classList.remove('sel'); });
+    syncPreviewStyle();
+  }
+});
+
+var cpRow = ge('color-picker');
+COLORS.forEach(function(col) {
+  var b = document.createElement('div');
+  b.className = 'cs' + (col===selectedColor?' sel':'');
+  b.style.background = col; b.title = col;
+  b.addEventListener('click', function() {
+    selectedColor = col;
+    cpRow.querySelectorAll('.cs').forEach(function(x) { x.classList.remove('sel'); });
+    b.classList.add('sel');
+    syncPreviewStyle();
+  });
+  cpRow.appendChild(b);
+});
+
+ge('hs-size').addEventListener('input', function() {
+  ge('hs-size-val').textContent = this.value;
+  syncPreviewStyle();
+});
+
+// ── Tabs ──────────────────────────────────────────────────
+document.querySelectorAll('.ptab').forEach(function(tab) {
+  tab.addEventListener('click', function() {
+    document.querySelectorAll('.ptab').forEach(function(t) { t.classList.remove('active'); });
+    document.querySelectorAll('.tab-pane').forEach(function(p) { p.classList.remove('active'); });
+    tab.classList.add('active');
+    ge('tab-'+tab.dataset.tab).classList.add('active');
+    if (tab.dataset.tab === 'embed') { renderEmbedTab(); loadGhForm(); }
+    if (tab.dataset.tab === 'hotspots') { renderAdminHotspotList(); populateHsTargets(); updateHsSceneHint(); }
+    if (tab.dataset.tab === 'scenes') renderAdminSceneList();
+    if (tab.dataset.tab === 'media') renderMediaGrid();
+  });
+});
+
+// ── Embed Tab ─────────────────────────────────────────────
+function renderEmbedTab() {
+  var ghCfg = getGhStatus ? getGhStatus() : null;
+  var sceneCount = config.scenes.length;
+
+  // ── 給 Syue & Lynn 後台的 Kuula 欄位（純 GitHub JSON URL）
+  var rawConfigUrl = ghCfg
+    ? 'https://raw.githubusercontent.com/' + ghCfg.user + '/' + ghCfg.repo + '/main/360/config.json'
+    : null;
+
+  var kuulaEl = ge('kuula-url-code');
+  var copyKuulaBtn = ge('copy-kuula-url-btn');
+  if (rawConfigUrl && sceneCount) {
+    kuulaEl.textContent = rawConfigUrl;
+    kuulaEl.dataset.url = rawConfigUrl;
+    copyKuulaBtn.disabled = false;
+    copyKuulaBtn.style.opacity = '1';
+  } else if (!ghCfg) {
+    kuulaEl.textContent = '⚠️ 請先設定 GitHub Token 並上傳 config.json';
+    copyKuulaBtn.disabled = true;
+    copyKuulaBtn.style.opacity = '0.4';
+  } else {
+    kuulaEl.textContent = '⚠️ 請先新增場景並上傳 JSON 到 GitHub';
+    copyKuulaBtn.disabled = true;
+    copyKuulaBtn.style.opacity = '0.4';
+  }
+
+  // ── iframe 給其他網站用（不用本機路徑，改用 GitHub Pages 或說明）
+  var embedEl = ge('embed-code');
+  var sizeWarn = ge('embed-size-warn');
+
+  if (rawConfigUrl && sceneCount) {
+    var iframeSrc = 'https://【你的網站域名】/360viewer.html?embed=true&config=' + rawConfigUrl;
+    embedEl.textContent =
+      '<!-- 將 360viewer.html 放到你的網站根目錄後使用 -->\n' +
+      '<iframe\n  src="' + iframeSrc + '"\n  width="100%" height="500"\n  frameborder="0" allowfullscreen allow="vr"\n  style="border-radius:10px;display:block;">\n</iframe>';
+    embedEl.dataset.full = '<iframe src="' + iframeSrc + '" width="100%" height="500" frameborder="0" allowfullscreen allow="vr" style="border-radius:10px;display:block;"></iframe>';
+    sizeWarn.style.display = 'block';
+    sizeWarn.className = 'gh-status gh-ok';
+    sizeWarn.textContent = '✅ 請把網址中的「【你的網站域名】」替換成實際域名後使用';
+  } else {
+    embedEl.textContent = '（請先完成 GitHub 設定）';
+    sizeWarn.style.display = 'none';
+  }
+}
+
+ge('copy-kuula-url-btn') && ge('copy-kuula-url-btn').addEventListener('click', function() {
+  var url = ge('kuula-url-code').dataset.url || ge('kuula-url-code').textContent;
+  if (!url || url.startsWith('⚠️')) return;
+  navigator.clipboard.writeText(url).then(function() {
+    alert('✅ 已複製！\n\n現在請：\n1. 開啟後台 admin.html\n2. 找到對應的地點 → 點「編輯」\n3. 在「Kuula 360 嵌入碼」欄位貼上這個網址\n4. 儲存\n\n前台 index.html 會自動顯示 360° 全景！');
+  });
+});
+ge('copy-embed-btn').addEventListener('click', function() {
+  var full = ge('embed-code').dataset.full || ge('embed-code').textContent;
+  navigator.clipboard.writeText(full).then(function() { alert('✅ 已複製 iframe 代碼！'); });
+});
+
+// ── Export / Import ───────────────────────────────────────
+var ioModal = ge('io-modal'), ioMode = 'export';
+ge('btn-export').addEventListener('click', function() {
+  ioMode = 'export';
+  ge('io-title').textContent = '📤 匯出設定 JSON';
+  ge('io-ok').textContent = '複製到剪貼簿';
+  ge('io-text').value = JSON.stringify(config, null, 2);
+  ge('io-text').readOnly = true;
+  ioModal.classList.add('open');
+});
+ge('btn-import').addEventListener('click', function() {
+  ioMode = 'import';
+  ge('io-title').textContent = '📥 匯入設定 JSON';
+  ge('io-ok').textContent = '確認匯入';
+  ge('io-text').value = ''; ge('io-text').readOnly = false;
+  ioModal.classList.add('open');
+});
+ge('io-cancel').addEventListener('click', function() { ioModal.classList.remove('open'); });
+ge('io-ok').addEventListener('click', function() {
+  if (ioMode === 'export') {
+    navigator.clipboard.writeText(ge('io-text').value).then(function() { alert('✅ 已複製！'); });
+  } else {
+    try {
+      var data = JSON.parse(ge('io-text').value);
+      config = data; saveConfig();
+      renderAdminSceneList(); updateSceneDots();
+      var startId = config.startScene || (config.scenes.length ? config.scenes[0].id : null);
+      if (startId) switchScene(startId);
+      ioModal.classList.remove('open');
+      alert('✅ 匯入成功！');
+    } catch(e) { alert('⚠️ JSON 格式錯誤'); }
+  }
+});
+
+// ── Top Controls ──────────────────────────────────────────
+var adminPanel = ge('admin');
+ge('btn-admin').addEventListener('click', function() {
+  var open = adminPanel.classList.toggle('open');
+  ge('btn-admin').classList.toggle('active', open);
+  if (open) {
+    ge('welcome').classList.remove('show'); // 開管理面板時隱藏歡迎畫面
+    renderAdminSceneList(); updateHsSceneHint();
+  }
+});
+ge('admin-close').addEventListener('click', function() {
+  adminPanel.classList.remove('open');
+  ge('btn-admin').classList.remove('active');
+});
+ge('btn-fs').addEventListener('click', function() {
+  if (!document.fullscreenElement) document.documentElement.requestFullscreen().catch(function(){});
+  else document.exitFullscreen();
+});
+ge('btn-help').addEventListener('click', function() {
+  alert('🕹 操作說明\n\n'+
+    '【基本操作】\n'+
+    '• 滑鼠拖曳 / 手指滑動：旋轉視角\n'+
+    '• 滾輪 / 雙指縮放：放大縮小\n'+
+    '• 點擊傳送點（圓形圖示）：跳到對應場景\n'+
+    '• 右下角圓點：快速切換場景\n\n'+
+    '【管理面板】\n'+
+    '• ⚙ 按鈕：開啟/關閉管理面板\n'+
+    '• 場景頁：上傳圖片，新增場景\n'+
+    '• 傳送點頁：放置跳轉點位\n'+
+    '• 圖片頁：查看上傳的圖片與使用狀況\n'+
+    '• 嵌入頁：複製代碼嵌入網站');
+});
+ge('welcome-open-btn').addEventListener('click', function() {
+  adminPanel.classList.add('open');
+  ge('btn-admin').classList.add('active');
+});
+
+// ── Init ──────────────────────────────────────────────────
+function init() {
+  var urlParams = new URLSearchParams(window.location.search);
+  if (urlParams.get('embed') === 'true') {
+    ge('btn-admin').style.display = 'none';
+    ge('btn-help').style.display = 'none';
+  }
+  updateSceneDots();
+  renderAdminSceneList();
+
+  if (config.scenes.length > 0) {
+    var startId = config.startScene || config.scenes[0].id;
+    switchScene(startId);
+  } else {
+    hideLoading();
+    ge('welcome').classList.add('show');
+  }
+}
+
+var configUrl = new URLSearchParams(window.location.search).get('config');
+var configData = new URLSearchParams(window.location.search).get('data');
+if (configData) {
+  // 直接從 URL 參數讀取 JSON（嵌入時使用）
+  try { config = JSON.parse(decodeURIComponent(configData)); } catch(e) {}
+  init();
+} else if (configUrl) {
+  setLoadingText('讀取設定中...');
+  fetch(configUrl)
+    .then(function(r) { return r.json(); })
+    .then(function(data) { config = data; init(); })
+    .catch(function() { init(); });
+} else {
+  init();
+}
+
+})(); // IIFE end
+</script>
+</body>
+</html>
