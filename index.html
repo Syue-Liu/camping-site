@@ -211,19 +211,37 @@
       fsBtn.className = 'pano-btn';
       fsBtn.textContent = '⛶';
       fsBtn.title = '全螢幕';
+      var _inPseudoFs = false, _origWrapStyle = '';
       fsBtn.addEventListener('click', function() {
-        if (!document.fullscreenElement) {
-          wrap.requestFullscreen && wrap.requestFullscreen();
-          fsBtn.textContent = '✕';
+        var isMob = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+        if (isMob || !wrap.requestFullscreen) {
+          // iOS pseudo-fullscreen
+          if (!_inPseudoFs) {
+            _origWrapStyle = wrap.getAttribute('style') || '';
+            wrap.style.cssText = 'position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:9999;border-radius:0;background:#0a0f0a;';
+            fsBtn.textContent = '✕';
+            _inPseudoFs = true;
+            setTimeout(function() { me.resize(); }, 60);
+          } else {
+            if (_origWrapStyle) wrap.setAttribute('style', _origWrapStyle);
+            else wrap.removeAttribute('style');
+            fsBtn.textContent = '⛶';
+            _inPseudoFs = false;
+            setTimeout(function() { me.resize(); }, 60);
+          }
         } else {
-          document.exitFullscreen && document.exitFullscreen();
-          fsBtn.textContent = '⛶';
+          if (!document.fullscreenElement) {
+            wrap.requestFullscreen();
+            fsBtn.textContent = '✕';
+          } else {
+            document.exitFullscreen();
+            fsBtn.textContent = '⛶';
+          }
         }
       });
       document.addEventListener('fullscreenchange', function() {
         var inFs = document.fullscreenElement === wrap;
         fsBtn.textContent = inFs ? '✕' : '⛶';
-        // 等 CSS 動畫完成後再 resize
         setTimeout(function() { me.resize(); }, 50);
         if (inFs) setTimeout(function() { me.resize(); }, 300);
       });
@@ -392,6 +410,17 @@
           var wrap2 = document.getElementById(me.containerId);
           var ld2 = wrap2 && wrap2.querySelector('.pano-loading');
           if (ld2) ld2.style.display = 'none';
+          // 套用場景調整
+          var adj = sc.adjust;
+          if (adj && me.renderer && me.renderer.domElement) {
+            var b = 1+(adj.brightness||0)/100, ct = 1+(adj.contrast||0)/100, s = 1+(adj.saturation||0)/100;
+            var f = 'brightness('+b.toFixed(2)+') contrast('+ct.toFixed(2)+') saturate('+s.toFixed(2)+')';
+            if (adj.warmth > 0) f += ' sepia('+((adj.warmth/50)*0.35).toFixed(2)+')';
+            if (adj.warmth < 0) f += ' hue-rotate('+(adj.warmth*0.8).toFixed(1)+'deg)';
+            me.renderer.domElement.style.filter = f;
+          } else if (me.renderer) {
+            me.renderer.domElement.style.filter = '';
+          }
         } catch(e) {
           if (ld) ld.innerHTML = '<div style="font-size:12px;color:#e05c5c">⚠️ 圖片處理失敗</div>';
         }
@@ -443,7 +472,23 @@
           e.stopPropagation();
           if (hs.targetScene) {
             var tidx = (me.cfg.scenes || []).findIndex(function(s) { return s.id === hs.targetScene; });
-            if (tidx >= 0) me.goScene(tidx);
+            if (tidx >= 0) {
+              // Zoom + blur 效果
+              var canvas = me.renderer.domElement;
+              var startFov = me.fov, targetFov = 28, dur = 350, t0 = Date.now();
+              (function step() {
+                var p = Math.min((Date.now()-t0)/dur, 1);
+                var ease = 1-Math.pow(1-p,3);
+                me.fov = startFov + (targetFov-startFov)*ease;
+                me.camera.fov = me.fov; me.camera.updateProjectionMatrix();
+                if (canvas) canvas.style.filter = 'blur('+(ease*6).toFixed(1)+'px)';
+                if (p < 1) requestAnimationFrame(step);
+                else {
+                  if (canvas) canvas.style.filter = '';
+                  me.goScene(tidx);
+                }
+              })();
+            }
           }
         });
         me.hsLayer.appendChild(div);
