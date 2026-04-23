@@ -76,7 +76,12 @@
     .pano-wrap{position:relative;width:100%;border-radius:8px;overflow:hidden;background:#0a0f0a;margin-top:1.25rem;user-select:none;}
     .pano-wrap canvas{display:block;width:100% !important;height:100% !important;cursor:grab;touch-action:none;}
     .pano-wrap canvas.grabbing{cursor:grabbing;}
-    .pano-loading{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;background:#0a0f0a;}
+    .pano-btn-bar{position:absolute;top:8px;right:8px;display:flex;gap:6px;z-index:10;}
+    .pano-btn{width:32px;height:32px;border-radius:8px;background:rgba(0,0,0,.55);border:1px solid rgba(255,255,255,.15);color:#fff;font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(8px);transition:background .15s;}
+    .pano-btn:hover{background:rgba(255,255,255,.2);}
+    .pano-wrap:-webkit-full-screen{width:100vw;height:100vh;}
+    .pano-wrap:fullscreen{width:100vw !important;height:100vh !important;}
+    .pano-wrap:fullscreen canvas{height:100% !important;}
     .pano-ring{width:36px;height:36px;border:3px solid rgba(126,184,122,.15);border-top-color:#7eb87a;border-radius:50%;animation:spin .9s linear infinite;}
     @keyframes spin{to{transform:rotate(360deg);}}
     .pano-loading-text{font-size:12px;color:#8a9088;}
@@ -199,6 +204,33 @@
       wrap.appendChild(canvas);
       var loadEl = wrap.querySelector('.pano-loading');
 
+      // Btn bar (fullscreen)
+      var btnBar = document.createElement('div');
+      btnBar.className = 'pano-btn-bar';
+      var fsBtn = document.createElement('button');
+      fsBtn.className = 'pano-btn';
+      fsBtn.textContent = '⛶';
+      fsBtn.title = '全螢幕';
+      fsBtn.addEventListener('click', function() {
+        if (!document.fullscreenElement) {
+          wrap.requestFullscreen && wrap.requestFullscreen();
+          fsBtn.textContent = '✕';
+        } else {
+          document.exitFullscreen && document.exitFullscreen();
+          fsBtn.textContent = '⛶';
+        }
+      });
+      document.addEventListener('fullscreenchange', function() {
+        if (!document.fullscreenElement) {
+          fsBtn.textContent = '⛶';
+          me.resize();
+        } else {
+          setTimeout(function() { me.resize(); }, 100);
+        }
+      });
+      btnBar.appendChild(fsBtn);
+      wrap.appendChild(btnBar);
+
       // HS layer
       var hsLayer = document.createElement('div');
       hsLayer.className = 'pano-hs-layer';
@@ -254,7 +286,7 @@
         if (!me.isDrag) return;
         var dx = e.clientX - me.prevX, dy = e.clientY - me.prevY;
         me.velX = dx; me.velY = dy;
-        me.camera.rotation.y -= dx * 0.005;
+        me.camera.rotation.y += dx * 0.005;
         me.camera.rotation.x = Math.max(-Math.PI/2, Math.min(Math.PI/2, me.camera.rotation.x + dy * 0.005));
         me.prevX = e.clientX; me.prevY = e.clientY;
       });
@@ -272,7 +304,7 @@
         e.preventDefault();
         if (e.touches.length === 1 && ltouch) {
           var dx = e.touches[0].clientX - ltouch.x, dy = e.touches[0].clientY - ltouch.y;
-          me.camera.rotation.y -= dx * 0.006;
+          me.camera.rotation.y += dx * 0.006;
           me.camera.rotation.x = Math.max(-Math.PI/2, Math.min(Math.PI/2, me.camera.rotation.x + dy * 0.006));
           ltouch = { x: e.touches[0].clientX, y: e.touches[0].clientY };
         } else if (e.touches.length === 2 && lpinch) {
@@ -288,7 +320,7 @@
         me.raf = requestAnimationFrame(loop);
         if (!me.isDrag) {
           me.velX *= 0.9; me.velY *= 0.9;
-          if (Math.abs(me.velX) > 0.01) me.camera.rotation.y -= me.velX * 0.0006;
+          if (Math.abs(me.velX) > 0.01) me.camera.rotation.y += me.velX * 0.0006;
           if (Math.abs(me.velY) > 0.01) me.camera.rotation.x = Math.max(-Math.PI/2, Math.min(Math.PI/2, me.camera.rotation.x + me.velY * 0.0006));
         }
         me.renderer.render(me.scene, me.camera);
