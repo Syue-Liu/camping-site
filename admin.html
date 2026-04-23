@@ -195,6 +195,7 @@ textarea.form-input{resize:vertical;min-height:90px;}
       <div class="sidebar-item" data-page="moto">◎ 重機地點</div>
       <div class="sidebar-label">設定</div>
       <div class="sidebar-item" data-page="social">📱 社群連結</div>
+      <div class="sidebar-item" data-page="pano360">🌐 360° 環景</div>
       <div class="sidebar-item" data-page="settings">⚙ 帳號設定</div>
     </div>
     <div class="content">
@@ -253,6 +254,34 @@ textarea.form-input{resize:vertical;min-height:90px;}
           <button class="btn-save-set" style="background:var(--danger);" id="clear-social-btn">清除所有連結</button>
         </div>
       </div>
+      <!-- 360° 環景 -->
+      <div class="page" id="page-pano360">
+        <div class="page-header"><h2>360° 環景管理</h2></div>
+        <div class="settings-card" id="pano-gh-card">
+          <h3>🐱 GitHub 連線設定</h3>
+          <div class="current-info" id="pano-gh-status">尚未設定</div>
+          <div class="form-group"><label class="form-label">使用者名稱</label><input class="form-input" type="text" id="p-gh-user" placeholder="例：syuelynn"></div>
+          <div class="form-group"><label class="form-label">Repository 名稱</label><input class="form-input" type="text" id="p-gh-repo" placeholder="例：360-images"></div>
+          <div class="form-group"><label class="form-label">Personal Access Token</label><input class="form-input" type="password" id="p-gh-token" placeholder="ghp_xxxxxxxxxxxxxxxx"></div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:4px;">
+            <button class="btn-save-set" id="p-gh-save-btn">💾 儲存設定</button>
+            <button class="btn-save-set" style="background:var(--accent2);" id="p-open-viewer-btn">🔗 開啟 360° 工具</button>
+          </div>
+        </div>
+        <div class="settings-card">
+          <h3>🌐 目前場景</h3>
+          <p style="font-size:13px;color:var(--muted);margin-bottom:1rem;line-height:1.6;">從 GitHub 載入現有的 360° 設定</p>
+          <button class="btn-save-set" id="p-load-config-btn">↺ 載入 GitHub 場景列表</button>
+          <div id="pano-scene-list" style="margin-top:1rem;"></div>
+        </div>
+        <div class="settings-card">
+          <h3>📋 Kuula 欄位 — 貼上用網址</h3>
+          <p style="font-size:13px;color:var(--muted);margin-bottom:0.75rem;">複製後貼到地點編輯的「Kuula 360 嵌入碼」欄位：</p>
+          <div class="current-info" id="pano-config-url" style="word-break:break-all;font-size:12px;">（請先設定 GitHub）</div>
+          <button class="btn-save-set" id="p-copy-url-btn" style="margin-top:0.5rem;">📋 複製網址</button>
+        </div>
+      </div>
+
       <!-- 設定 -->
       <div class="page" id="page-settings">
         <div class="page-header"><h2>帳號設定</h2></div>
@@ -489,7 +518,7 @@ function toggleEye(targetId) {
 }
 
 // ── 頁面導航 ─────────────────────────────────────────────
-var PAGES = ['dashboard', 'camping', 'moto', 'social', 'settings'];
+var PAGES = ['dashboard', 'camping', 'moto', 'social', 'pano360', 'settings'];
 
 function showPage(name) {
   document.querySelectorAll('.page').forEach(function(p) { p.classList.remove('active'); });
@@ -501,7 +530,7 @@ function showPage(name) {
   if (name === 'camping') renderList('camping');
   if (name === 'moto') renderList('moto');
   if (name === 'social') loadSocialForm();
-  if (name === 'settings') {
+  if (name === 'pano360') initPano360Page();
     ge('disp-user').textContent = getAcc().username;
     ge('disp-recovery').textContent = RECOVERY_EMAIL;
   }
@@ -1019,6 +1048,85 @@ document.querySelectorAll('.eye-btn').forEach(function(btn) {
 // 社群
 ge('save-social-btn').addEventListener('click', saveSocial);
 ge('clear-social-btn').addEventListener('click', clearSocial);
+
+// ── 360° 環景管理頁面 ──────────────────────────────────────
+var panoGhConfig = { user:'', repo:'', token:'' };
+try { var pgs = localStorage.getItem('pano360_gh'); if (pgs) panoGhConfig = JSON.parse(pgs); } catch(e) {}
+
+function savePanoGh() {
+  panoGhConfig.user  = ge('p-gh-user').value.trim();
+  panoGhConfig.repo  = ge('p-gh-repo').value.trim();
+  panoGhConfig.token = ge('p-gh-token').value.trim();
+  if (!panoGhConfig.user || !panoGhConfig.repo || !panoGhConfig.token) {
+    toast('請填寫所有 GitHub 設定', 1); return;
+  }
+  localStorage.setItem('pano360_gh', JSON.stringify(panoGhConfig));
+  localStorage.setItem('pano360_gh_shared', JSON.stringify(panoGhConfig)); // 共用給 360viewer
+  updatePanoGhStatus();
+  toast('GitHub 設定已儲存！');
+}
+
+function updatePanoGhStatus() {
+  var st = ge('pano-gh-status');
+  var url = ge('pano-config-url');
+  if (panoGhConfig.user && panoGhConfig.repo && panoGhConfig.token) {
+    st.innerHTML = '✅ 已設定：<b>' + panoGhConfig.user + '/' + panoGhConfig.repo + '</b>';
+    var rawUrl = 'https://raw.githubusercontent.com/' + panoGhConfig.user + '/' + panoGhConfig.repo + '/main/360/config.json';
+    url.textContent = rawUrl;
+    url.dataset.url = rawUrl;
+  } else {
+    st.textContent = '⚠️ 尚未設定，請填寫下方欄位';
+    url.textContent = '（請先設定 GitHub）';
+    url.dataset.url = '';
+  }
+}
+
+function initPano360Page() {
+  ge('p-gh-user').value  = panoGhConfig.user  || '';
+  ge('p-gh-repo').value  = panoGhConfig.repo  || '';
+  ge('p-gh-token').value = panoGhConfig.token || '';
+  updatePanoGhStatus();
+}
+
+ge('p-gh-save-btn').addEventListener('click', savePanoGh);
+
+ge('p-open-viewer-btn').addEventListener('click', function() {
+  // 傳遞 GitHub 設定給 360viewer（透過 localStorage）
+  if (panoGhConfig.user) localStorage.setItem('pano360_gh', JSON.stringify(panoGhConfig));
+  window.open('360viewer.html', '_blank');
+});
+
+ge('p-copy-url-btn').addEventListener('click', function() {
+  var url = ge('pano-config-url').dataset.url;
+  if (!url) { toast('請先設定 GitHub', 1); return; }
+  navigator.clipboard.writeText(url).then(function() {
+    toast('✅ 已複製！貼到地點的「Kuula 360 嵌入碼」欄位');
+  });
+});
+
+ge('p-load-config-btn').addEventListener('click', async function() {
+  if (!panoGhConfig.user || !panoGhConfig.repo) { toast('請先設定 GitHub', 1); return; }
+  var rawUrl = 'https://raw.githubusercontent.com/' + panoGhConfig.user + '/' + panoGhConfig.repo + '/main/360/config.json';
+  var el = ge('pano-scene-list');
+  el.innerHTML = '<div style="font-size:13px;color:var(--muted);">載入中...</div>';
+  try {
+    var res = await fetch(rawUrl + '?t=' + Date.now());
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    var cfg = await res.json();
+    var scenes = cfg.scenes || [];
+    if (!scenes.length) { el.innerHTML = '<div style="font-size:13px;color:var(--muted);">尚無場景</div>'; return; }
+    el.innerHTML = scenes.map(function(sc) {
+      return '<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);">' +
+        (sc.imageUrl ? '<img src="'+sc.imageUrl+'" style="width:56px;height:42px;object-fit:cover;border-radius:6px;" onerror="this.style.display=\'none\'">' : '<div style="width:56px;height:42px;background:var(--surface2);border-radius:6px;"></div>') +
+        '<div><div style="font-size:14px;font-weight:500;">' + sc.name + '</div>' +
+        '<div style="font-size:11px;color:var(--muted);">' + (sc.hotspots ? sc.hotspots.length : 0) + ' 個傳送點</div></div>' +
+      '</div>';
+    }).join('');
+  } catch(e) {
+    el.innerHTML = '<div style="font-size:13px;color:var(--danger);">載入失敗：' + e.message + '<br>請確認 config.json 已上傳且 Repo 為 Public</div>';
+  }
+});
+
 
 </script>
 </body>
