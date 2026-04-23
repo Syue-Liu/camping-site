@@ -1088,44 +1088,53 @@ function initPano360Page() {
   updatePanoGhStatus();
 }
 
-ge('p-gh-save-btn').addEventListener('click', savePanoGh);
+// 用 try-catch 包住，防止任何錯誤影響登入
+try {
+  ge('p-gh-save-btn') && ge('p-gh-save-btn').addEventListener('click', savePanoGh);
 
-ge('p-open-viewer-btn').addEventListener('click', function() {
-  // 傳遞 GitHub 設定給 360viewer（透過 localStorage）
-  if (panoGhConfig.user) localStorage.setItem('pano360_gh', JSON.stringify(panoGhConfig));
-  window.open('360viewer.html', '_blank');
-});
-
-ge('p-copy-url-btn').addEventListener('click', function() {
-  var url = ge('pano-config-url').dataset.url;
-  if (!url) { toast('請先設定 GitHub', 1); return; }
-  navigator.clipboard.writeText(url).then(function() {
-    toast('✅ 已複製！貼到地點的「Kuula 360 嵌入碼」欄位');
+  ge('p-open-viewer-btn') && ge('p-open-viewer-btn').addEventListener('click', function() {
+    if (panoGhConfig.user) localStorage.setItem('pano360_gh', JSON.stringify(panoGhConfig));
+    window.open('360viewer.html', '_blank');
   });
-});
 
-ge('p-load-config-btn').addEventListener('click', async function() {
-  if (!panoGhConfig.user || !panoGhConfig.repo) { toast('請先設定 GitHub', 1); return; }
-  var rawUrl = 'https://raw.githubusercontent.com/' + panoGhConfig.user + '/' + panoGhConfig.repo + '/main/360/config.json';
-  var el = ge('pano-scene-list');
-  el.innerHTML = '<div style="font-size:13px;color:var(--muted);">載入中...</div>';
-  try {
-    var res = await fetch(rawUrl + '?t=' + Date.now());
-    if (!res.ok) throw new Error('HTTP ' + res.status);
-    var cfg = await res.json();
-    var scenes = cfg.scenes || [];
-    if (!scenes.length) { el.innerHTML = '<div style="font-size:13px;color:var(--muted);">尚無場景</div>'; return; }
-    el.innerHTML = scenes.map(function(sc) {
-      return '<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);">' +
-        (sc.imageUrl ? '<img src="'+sc.imageUrl+'" style="width:56px;height:42px;object-fit:cover;border-radius:6px;" onerror="this.style.display=\'none\'">' : '<div style="width:56px;height:42px;background:var(--surface2);border-radius:6px;"></div>') +
-        '<div><div style="font-size:14px;font-weight:500;">' + sc.name + '</div>' +
-        '<div style="font-size:11px;color:var(--muted);">' + (sc.hotspots ? sc.hotspots.length : 0) + ' 個傳送點</div></div>' +
-      '</div>';
-    }).join('');
-  } catch(e) {
-    el.innerHTML = '<div style="font-size:13px;color:var(--danger);">載入失敗：' + e.message + '<br>請確認 config.json 已上傳且 Repo 為 Public</div>';
-  }
-});
+  ge('p-copy-url-btn') && ge('p-copy-url-btn').addEventListener('click', function() {
+    var urlEl = ge('pano-config-url');
+    var url = urlEl ? urlEl.dataset.url : '';
+    if (!url) { toast('請先設定 GitHub', 1); return; }
+    navigator.clipboard.writeText(url).then(function() {
+      toast('✅ 已複製！貼到地點的「Kuula 360 嵌入碼」欄位');
+    });
+  });
+
+  ge('p-load-config-btn') && ge('p-load-config-btn').addEventListener('click', function() {
+    if (!panoGhConfig.user || !panoGhConfig.repo) { toast('請先設定 GitHub', 1); return; }
+    var rawUrl = 'https://raw.githubusercontent.com/' + panoGhConfig.user + '/' + panoGhConfig.repo + '/main/360/config.json';
+    var el = ge('pano-scene-list');
+    if (!el) return;
+    el.innerHTML = '<div style="font-size:13px;color:var(--muted);">載入中...</div>';
+    fetch(rawUrl + '?t=' + Date.now())
+      .then(function(r) {
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        return r.json();
+      })
+      .then(function(cfg) {
+        var scenes = cfg.scenes || [];
+        if (!scenes.length) { el.innerHTML = '<div style="font-size:13px;color:var(--muted);">尚無場景</div>'; return; }
+        el.innerHTML = scenes.map(function(sc) {
+          return '<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);">' +
+            (sc.imageUrl ? '<img src="'+sc.imageUrl+'" style="width:56px;height:42px;object-fit:cover;border-radius:6px;" onerror="this.style.display=\'none\'">' : '<div style="width:56px;height:42px;background:var(--surface2);border-radius:6px;"></div>') +
+            '<div><div style="font-size:14px;font-weight:500;">' + sc.name + '</div>' +
+            '<div style="font-size:11px;color:var(--muted);">' + (sc.hotspots ? sc.hotspots.length : 0) + ' 個傳送點</div></div>' +
+          '</div>';
+        }).join('');
+      })
+      .catch(function(e) {
+        el.innerHTML = '<div style="font-size:13px;color:var(--danger);">載入失敗：' + e.message + '<br>請確認 config.json 已上傳且 Repo 為 Public</div>';
+      });
+  });
+} catch(panoErr) {
+  console.warn('360° 頁面初始化錯誤（不影響主功能）:', panoErr);
+}
 
 
 </script>
