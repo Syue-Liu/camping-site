@@ -389,6 +389,22 @@ textarea.form-input{resize:vertical;min-height:90px;}
 <script>
 'use strict';
 
+// ── 緊急重置（網址加 ?reset 即可清除密碼回預設值）────────
+(function() {
+  if (window.location.search.indexOf('reset') !== -1) {
+    localStorage.removeItem('sl_acc');
+    // 清除 URL 參數
+    history.replaceState(null, '', window.location.pathname);
+    var notice = document.createElement('div');
+    notice.style.cssText = 'position:fixed;top:20px;left:50%;transform:translateX(-50%);background:#7eb87a;color:#0f1410;padding:12px 24px;border-radius:10px;font-size:14px;font-weight:700;z-index:9999;';
+    notice.textContent = '✅ 帳密已重置！請用 syuelynn / syuelynn2025 登入';
+    document.body.appendChild(notice);
+    setTimeout(function() { notice.remove(); }, 4000);
+  }
+})();
+
+var _loginFailCount = 0;
+
 // ── 常數 ─────────────────────────────────────────────────
 var API = 'https://script.google.com/macros/s/AKfycbzPguC2eh8JP1x1GAOaqodo9r4nb1BPEE4JayJoQxBF-31jZTLl02pIj1ADQ8SGyHxcDw/exec';
 var CLOUDINARY_CLOUD = 'ddcalhl1s';
@@ -430,12 +446,18 @@ function doLogin() {
   var pw = ge('l-pw').value;
   ge('l-err').style.display = 'none';
   if (u === acc.username && pw === acc.password) {
+    _loginFailCount = 0;
     ge('login-screen').style.display = 'none';
     ge('admin-screen').style.display = 'block';
     ge('disp-user').textContent = acc.username;
     loadAll();
   } else {
+    _loginFailCount++;
     ge('l-err').style.display = 'block';
+    // 連續失敗 3 次，提示重置
+    if (_loginFailCount >= 3) {
+      ge('l-err').innerHTML = '帳號或密碼錯誤<br><small style="color:#e05c5c88;">如果忘記密碼，請在網址後加 <b style="color:#e05c5c;">?reset</b> 重置</small>';
+    }
   }
 }
 
