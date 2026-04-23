@@ -308,6 +308,10 @@ canvas.edit-mode{cursor:default;}
       <button class="btn-primary" id="add-scene-btn">+ 新增場景</button>
       <div class="dv"></div>
       <div class="st">場景列表</div>
+
+      <!-- 資料夾管理 -->
+      <div id="folder-mgmt-area"></div>
+
       <!-- 新增資料夾：內嵌表單，不用 prompt() -->
       <div id="new-folder-form" style="display:none;background:rgba(196,163,90,.06);border:1px solid rgba(196,163,90,.2);border-radius:8px;padding:10px;margin-bottom:8px;">
         <div style="font-size:12px;color:#c4a35a;margin-bottom:6px;">資料夾名稱</div>
@@ -318,7 +322,7 @@ canvas.edit-mode{cursor:default;}
         </div>
       </div>
       <button class="btn-new-folder" id="new-folder-btn">📁 + 新增資料夾</button>
-      <div id="folder-created-tip" style="display:none;font-size:12px;color:#7eb87a;padding:6px 10px;background:rgba(126,184,122,.08);border-radius:6px;margin-bottom:6px;">✅ 資料夾已建立！請在每個場景卡片右上角的下拉選單選擇資料夾。</div>
+      <div id="folder-created-tip" style="display:none;font-size:12px;color:#7eb87a;padding:6px 10px;background:rgba(126,184,122,.08);border-radius:6px;margin-bottom:6px;">✅ 資料夾已建立！點每個場景卡片上的「📁」按鈕指定資料夾。</div>
       <div id="scenes-list"></div>
     </div>
 
@@ -1187,38 +1191,63 @@ function makeSceneCard(sc, idx, allIdx) {
     '<button class="btn-red sc-del">🗑</button>'+
   '</div>';
 
-  // 資料夾選擇器 — 用 DOM 建立，完全隔離 click 冒泡
+  // 資料夾選擇器 — 用按鈕取代 select，避免下拉干擾問題
   if (config.folders && config.folders.length) {
     var folderRow = document.createElement('div');
-    folderRow.style.cssText = 'margin-top:7px;display:flex;align-items:center;gap:7px;';
+    folderRow.style.cssText = 'margin-top:7px;';
+
+    var currentFolder = config.folders.find(function(f) { return f.id === sc.folder; });
+    var folderBtnWrap = document.createElement('div');
+    folderBtnWrap.style.cssText = 'display:flex;align-items:center;gap:6px;';
+
     var folderLabel = document.createElement('span');
     folderLabel.style.cssText = 'font-size:11px;color:#8a9088;flex-shrink:0;';
-    folderLabel.textContent = '📁 資料夾：';
-    var folderSel = document.createElement('select');
-    folderSel.className = 'fi';
-    folderSel.style.cssText = 'font-size:12px;padding:4px 8px;flex:1;cursor:pointer;';
-    var optNone = document.createElement('option');
-    optNone.value = ''; optNone.textContent = '無資料夾';
-    if (!sc.folder) optNone.selected = true;
-    folderSel.appendChild(optNone);
+    folderLabel.textContent = '📁';
+
+    var folderBtn = document.createElement('button');
+    folderBtn.style.cssText = 'flex:1;padding:5px 10px;background:rgba(196,163,90,.08);border:1px solid rgba(196,163,90,.25);border-radius:7px;color:#c4a35a;font-size:12px;text-align:left;cursor:pointer;font-family:inherit;';
+    folderBtn.textContent = currentFolder ? ('📁 ' + currentFolder.name) : '無資料夾 ▾';
+
+    var folderMenu = document.createElement('div');
+    folderMenu.style.cssText = 'display:none;margin-top:4px;background:var(--surface2);border:1px solid rgba(255,255,255,.1);border-radius:8px;overflow:hidden;';
+
+    // 選項：無資料夾
+    function makeFolderOption(label, value) {
+      var opt = document.createElement('button');
+      opt.style.cssText = 'width:100%;padding:8px 12px;background:none;border:none;color:#e8e4dc;font-size:12px;text-align:left;cursor:pointer;font-family:inherit;';
+      opt.textContent = label;
+      opt.addEventListener('mouseenter', function() { opt.style.background = 'rgba(255,255,255,.07)'; });
+      opt.addEventListener('mouseleave', function() { opt.style.background = ''; });
+      opt.addEventListener('click', function(e) {
+        e.stopPropagation();
+        sc.folder = value;
+        saveConfig(); renderAdminSceneList();
+      });
+      return opt;
+    }
+
+    folderMenu.appendChild(makeFolderOption('— 無資料夾', ''));
     (config.folders || []).forEach(function(f) {
-      var opt = document.createElement('option');
-      opt.value = f.id; opt.textContent = '📁 ' + f.name;
-      if (sc.folder === f.id) opt.selected = true;
-      folderSel.appendChild(opt);
+      folderMenu.appendChild(makeFolderOption('📁 ' + f.name, f.id));
     });
-    // 完全阻止冒泡
-    folderSel.addEventListener('mousedown', function(e) { e.stopPropagation(); });
-    folderSel.addEventListener('click', function(e) { e.stopPropagation(); });
-    folderSel.addEventListener('touchstart', function(e) { e.stopPropagation(); });
-    folderSel.addEventListener('change', function(e) {
+
+    var menuOpen = false;
+    folderBtn.addEventListener('click', function(e) {
       e.stopPropagation();
-      sc.folder = folderSel.value || '';
-      saveConfig();
-      renderAdminSceneList();
+      menuOpen = !menuOpen;
+      folderMenu.style.display = menuOpen ? 'block' : 'none';
     });
-    folderRow.appendChild(folderLabel);
-    folderRow.appendChild(folderSel);
+
+    // 點其他地方關掉
+    document.addEventListener('click', function closeMenu() {
+      menuOpen = false; folderMenu.style.display = 'none';
+      document.removeEventListener('click', closeMenu);
+    });
+
+    folderBtnWrap.appendChild(folderLabel);
+    folderBtnWrap.appendChild(folderBtn);
+    folderRow.appendChild(folderBtnWrap);
+    folderRow.appendChild(folderMenu);
     d.appendChild(folderRow);
   }
 
@@ -1314,18 +1343,93 @@ function makeSceneCard(sc, idx, allIdx) {
     config.scenes.splice(allIdx, 1);
     saveConfig(); renderAdminSceneList(); updateSceneDots();
   });
-  d.addEventListener('click', function(e) {
-    // 忽略按鈕、select、input 等互動元素的點擊
-    var t = e.target;
-    if (t.tagName === 'BUTTON' || t.tagName === 'SELECT' ||
-        t.tagName === 'INPUT' || t.tagName === 'OPTION' ||
-        t.closest && (t.closest('button') || t.closest('select') || t.closest('.scene-edit-row'))) return;
-    switchScene(sc.id); renderAdminSceneList();
-  });
+  // 不設定卡片整體的 click，只靠「▶ 載入」按鈕
   return d;
 }
 
+function renderFolderMgmt() {
+  var el = ge('folder-mgmt-area');
+  if (!el) return;
+  var folders = config.folders || [];
+  if (!folders.length) { el.innerHTML = ''; return; }
+
+  el.innerHTML = '';
+  var title = document.createElement('div');
+  title.style.cssText = 'font-size:11px;color:#8a9088;text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px;';
+  title.textContent = '已建立的資料夾';
+  el.appendChild(title);
+
+  folders.forEach(function(folder, fi) {
+    var row = document.createElement('div');
+    row.style.cssText = 'background:rgba(196,163,90,.06);border:1px solid rgba(196,163,90,.18);border-radius:8px;padding:8px 10px;margin-bottom:6px;';
+
+    var nameInput = document.createElement('input');
+    nameInput.className = 'fi';
+    nameInput.value = folder.name;
+    nameInput.style.cssText = 'font-size:13px;margin:0 0 7px 0;padding:5px 10px;';
+
+    var btnRow = document.createElement('div');
+    btnRow.style.cssText = 'display:flex;gap:6px;';
+
+    var saveBtn = document.createElement('button');
+    saveBtn.className = 'btn-green';
+    saveBtn.style.cssText = 'flex:1;padding:6px;font-size:12px;';
+    saveBtn.textContent = '💾 儲存名稱';
+
+    var delBtn = document.createElement('button');
+    delBtn.className = 'btn-red';
+    delBtn.style.cssText = 'padding:6px 12px;font-size:12px;';
+    delBtn.textContent = '🗑 刪除';
+    delBtn.dataset.confirmed = '';
+
+    saveBtn.addEventListener('click', function(e) {
+      e.stopPropagation();
+      var newName = nameInput.value.trim();
+      if (!newName) return;
+      folder.name = newName;
+      saveConfig(); renderAdminSceneList();
+      saveBtn.textContent = '✅ 已儲存'; saveBtn.style.color = '#7eb87a';
+      setTimeout(function() { saveBtn.textContent = '💾 儲存名稱'; saveBtn.style.color = ''; }, 1500);
+    });
+
+    delBtn.addEventListener('click', function(e) {
+      e.stopPropagation();
+      if (delBtn.dataset.confirmed !== 'yes') {
+        delBtn.textContent = '確定刪除？';
+        delBtn.dataset.confirmed = 'yes';
+        setTimeout(function() {
+          if (delBtn.dataset.confirmed === 'yes') {
+            delBtn.textContent = '🗑 刪除'; delBtn.dataset.confirmed = '';
+          }
+        }, 2500);
+        return;
+      }
+      // 清除所有場景的這個資料夾
+      config.scenes.forEach(function(sc) { if (sc.folder === folder.id) sc.folder = ''; });
+      config.folders.splice(fi, 1);
+      saveConfig(); renderAdminSceneList();
+    });
+
+    var scCount = config.scenes.filter(function(sc) { return sc.folder === folder.id; }).length;
+    var info = document.createElement('div');
+    info.style.cssText = 'font-size:11px;color:#8a9088;margin-bottom:6px;';
+    info.textContent = '📁 ' + folder.name + '　含 ' + scCount + ' 個場景';
+
+    btnRow.appendChild(saveBtn);
+    btnRow.appendChild(delBtn);
+    row.appendChild(info);
+    row.appendChild(nameInput);
+    row.appendChild(btnRow);
+    el.appendChild(row);
+  });
+
+  var divEl = document.createElement('div');
+  divEl.style.cssText = 'height:1px;background:rgba(255,255,255,.05);margin:10px 0 8px;';
+  el.appendChild(divEl);
+}
+
 function renderAdminSceneList() {
+  renderFolderMgmt();
   var el = ge('scenes-list');
   if (!config.scenes.length) {
     el.innerHTML = '<div class="empty"><div class="empty-icon">🗺</div>尚無場景，請在上方新增</div>';
