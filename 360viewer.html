@@ -308,7 +308,17 @@ canvas.edit-mode{cursor:default;}
       <button class="btn-primary" id="add-scene-btn">+ 新增場景</button>
       <div class="dv"></div>
       <div class="st">場景列表</div>
+      <!-- 新增資料夾：內嵌表單，不用 prompt() -->
+      <div id="new-folder-form" style="display:none;background:rgba(196,163,90,.06);border:1px solid rgba(196,163,90,.2);border-radius:8px;padding:10px;margin-bottom:8px;">
+        <div style="font-size:12px;color:#c4a35a;margin-bottom:6px;">資料夾名稱</div>
+        <div style="display:flex;gap:6px;">
+          <input class="fi" id="new-folder-name" placeholder="例：內湖露營區" style="flex:1;margin:0;">
+          <button class="btn-green" id="confirm-folder-btn" style="padding:8px 14px;white-space:nowrap;">✓ 建立</button>
+          <button class="btn-outline" id="cancel-folder-btn" style="padding:8px 10px;margin:0;width:auto;">✕</button>
+        </div>
+      </div>
       <button class="btn-new-folder" id="new-folder-btn">📁 + 新增資料夾</button>
+      <div id="folder-created-tip" style="display:none;font-size:12px;color:#7eb87a;padding:6px 10px;background:rgba(126,184,122,.08);border-radius:6px;margin-bottom:6px;">✅ 資料夾已建立！請在每個場景卡片右上角的下拉選單選擇資料夾。</div>
       <div id="scenes-list"></div>
     </div>
 
@@ -1116,11 +1126,40 @@ function getFolderScenes(folderId) {
 }
 
 ge('new-folder-btn') && ge('new-folder-btn').addEventListener('click', function() {
-  var name = prompt('資料夾名稱', '新資料夾');
-  if (!name) return;
+  ge('new-folder-form').style.display = 'block';
+  ge('new-folder-btn').style.display = 'none';
+  ge('folder-created-tip').style.display = 'none';
+  setTimeout(function() {
+    var inp = ge('new-folder-name');
+    if (inp) { inp.value = ''; inp.focus(); }
+  }, 50);
+});
+
+ge('cancel-folder-btn') && ge('cancel-folder-btn').addEventListener('click', function() {
+  ge('new-folder-form').style.display = 'none';
+  ge('new-folder-btn').style.display = 'block';
+});
+
+function doCreateFolder() {
+  var inp = ge('new-folder-name');
+  var name = inp ? inp.value.trim() : '';
+  if (!name) { if(inp) inp.focus(); return; }
   if (!config.folders) config.folders = [];
   config.folders.push({ id: uid(), name: name, open: true });
-  saveConfig(); renderAdminSceneList();
+  saveConfig();
+  ge('new-folder-form').style.display = 'none';
+  ge('new-folder-btn').style.display = 'block';
+  ge('folder-created-tip').style.display = 'block';
+  setTimeout(function() {
+    var tip = ge('folder-created-tip');
+    if (tip) tip.style.display = 'none';
+  }, 4000);
+  renderAdminSceneList();
+}
+
+ge('confirm-folder-btn') && ge('confirm-folder-btn').addEventListener('click', doCreateFolder);
+ge('new-folder-name') && ge('new-folder-name').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') doCreateFolder();
 });
 
 var _dragSrcIdx = null;
@@ -1190,11 +1229,36 @@ function makeSceneCard(sc, idx, allIdx) {
   });
   d.querySelector('.sc-edit').addEventListener('click', function(e) {
     e.stopPropagation();
-    var newName = prompt('場景名稱', sc.name);
-    if (newName === null) return;
-    sc.name = newName || sc.name;
-    var choice = confirm('是否更換圖片？\n確定 = 上傳新圖\n取消 = 手動輸入網址');
-    if (choice) {
+    // 直接展開內嵌編輯，不用 prompt()
+    var nameEl = d.querySelector('.scene-edit-name');
+    if (nameEl) { nameEl.style.display = nameEl.style.display === 'none' ? 'block' : 'none'; return; }
+    // 建立內嵌編輯區
+    var editRow = document.createElement('div');
+    editRow.className = 'scene-edit-row';
+    editRow.style.cssText = 'margin-top:8px;padding:8px;background:rgba(126,184,122,.06);border-radius:7px;border:1px solid rgba(126,184,122,.2);';
+    editRow.innerHTML =
+      '<div style="font-size:11px;color:#8a9088;margin-bottom:5px;">場景名稱</div>'+
+      '<div style="display:flex;gap:6px;margin-bottom:7px;">'+
+        '<input class="fi scene-edit-name" value="'+sc.name.replace(/"/g,'&quot;')+'" style="flex:1;margin:0;font-size:13px;">'+
+        '<button class="btn-green sc-name-ok" style="padding:6px 12px;white-space:nowrap;font-size:12px;">✓ 改名</button>'+
+      '</div>'+
+      '<div style="font-size:11px;color:#8a9088;margin-bottom:5px;">更換圖片（可留空）</div>'+
+      '<div style="display:flex;gap:6px;">'+
+        '<button class="btn-green sc-upload-img" style="flex:1;padding:6px;font-size:12px;">⬆ 上傳新圖</button>'+
+        '<button class="btn-outline sc-edit-close" style="padding:6px 10px;margin:0;width:auto;font-size:12px;">關閉</button>'+
+      '</div>';
+    d.appendChild(editRow);
+
+    editRow.querySelector('.sc-edit-close').addEventListener('click', function(ev) {
+      ev.stopPropagation(); editRow.remove();
+    });
+    editRow.querySelector('.sc-name-ok').addEventListener('click', function(ev) {
+      ev.stopPropagation();
+      var newName = editRow.querySelector('.scene-edit-name').value.trim();
+      if (newName) { sc.name = newName; saveConfig(); renderAdminSceneList(); updateSceneDots(); }
+    });
+    editRow.querySelector('.sc-upload-img').addEventListener('click', function(ev) {
+      ev.stopPropagation();
       var inp = document.createElement('input');
       inp.type = 'file'; inp.accept = 'image/*';
       inp.onchange = function() {
@@ -1203,22 +1267,30 @@ function makeSceneCard(sc, idx, allIdx) {
           .then(function(url) {
             sc.imageUrl = url; saveConfig(); renderAdminSceneList(); updateSceneDots();
             if (sc.id === currentSceneId) loadPanoTexture(url, function(){});
-          }).catch(function(e) { alert('上傳失敗：' + (e && e.message ? e.message : '')); });
+          }).catch(function(e) { toast('上傳失敗：' + (e && e.message ? e.message : ''), 1); });
       };
       inp.click();
-    } else {
-      var nu = prompt('圖片網址', sc.imageUrl || '');
-      if (nu !== null) { sc.imageUrl = nu; }
-      saveConfig(); renderAdminSceneList(); updateSceneDots();
-      if (sc.id === currentSceneId && sc.imageUrl) loadPanoTexture(sc.imageUrl, function(){});
-    }
+    });
   });
   d.querySelector('.sc-del').addEventListener('click', function(e) {
     e.stopPropagation();
-    if (!confirm('確定刪除「'+sc.name+'」？')) return;
-    config.scenes.splice(allIdx, 1);
-    if (config.startScene === sc.id) config.startScene = config.scenes.length ? config.scenes[0].id : null;
+    // 顯示確認按鈕取代 confirm()
+    var delBtn = e.target;
+    if (delBtn.dataset.confirmed !== 'yes') {
+      delBtn.textContent = '確定？';
+      delBtn.style.background = 'rgba(224,92,92,.3)';
+      delBtn.dataset.confirmed = 'yes';
+      setTimeout(function() {
+        if (delBtn.dataset.confirmed === 'yes') {
+          delBtn.textContent = '🗑'; delBtn.style.background = '';
+          delBtn.dataset.confirmed = '';
+        }
+      }, 2500);
+      return;
+    }
+    if (config.startScene === sc.id) config.startScene = config.scenes.length > 1 ? config.scenes.find(function(s){return s.id!==sc.id;}).id : null;
     if (currentSceneId === sc.id) currentSceneId = null;
+    config.scenes.splice(allIdx, 1);
     saveConfig(); renderAdminSceneList(); updateSceneDots();
   });
   d.addEventListener('click', function() { switchScene(sc.id); renderAdminSceneList(); });
@@ -1257,7 +1329,12 @@ function renderAdminSceneList() {
       content.className = 'folder-scenes' + (folder.open === false ? ' hidden' : '');
       header.addEventListener('click', function(e) {
         if (e.target.dataset.delFolder) {
-          if (!confirm('刪除資料夾「'+folder.name+'」？（場景不會被刪除，只是取消分類）')) return;
+          var btn = e.target;
+          if (btn.dataset.confirmed !== 'yes') {
+            btn.textContent = '確定刪除？'; btn.dataset.confirmed = 'yes';
+            setTimeout(function() { if(btn.dataset.confirmed==='yes'){btn.textContent='🗑';btn.dataset.confirmed='';} }, 2500);
+            return;
+          }
           config.scenes.forEach(function(sc) { if (sc.folder === folder.id) sc.folder = ''; });
           config.folders.splice(fi, 1);
           saveConfig(); renderAdminSceneList(); return;
@@ -1370,7 +1447,12 @@ function renderAdminHotspotList() {
       '</div>'+
       '<div class="sc-actions" style="margin-top:8px;"><button class="btn-green hs-edit-btn">✏ 編輯</button></div>';
     d.querySelector('.hs-del').addEventListener('click', function() {
-      if (!confirm('確定刪除此傳送點？')) return;
+      var btn = d.querySelector('.hs-del');
+      if (btn.dataset.confirmed !== 'yes') {
+        btn.textContent = '確定？'; btn.dataset.confirmed = 'yes';
+        setTimeout(function() { if(btn.dataset.confirmed==='yes'){btn.textContent='🗑';btn.dataset.confirmed='';} }, 2500);
+        return;
+      }
       getScene(currentSceneId).hotspots.splice(idx, 1);
       saveConfig(); rebuildHotspotEls(); renderAdminHotspotList();
     });
