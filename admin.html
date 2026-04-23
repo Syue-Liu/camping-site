@@ -553,6 +553,7 @@ function showPage(name) {
   if (name === 'moto') renderList('moto');
   if (name === 'social') loadSocialForm();
   if (name === 'pano360') initPano360Page();
+  if (name === 'settings') {
     ge('disp-user').textContent = getAcc().username;
     ge('disp-recovery').textContent = RECOVERY_EMAIL;
   }
