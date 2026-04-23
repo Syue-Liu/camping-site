@@ -144,7 +144,25 @@
     const state={camping:{tag:'全部',loc:'全部',kw:''},moto:{tag:'全部',loc:'全部',kw:''}};
     let cid=0;
 
-    function kuulaUrl(code){if(!code)return null;const m=code.match(/data-kuula="([^"]+)"/);return m?m[1]:null;}
+    function kuulaEmbed(code){
+      if(!code||!code.trim())return null;
+      code=code.trim();
+      // 1. 直接貼 <iframe ...> 標籤（360viewer 或任何 iframe）
+      if(code.toLowerCase().startsWith('<iframe')){
+        // 確保有寬度100%和圓角
+        var fixed=code
+          .replace(/width="[^"]*"/i,'width="100%"')
+          .replace(/style="[^"]*"/i,'style="border-radius:8px;display:block;border:none;"');
+        if(!fixed.includes('style='))fixed=fixed.replace('<iframe','<iframe style="border-radius:8px;display:block;border:none;"');
+        return{type:'raw',html:'<div class="kuula-wrap" style="overflow:hidden;border-radius:8px;">'+fixed+'</div>'};
+      }
+      // 2. Kuula script 嵌入碼（data-kuula="URL"）
+      var m=code.match(/data-kuula="([^"]+)"/);
+      if(m)return{type:'url',url:m[1]};
+      // 3. 直接是 URL
+      if(code.startsWith('http'))return{type:'url',url:code};
+      return null;
+    }
 
     function hl(t,kw,g){
       if(!kw||!t)return String(t||'');
@@ -273,7 +291,7 @@
       var html=filtered.map(function(p){
         cid++;var id='c'+cid;
         var imgP=parseImgField(p.img||'');
-        var ku=kuulaUrl(p.kuula);
+        var ku=kuulaEmbed(p.kuula);
         var ytUrl=youtubeEmbedUrl(imgP.youtube||p.youtube||'');
         var igUrl=(imgP.ig||p.ig||'').trim();
         var descHtml=renderFull(p.desc,kw,g);
@@ -291,7 +309,13 @@
         var hasExpand=!!(descHtml||ku||ytUrl||igUrl);
         var expandHtml='';
         if(descHtml)expandHtml+=descHtml;
-        if(ku)expandHtml+='<div class="kuula-wrap"><iframe src="'+ku+'" width="100%" height="480" allowfullscreen allow="vr"></iframe></div><p class="kuula-caption">360° 環景 — 拖動探索現場環境</p>';
+        if(ku){
+          if(ku.type==='raw'){
+            expandHtml+=ku.html+'<p class="kuula-caption">360° 環景 — 拖動探索現場環境</p>';
+          } else {
+            expandHtml+='<div class="kuula-wrap"><iframe src="'+ku.url+'" width="100%" height="480" allowfullscreen allow="vr" style="display:block;border:none;"></iframe></div><p class="kuula-caption">360° 環景 — 拖動探索現場環境</p>';
+          }
+        }
         if(ytUrl)expandHtml+=
           '<div class="yt-wrap"><iframe src="'+ytUrl+'"'+
           ' allow="accelerometer;autoplay;clipboard-write;encrypted-media;gyroscope;picture-in-picture"'+
