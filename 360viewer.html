@@ -286,6 +286,7 @@ canvas.edit-mode{cursor:default;}
   <div class="pt">
     <div class="ptab active" data-tab="scenes">🗺 場景</div>
     <div class="ptab" data-tab="hotspots">📍 傳送點</div>
+    <div class="ptab" data-tab="adjust">🎨 調整</div>
     <div class="ptab" data-tab="media">🖼 圖片</div>
     <div class="ptab" data-tab="embed">🔗 嵌入</div>
   </div>
@@ -366,6 +367,36 @@ canvas.edit-mode{cursor:default;}
       <div class="dv"></div>
       <div class="st" id="hs-list-title">傳送點列表</div>
       <div id="hotspots-list"></div>
+    </div>
+
+    <!-- 圖片調整 Tab -->
+    <div class="tab-pane" id="tab-adjust">
+      <div class="st">🎨 環景圖片調整</div>
+      <div class="hint" style="margin-bottom:14px;">即時預覽，調整完記得上傳 JSON 更新前台</div>
+
+      <div class="fg">
+        <label class="fl">☀️ 明亮度 <span id="adj-bright-val">0</span></label>
+        <input type="range" id="adj-bright" min="-100" max="100" value="0" style="width:100%;accent-color:#c4a35a;">
+      </div>
+      <div class="fg">
+        <label class="fl">◑ 對比度 <span id="adj-contrast-val">0</span></label>
+        <input type="range" id="adj-contrast" min="-100" max="100" value="0" style="width:100%;accent-color:#c4a35a;">
+      </div>
+      <div class="fg">
+        <label class="fl">🎨 飽和度 <span id="adj-sat-val">0</span></label>
+        <input type="range" id="adj-sat" min="-100" max="100" value="0" style="width:100%;accent-color:#c4a35a;">
+      </div>
+      <div class="fg">
+        <label class="fl">🌡 色溫（暖/冷） <span id="adj-warm-val">0</span></label>
+        <input type="range" id="adj-warm" min="-50" max="50" value="0" style="width:100%;accent-color:#c4a35a;">
+      </div>
+      <div style="display:flex;gap:8px;margin-top:6px;">
+        <button class="btn-green" id="adj-apply-btn" style="flex:1;padding:9px;">✅ 套用到目前場景</button>
+        <button class="btn-red" id="adj-reset-btn" style="padding:9px 14px;">重置</button>
+      </div>
+      <div id="adj-status" style="font-size:12px;margin-top:8px;"></div>
+      <div class="dv"></div>
+      <div class="hint">調整只影響在 360viewer 的顯示效果，不會修改 GitHub 上的原始圖片。前台 index.html 使用 config.json 的設定值即時套用。</div>
     </div>
 
     <!-- 圖片管理 Tab -->
@@ -698,12 +729,7 @@ function updateHotspotPositions() {
   hots.forEach(function(hs) {
     var el = hsLayer.querySelector('[data-id="'+hs.id+'"]');
     if (!el) return;
-    // 拖曳中的點位保持顯示，不更新位置
-    if (hs.id === draggingHsId) {
-      el.style.display = 'block';
-      el.style.opacity = '1';
-      return;
-    }
+    if (hs.id === draggingHsId) { el.style.display = 'block'; el.style.opacity = '1'; return; }
     var pos = sphericalToVec(hs.phi, hs.theta);
     var fwd = new THREE.Vector3(0, 0, -1).applyEuler(camera.rotation);
     var dot = fwd.dot(pos.clone().normalize());
@@ -712,10 +738,24 @@ function updateHotspotPositions() {
     var sx = (proj.x + 1) / 2 * w, sy = -(proj.y - 1) / 2 * h;
     if (sx < -60 || sx > w+60 || sy < -60 || sy > h+60) { el.style.display = 'none'; return; }
     el.style.display = 'block';
-    el.style.left = sx + 'px';
-    el.style.top = sy + 'px';
+    el.style.left = sx + 'px'; el.style.top = sy + 'px';
     el.style.opacity = Math.min(1, (dot - 0.1) / 0.25);
   });
+  // 更新放置預覽點
+  var prev = ge('hs-placed-preview');
+  if (prev && prev._phi !== undefined) {
+    var pos2 = sphericalToVec(prev._phi, prev._theta);
+    var fwd2 = new THREE.Vector3(0, 0, -1).applyEuler(camera.rotation);
+    var dot2 = fwd2.dot(pos2.clone().normalize());
+    if (dot2 < 0.1) { prev.style.display = 'none'; }
+    else {
+      var proj2 = pos2.clone().project(camera);
+      prev.style.display = 'block';
+      prev.style.left = (proj2.x + 1) / 2 * w + 'px';
+      prev.style.top = -(proj2.y - 1) / 2 * h + 'px';
+      prev.style.opacity = Math.min(1, (dot2 - 0.1) / 0.25);
+    }
+  }
 }
 
 // ── Scene Switch ──────────────────────────────────────────
@@ -724,21 +764,27 @@ function switchSceneWithZoom(id) {
   if (!id) return;
   var startFov = fov;
   var targetFov = 28;
-  var dur = 350;
+  var dur = 380;
   var t0 = Date.now();
+  var canvasEl = ge('c');
   function step() {
     var p = Math.min((Date.now() - t0) / dur, 1);
     var ease = 1 - Math.pow(1 - p, 3);
     fov = startFov + (targetFov - startFov) * ease;
     camera.fov = fov; camera.updateProjectionMatrix();
+    // 模糊隨縮放增強
+    if (canvasEl) canvasEl.style.filter = 'blur(' + (ease * 7).toFixed(1) + 'px)';
     if (p < 1) requestAnimationFrame(step);
-    else switchScene(id);
+    else {
+      switchScene(id);
+    }
   }
   step();
 }
 
 function switchScene(id) {
   var sc = getScene(id); if (!sc) return;
+  var canvasEl = ge('c');
   var fade = ge('fade');
   fade.classList.add('in');
   setTimeout(function() {
@@ -750,12 +796,24 @@ function switchScene(id) {
     updateSceneDots();
     camera.rotation.set(0,0,0); fov = 75; camera.fov = 75; camera.updateProjectionMatrix();
     if (sc.imageUrl) {
-      loadPanoTexture(sc.imageUrl, function() { fade.classList.remove('in'); });
+      loadPanoTexture(sc.imageUrl, function() {
+        fade.classList.remove('in');
+        if (canvasEl) canvasEl.style.filter = ''; // 清除模糊
+      });
     } else {
       mat.map = null; mat.color.set(0x1a2a1a); mat.needsUpdate = true;
       hideLoading(); fade.classList.remove('in');
+      if (canvasEl) canvasEl.style.filter = '';
     }
     renderAdminHotspotList(); updateHsSceneHint();
+    // 套用場景的調整設定
+    var adjSc = getScene(id);
+    var canvasEl = ge('c');
+    if (adjSc && adjSc.adjust && canvasEl) {
+      canvasEl.style.filter = adjToFilter(adjSc.adjust);
+    } else if (canvasEl) {
+      canvasEl.style.filter = '';
+    }
   }, 380);
 }
 
@@ -799,10 +857,25 @@ function handlePlaceClick(cx, cy) {
   ge('hs-theta').value = theta.toFixed(4);
   ge('hs-save-btn').disabled = false;
   stopPlacing();
+
+  // 立即在放置位置顯示預覽點位
+  var prev = ge('hs-placed-preview');
+  if (!prev) {
+    prev = document.createElement('div');
+    prev.id = 'hs-placed-preview';
+    prev.style.cssText = 'position:absolute;transform:translate(-50%,-50%);pointer-events:none;z-index:9;';
+    hsLayer.appendChild(prev);
+  }
+  var color = selectedColor || '#7eb87a';
+  var icon = (ge('hs-icon-custom') && ge('hs-icon-custom').value.trim()) || selectedIcon || '🔵';
+  var size = parseInt((ge('hs-size') && ge('hs-size').value) || 44);
+  prev.innerHTML = '<div style="width:'+size+'px;height:'+size+'px;border-radius:50%;background:'+color+'22;border:2.5px dashed '+color+';display:flex;align-items:center;justify-content:center;font-size:'+Math.round(size*.42)+'px;box-shadow:0 0 0 4px '+color+'33,0 3px 14px rgba(0,0,0,.5);">'+icon+'</div>';
+  // 儲存待顯示座標，render loop 更新位置
+  prev._phi = phi; prev._theta = theta;
+
   ge('place-banner').textContent = '✅ 位置設定完成，請填寫點位資訊';
   ge('place-banner').style.background = 'rgba(126,184,122,.95)';
   setTimeout(function() { ge('place-banner').style.display = 'none'; }, 2500);
-  // Re-open admin
   ge('admin').classList.add('open');
   ge('btn-admin').classList.add('active');
 }
@@ -957,16 +1030,13 @@ function finishHsDrag(cx, cy) {
 // ── Preview Mode ──────────────────────────────────────────
 var previewActive = false;
 ge('btn-preview').addEventListener('click', function() {
-  previewActive = !previewActive;
   ge('btn-preview').classList.toggle('active', previewActive);
   if (previewActive) {
-    // Hide all UI except scene dots and label
     ge('admin').classList.remove('open');
     ge('btn-admin').classList.remove('active');
     ge('top-ctrl').style.opacity = '0';
     ge('top-ctrl').style.pointerEvents = 'none';
     ge('scene-dots').style.display = 'flex';
-    // Show exit preview btn after 1s
     setTimeout(function() {
       ge('top-ctrl').style.opacity = '0.35';
       ge('top-ctrl').style.pointerEvents = 'auto';
@@ -1604,7 +1674,7 @@ ge('hs-cancel-btn').addEventListener('click', function() {
 ge('hs-save-btn').addEventListener('click', function() {
   var phi = parseFloat(ge('hs-phi').value);
   var theta = parseFloat(ge('hs-theta').value);
-  if (isNaN(phi) || isNaN(theta)) { alert('請先點擊 360° 畫面選擇位置'); return; }
+  if (isNaN(phi) || isNaN(theta)) { toast('請先點擊 360° 畫面選擇位置', 1); return; }
   var hs = {
     id: editingHsId || uid(),
     phi: phi, theta: theta,
@@ -1623,6 +1693,9 @@ ge('hs-save-btn').addEventListener('click', function() {
   } else {
     sc.hotspots.push(hs);
   }
+  // 清除放置預覽點
+  var prev = ge('hs-placed-preview');
+  if (prev) { prev.style.display = 'none'; prev._phi = undefined; }
   saveConfig(); rebuildHotspotEls(); renderAdminHotspotList();
   ge('hs-form').classList.remove('show');
   editingHsId = null;
@@ -1675,17 +1748,105 @@ function renderAdminHotspotList() {
       ge('hs-pulse').checked = hs.pulse !== false;
       selectedIcon = hs.icon; selectedColor = hs.color;
       ge('hs-icon-custom').value = '';
-      ge('ip-row') && ge('ip-row').querySelectorAll('.ib').forEach(function(b) { b.classList.toggle('sel', b.textContent===hs.icon); });
       document.getElementById('icon-picker').querySelectorAll('.ib').forEach(function(b) { b.classList.toggle('sel', b.textContent===hs.icon); });
       document.getElementById('color-picker').querySelectorAll('.cs').forEach(function(b) { b.classList.toggle('sel', b.title===hs.color); });
       populateHsTargets();
       ge('hs-target').value = hs.targetScene;
       ge('hs-save-btn').disabled = false;
       ge('hs-form').classList.add('show');
+      // 在表單頂部動態加入「重新點擊設定位置」按鈕
+      var reposRow = ge('hs-repos-row');
+      if (!reposRow) {
+        reposRow = document.createElement('div');
+        reposRow.id = 'hs-repos-row';
+        reposRow.style.cssText = 'margin-bottom:8px;';
+        var reposBtn = document.createElement('button');
+        reposBtn.className = 'btn-add';
+        reposBtn.style.cssText = 'width:100%;padding:9px;border-color:rgba(196,163,90,.4);color:#c4a35a;font-size:13px;';
+        reposBtn.textContent = '🎯 重新點擊畫面設定位置';
+        reposBtn.addEventListener('click', function() {
+          ge('hs-form').classList.remove('show');
+          startPlacing();
+          ge('admin').classList.remove('open');
+          ge('btn-admin').classList.remove('active');
+        });
+        reposRow.appendChild(reposBtn);
+        ge('hs-form').insertBefore(reposRow, ge('hs-form').firstChild.nextSibling);
+      }
     });
     el.appendChild(d);
   });
 }
+
+// ── Image Adjust ──────────────────────────────────────────
+function getAdjValues() {
+  return {
+    brightness: parseInt(ge('adj-bright').value),
+    contrast: parseInt(ge('adj-contrast').value),
+    saturation: parseInt(ge('adj-sat').value),
+    warmth: parseInt(ge('adj-warm').value)
+  };
+}
+
+function adjToFilter(a) {
+  var b = 1 + a.brightness / 100;
+  var c = 1 + a.contrast / 100;
+  var s = 1 + a.saturation / 100;
+  var filter = 'brightness('+b.toFixed(2)+') contrast('+c.toFixed(2)+') saturate('+s.toFixed(2)+')';
+  if (a.warmth > 0) filter += ' sepia('+(a.warmth/50*0.35).toFixed(2)+')';
+  if (a.warmth < 0) filter += ' hue-rotate('+(a.warmth*0.8).toFixed(1)+'deg)';
+  return filter;
+}
+
+function applyAdjPreview() {
+  var adj = getAdjValues();
+  var canvasEl = ge('c');
+  if (canvasEl) canvasEl.style.filter = adjToFilter(adj);
+}
+
+function loadSceneAdj() {
+  var sc = getScene(currentSceneId);
+  var adj = (sc && sc.adjust) || { brightness:0, contrast:0, saturation:0, warmth:0 };
+  ge('adj-bright').value = adj.brightness || 0;
+  ge('adj-contrast').value = adj.contrast || 0;
+  ge('adj-sat').value = adj.saturation || 0;
+  ge('adj-warm').value = adj.warmth || 0;
+  ge('adj-bright-val').textContent = adj.brightness || 0;
+  ge('adj-contrast-val').textContent = adj.contrast || 0;
+  ge('adj-sat-val').textContent = adj.saturation || 0;
+  ge('adj-warm-val').textContent = adj.warmth || 0;
+  applyAdjPreview();
+}
+
+['adj-bright','adj-contrast','adj-sat','adj-warm'].forEach(function(id) {
+  var el = ge(id); if (!el) return;
+  var valId = id + '-val';
+  el.addEventListener('input', function() {
+    ge(valId).textContent = el.value;
+    applyAdjPreview();
+  });
+});
+
+ge('adj-apply-btn') && ge('adj-apply-btn').addEventListener('click', function() {
+  var sc = getScene(currentSceneId);
+  if (!sc) { toast('請先載入一個場景', 1); return; }
+  sc.adjust = getAdjValues();
+  saveConfig();
+  var st = ge('adj-status');
+  st.textContent = '✅ 已套用到「' + sc.name + '」，上傳 JSON 後前台生效';
+  st.style.color = '#7eb87a';
+  setTimeout(function() { st.textContent = ''; }, 3000);
+});
+
+ge('adj-reset-btn') && ge('adj-reset-btn').addEventListener('click', function() {
+  ['adj-bright','adj-contrast','adj-sat','adj-warm'].forEach(function(id) {
+    ge(id).value = 0;
+    ge(id+'-val').textContent = 0;
+  });
+  var sc = getScene(currentSceneId);
+  if (sc) { sc.adjust = null; saveConfig(); }
+  var canvasEl = ge('c'); if (canvasEl) canvasEl.style.filter = '';
+});
 
 // ── Media Manager ─────────────────────────────────────────
 function getUsedUrls() {
@@ -1766,6 +1927,7 @@ document.querySelectorAll('.ptab').forEach(function(tab) {
     if (tab.dataset.tab === 'hotspots') { renderAdminHotspotList(); populateHsTargets(); updateHsSceneHint(); }
     if (tab.dataset.tab === 'scenes') renderAdminSceneList();
     if (tab.dataset.tab === 'media') renderMediaGrid();
+    if (tab.dataset.tab === 'adjust') loadSceneAdj();
   });
 });
 
@@ -1875,9 +2037,45 @@ ge('admin-close').addEventListener('click', function() {
   adminPanel.classList.remove('open');
   ge('btn-admin').classList.remove('active');
 });
+// 全螢幕：iOS 不支援 requestFullscreen，改用 pseudo-fullscreen
+var _pseudoFs = false;
+var _wrapOrigStyle = '';
 ge('btn-fs').addEventListener('click', function() {
-  if (!document.fullscreenElement) document.documentElement.requestFullscreen().catch(function(){});
-  else document.exitFullscreen();
+  var isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+  if (isMobile || !document.documentElement.requestFullscreen) {
+    // Pseudo fullscreen
+    if (!_pseudoFs) {
+      _wrapOrigStyle = wrap.getAttribute('style') || '';
+      wrap.style.cssText = 'position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:9998;';
+      ge('btn-fs').textContent = '✕';
+      ge('btn-fs').title = '退出全螢幕';
+      _pseudoFs = true;
+      // 強制 resize
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+    } else {
+      wrap.setAttribute('style', _wrapOrigStyle);
+      ge('btn-fs').textContent = '⛶';
+      ge('btn-fs').title = '全螢幕';
+      _pseudoFs = false;
+      resize();
+    }
+  } else {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen().catch(function(){});
+      ge('btn-fs').textContent = '✕';
+    } else {
+      document.exitFullscreen();
+      ge('btn-fs').textContent = '⛶';
+    }
+  }
+});
+document.addEventListener('fullscreenchange', function() {
+  if (!document.fullscreenElement) {
+    ge('btn-fs').textContent = '⛶';
+    resize();
+  }
 });
 ge('btn-help').addEventListener('click', function() {
   alert('🕹 操作說明\n\n'+
