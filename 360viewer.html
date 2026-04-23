@@ -1178,10 +1178,6 @@ function makeSceneCard(sc, idx, allIdx) {
   d.innerHTML = '<div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;">'+
     '<span class="drag-handle" title="拖曳排序">⠿</span>'+
     '<span style="font-size:13px;font-weight:500;color:#e8e4dc;flex:1">'+sc.name+'</span>'+
-    (config.folders && config.folders.length ? '<select class="fi" style="font-size:11px;padding:3px 6px;width:auto;max-width:90px;" data-folder-sel="'+sc.id+'">'+
-      '<option value=""'+((!sc.folder)?' selected':'')+'>無資料夾</option>'+
-      (config.folders||[]).map(function(f){return'<option value="'+f.id+'"'+(sc.folder===f.id?' selected':'')+'>'+f.name+'</option>';}).join('')+
-    '</select>' : '')+
   '</div>'+
   thumbHtml+
   '<div class="sc-url">'+(sc.imageUrl ? sc.imageUrl.replace(/^https?:\/\//,'').substring(0,45)+'...' : '（未設定圖片）')+'</div>'+
@@ -1191,14 +1187,39 @@ function makeSceneCard(sc, idx, allIdx) {
     '<button class="btn-red sc-del">🗑</button>'+
   '</div>';
 
-  // Folder select change
-  var folderSel = d.querySelector('[data-folder-sel]');
-  if (folderSel) {
+  // 資料夾選擇器 — 用 DOM 建立，完全隔離 click 冒泡
+  if (config.folders && config.folders.length) {
+    var folderRow = document.createElement('div');
+    folderRow.style.cssText = 'margin-top:7px;display:flex;align-items:center;gap:7px;';
+    var folderLabel = document.createElement('span');
+    folderLabel.style.cssText = 'font-size:11px;color:#8a9088;flex-shrink:0;';
+    folderLabel.textContent = '📁 資料夾：';
+    var folderSel = document.createElement('select');
+    folderSel.className = 'fi';
+    folderSel.style.cssText = 'font-size:12px;padding:4px 8px;flex:1;cursor:pointer;';
+    var optNone = document.createElement('option');
+    optNone.value = ''; optNone.textContent = '無資料夾';
+    if (!sc.folder) optNone.selected = true;
+    folderSel.appendChild(optNone);
+    (config.folders || []).forEach(function(f) {
+      var opt = document.createElement('option');
+      opt.value = f.id; opt.textContent = '📁 ' + f.name;
+      if (sc.folder === f.id) opt.selected = true;
+      folderSel.appendChild(opt);
+    });
+    // 完全阻止冒泡
+    folderSel.addEventListener('mousedown', function(e) { e.stopPropagation(); });
+    folderSel.addEventListener('click', function(e) { e.stopPropagation(); });
+    folderSel.addEventListener('touchstart', function(e) { e.stopPropagation(); });
     folderSel.addEventListener('change', function(e) {
       e.stopPropagation();
       sc.folder = folderSel.value || '';
-      saveConfig(); renderAdminSceneList();
+      saveConfig();
+      renderAdminSceneList();
     });
+    folderRow.appendChild(folderLabel);
+    folderRow.appendChild(folderSel);
+    d.appendChild(folderRow);
   }
 
   // Drag sort
@@ -1293,7 +1314,14 @@ function makeSceneCard(sc, idx, allIdx) {
     config.scenes.splice(allIdx, 1);
     saveConfig(); renderAdminSceneList(); updateSceneDots();
   });
-  d.addEventListener('click', function() { switchScene(sc.id); renderAdminSceneList(); });
+  d.addEventListener('click', function(e) {
+    // 忽略按鈕、select、input 等互動元素的點擊
+    var t = e.target;
+    if (t.tagName === 'BUTTON' || t.tagName === 'SELECT' ||
+        t.tagName === 'INPUT' || t.tagName === 'OPTION' ||
+        t.closest && (t.closest('button') || t.closest('select') || t.closest('.scene-edit-row'))) return;
+    switchScene(sc.id); renderAdminSceneList();
+  });
   return d;
 }
 
