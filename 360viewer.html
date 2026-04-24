@@ -19,8 +19,9 @@ canvas.placing{cursor:crosshair;}
 #fade.in{opacity:1;}
 
 /* ── Loading ── */
-#loading{position:absolute;inset:0;background:#0f1410;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:60;gap:16px;transition:opacity .3s;}
-#loading.hidden{opacity:0;pointer-events:none;}
+#loading{position:absolute;inset:0;background:rgba(15,20,16,.92);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:60;gap:16px;transition:opacity .4s;pointer-events:none;}
+#loading.active{pointer-events:auto;}
+#loading.hidden{opacity:0;display:none;}
 .loading-ring{width:48px;height:48px;border:3px solid rgba(126,184,122,0.15);border-top-color:#7eb87a;border-radius:50%;animation:spin .9s linear infinite;}
 .loading-text{font-size:13px;color:#8a9088;letter-spacing:0.1em;}
 @keyframes spin{to{transform:rotate(360deg);}}
@@ -89,11 +90,19 @@ textarea.fi{resize:vertical;min-height:60px;}
 .hint{font-size:12px;color:#8a9088;line-height:1.6;}
 
 /* Cards */
-.scene-card{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:10px;padding:11px 13px;margin-bottom:8px;cursor:pointer;transition:all .15s;}
+.scene-card{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:10px;overflow:hidden;margin-bottom:8px;transition:all .15s;}
 .scene-card:hover{border-color:rgba(255,255,255,.18);}
-.scene-card.active{border-color:#7eb87a;background:rgba(126,184,122,.07);}
+.scene-card.active{border-color:#7eb87a;background:rgba(126,184,122,.05);}
+.sc-row1{display:flex;align-items:center;gap:6px;padding:8px 10px 6px;}
+.sc-title{flex:1;font-size:13px;font-weight:500;color:#e8e4dc;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.sc-btns{display:flex;gap:4px;flex-shrink:0;}
+.sc-btn{width:28px;height:28px;border-radius:6px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.04);color:#8a9088;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;font-family:inherit;}
+.sc-btn:hover{background:rgba(255,255,255,.12);color:#e8e4dc;}
+.sc-btn.red:hover{background:rgba(224,92,92,.15);color:#e05c5c;border-color:rgba(224,92,92,.3);}
+.sc-thumb-sm{width:100%;height:90px;object-fit:cover;display:block;}
+.sc-no-img{height:36px;display:flex;align-items:center;justify-content:center;font-size:11px;color:#4a5448;}
+.sc-load-row{padding:5px 8px;display:flex;}
 .sc-name{font-size:13px;color:#e8e4dc;font-weight:500;margin-bottom:3px;}
-.sc-thumb{width:100%;height:70px;border-radius:7px;object-fit:cover;margin-bottom:8px;display:block;background:rgba(255,255,255,.04);}
 .sc-url{font-size:11px;color:#8a9088;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-bottom:8px;}
 .sc-actions{display:flex;gap:6px;}
 .hs-card{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:10px;padding:11px 13px;margin-bottom:8px;}
@@ -238,7 +247,7 @@ canvas.edit-mode{cursor:default;}
   <div id="fade"></div>
 
   <!-- Loading -->
-  <div id="loading">
+  <div id="loading" class="active">
     <div class="loading-ring"></div>
     <div class="loading-text" id="loading-text">初始化中...</div>
   </div>
@@ -394,6 +403,7 @@ canvas.edit-mode{cursor:default;}
         <button class="btn-green" id="adj-apply-btn" style="flex:1;padding:9px;">✅ 套用到目前場景</button>
         <button class="btn-red" id="adj-reset-btn" style="padding:9px 14px;">重置</button>
       </div>
+      <button id="adj-sync-all-btn" style="width:100%;margin-top:7px;padding:8px;background:rgba(196,163,90,.1);border:1px solid rgba(196,163,90,.3);border-radius:8px;color:#c4a35a;font-size:13px;cursor:pointer;font-family:inherit;">🔄 同步套用到全部場景</button>
       <div id="adj-status" style="font-size:12px;margin-top:8px;"></div>
       <div class="dv"></div>
       <div class="hint">調整只影響在 360viewer 的顯示效果，不會修改 GitHub 上的原始圖片。前台 index.html 使用 config.json 的設定值即時套用。</div>
@@ -480,17 +490,28 @@ canvas.edit-mode{cursor:default;}
 
 // ── 安全防護：確保 loading 最多顯示 8 秒 ────────────────
 var loadingTimeout = setTimeout(function() {
+  hideLoading();
+}, 4000);
+
+function showLoading(text) {
+  clearTimeout(loadingTimeout);
   var el = document.getElementById('loading');
-  if (el) el.classList.add('hidden');
-}, 8000);
+  if (!el) return;
+  el.classList.remove('hidden');
+  el.classList.add('active');
+  el.style.display = 'flex';
+  el.style.opacity = '1';
+  if (text) setLoadingText(text);
+}
 
 function hideLoading() {
   clearTimeout(loadingTimeout);
   var el = document.getElementById('loading');
-  if (el) {
-    el.classList.add('hidden');
-    setTimeout(function() { el.style.display = 'none'; }, 350);
-  }
+  if (!el) return;
+  el.classList.remove('active');
+  el.classList.add('hidden');
+  el.style.display = 'none';
+  el.style.opacity = '0';
 }
 
 function setLoadingText(t) {
@@ -532,6 +553,28 @@ function saveConfig() {
 function ge(id) { return document.getElementById(id); }
 function uid() { return 'id_' + Math.random().toString(36).substr(2,9); }
 
+// ── Toast 通知 ────────────────────────────────────────────
+function toast(msg, isErr) {
+  var t = document.createElement('div');
+  t.style.cssText = 'position:fixed;bottom:1.5rem;left:50%;transform:translateX(-50%);background:'+(isErr?'#e05c5c':'#7eb87a')+';color:#0f1410;padding:10px 22px;border-radius:20px;font-size:13px;font-weight:700;z-index:9999;pointer-events:none;opacity:1;transition:opacity .4s;white-space:nowrap;';
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(function(){ t.style.opacity='0'; setTimeout(function(){if(t.parentNode)t.remove();},450); }, 2500);
+}
+
+// ── 重置場景上傳區 ────────────────────────────────────────
+function resetSceneUpload() {
+  var z = ge('gh-upload-zone');
+  if (z) {
+    z.className = 'uz';
+    z.innerHTML = '<div class="uz-icon">🐱</div><div class="uz-text">點擊選擇圖片上傳至 GitHub</div><div class="uz-hint">需先在「嵌入」頁設定 GitHub Token</div>';
+  }
+  var inp = ge('new-scene-img-url');
+  if (inp) inp.value = '';
+  var f = ge('gh-img-file');
+  if (f) f.value = '';
+}
+
 // ── Three.js Setup ────────────────────────────────────────
 setLoadingText('初始化 3D 場景...');
 var canvas = ge('c');
@@ -569,9 +612,7 @@ txLoader.crossOrigin = 'anonymous';
 
 function loadPanoTexture(url, onDone) {
   if (!url) { hideLoading(); if (onDone) onDone(false); return; }
-  document.getElementById('loading').classList.remove('hidden');
-  document.getElementById('loading').style.display = 'flex';
-  setLoadingText('載入全景圖片...');
+  showLoading('載入全景圖片...');
   // Per-texture timeout
   var txTimeout = setTimeout(function() {
     hideLoading();
@@ -908,16 +949,21 @@ function syncPreviewStyle() {
 var editModeActive = false;
 var draggingHsId = null;
 var hsDragStart = null;
+var _editingHsDragEnabled = false; // 編輯表單中允許直接拖曳
 
-function enterEditMode() {
+function enterEditMode(forHsId) {
   editModeActive = true;
+  _editingHsDragEnabled = !!forHsId;
   ge('edit-mode-bar').classList.add('show');
-  ge('admin').classList.remove('open');
-  ge('btn-admin').classList.remove('active');
-  rebuildHotspotEls(); // rebuild with drag handles
+  if (!forHsId) {
+    ge('admin').classList.remove('open');
+    ge('btn-admin').classList.remove('active');
+  }
+  rebuildHotspotEls();
 }
 function exitEditMode() {
   editModeActive = false;
+  _editingHsDragEnabled = false;
   draggingHsId = null;
   ge('edit-mode-bar').classList.remove('show');
   rebuildHotspotEls();
@@ -1013,7 +1059,6 @@ function moveHsDrag(cx, cy) {
 }
 
 function finishHsDrag(cx, cy) {
-  // Raycast to get new 3D position
   var ndc = { x: (cx/window.innerWidth)*2-1, y: -(cy/window.innerHeight)*2+1 };
   raycaster.setFromCamera(ndc, camera);
   var hits = raycaster.intersectObject(sphere);
@@ -1021,15 +1066,28 @@ function finishHsDrag(cx, cy) {
   var p = hits[0].point.normalize();
   var phi = Math.acos(Math.max(-1, Math.min(1, p.y)));
   var theta = Math.atan2(p.x, p.z);
-  // Update config
   var sc = getScene(currentSceneId); if (!sc || !sc.hotspots) return;
   var hsDef = sc.hotspots.find(function(h) { return h.id === draggingHsId; });
-  if (hsDef) { hsDef.phi = phi; hsDef.theta = theta; saveConfig(); }
+  if (hsDef) {
+    hsDef.phi = phi; hsDef.theta = theta; saveConfig();
+    // 如果正在編輯這個點，同步更新表單座標
+    if (_editingHsDragEnabled && editingHsId === draggingHsId) {
+      ge('hs-phi').value = phi.toFixed(4);
+      ge('hs-theta').value = theta.toFixed(4);
+      ge('hs-save-btn').disabled = false;
+      // 短暫提示
+      var saveBtn = ge('hs-save-btn');
+      var orig = saveBtn.textContent;
+      saveBtn.textContent = '✅ 位置已更新';
+      setTimeout(function() { saveBtn.textContent = orig; }, 1500);
+    }
+  }
 }
 
 // ── Preview Mode ──────────────────────────────────────────
 var previewActive = false;
 ge('btn-preview').addEventListener('click', function() {
+  previewActive = !previewActive;
   ge('btn-preview').classList.toggle('active', previewActive);
   if (previewActive) {
     ge('admin').classList.remove('open');
@@ -1314,19 +1372,23 @@ function makeSceneCard(sc, idx, allIdx) {
     ? '<img class="sc-thumb" src="'+sc.imageUrl+'" alt="" onerror="this.style.display=\'none\'">'
     : '<div class="sc-thumb" style="display:flex;align-items:center;justify-content:center;font-size:11px;color:#4a5448">未設定圖片</div>';
 
-  d.innerHTML = '<div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;">'+
-    '<span class="drag-handle" title="拖曳排序">⠿</span>'+
-    '<span style="font-size:13px;font-weight:500;color:#e8e4dc;flex:1">'+sc.name+'</span>'+
-  '</div>'+
-  thumbHtml+
-  '<div class="sc-url">'+(sc.imageUrl ? sc.imageUrl.replace(/^https?:\/\//,'').substring(0,45)+'...' : '（未設定圖片）')+'</div>'+
-  '<div class="sc-actions">'+
-    '<button class="btn-green sc-load" style="flex:1">▶ 載入</button>'+
-    '<button class="btn-green sc-up" title="往前">↑</button>'+
-    '<button class="btn-green sc-down" title="往後">↓</button>'+
-    '<button class="btn-green sc-edit">✏</button>'+
-    '<button class="btn-red sc-del">🗑</button>'+
-  '</div>';
+  d.innerHTML =
+    '<div class="sc-row1">'+
+      '<span class="drag-handle" title="拖曳排序">⠿</span>'+
+      '<span class="sc-title">'+sc.name+'</span>'+
+      '<div class="sc-btns">'+
+        '<button class="sc-btn sc-up" title="往前">↑</button>'+
+        '<button class="sc-btn sc-down" title="往後">↓</button>'+
+        '<button class="sc-btn sc-edit" title="編輯名稱/圖片">✏</button>'+
+        '<button class="sc-btn sc-del red" title="刪除">🗑</button>'+
+      '</div>'+
+    '</div>'+
+    (sc.imageUrl
+      ? '<img class="sc-thumb-sm" src="'+sc.imageUrl+'" alt="" onerror="this.style.display=\'none\'">'
+      : '<div class="sc-no-img">未設定圖片</div>')+
+    '<div class="sc-load-row">'+
+      '<button class="btn-green sc-load" style="flex:1;padding:6px 0;font-size:12px;">▶ 載入場景</button>'+
+    '</div>';
 
   // 資料夾選擇器 — 用按鈕取代 select，避免下拉干擾問題
   if (config.folders && config.folders.length) {
@@ -1700,6 +1762,7 @@ ge('hs-save-btn').addEventListener('click', function() {
   ge('hs-form').classList.remove('show');
   editingHsId = null;
   ge('hs-label').value = '';
+  exitEditMode();
   ge('admin').classList.add('open');
   ge('btn-admin').classList.add('active');
 });
@@ -1754,7 +1817,11 @@ function renderAdminHotspotList() {
       ge('hs-target').value = hs.targetScene;
       ge('hs-save-btn').disabled = false;
       ge('hs-form').classList.add('show');
-      // 在表單頂部動態加入「重新點擊設定位置」按鈕
+
+      // 自動進入此傳送點的拖曳模式
+      enterEditMode(hs.id);
+
+      // 在表單頂部加入拖曳提示（若尚未加入）
       var reposRow = ge('hs-repos-row');
       if (!reposRow) {
         reposRow = document.createElement('div');
@@ -1762,16 +1829,21 @@ function renderAdminHotspotList() {
         reposRow.style.cssText = 'margin-bottom:8px;';
         var reposBtn = document.createElement('button');
         reposBtn.className = 'btn-add';
-        reposBtn.style.cssText = 'width:100%;padding:9px;border-color:rgba(196,163,90,.4);color:#c4a35a;font-size:13px;';
+        reposBtn.style.cssText = 'width:100%;padding:9px;border-color:rgba(196,163,90,.4);color:#c4a35a;font-size:12px;';
         reposBtn.textContent = '🎯 重新點擊畫面設定位置';
         reposBtn.addEventListener('click', function() {
           ge('hs-form').classList.remove('show');
+          exitEditMode();
           startPlacing();
           ge('admin').classList.remove('open');
           ge('btn-admin').classList.remove('active');
         });
+        var dragHint = document.createElement('div');
+        dragHint.style.cssText = 'font-size:11px;color:#c4a35a;text-align:center;margin-top:5px;padding:4px;background:rgba(196,163,90,.06);border-radius:6px;';
+        dragHint.textContent = '✥ 或直接在 360° 畫面拖曳點位調整位置';
         reposRow.appendChild(reposBtn);
-        ge('hs-form').insertBefore(reposRow, ge('hs-form').firstChild.nextSibling);
+        reposRow.appendChild(dragHint);
+        ge('hs-form').insertBefore(reposRow, ge('hs-form').children[1]);
       }
     });
     el.appendChild(d);
@@ -1838,6 +1910,25 @@ ge('adj-apply-btn') && ge('adj-apply-btn').addEventListener('click', function() 
   setTimeout(function() { st.textContent = ''; }, 3000);
 });
 
+ge('adj-sync-all-btn') && ge('adj-sync-all-btn').addEventListener('click', function() {
+  if (!config.scenes.length) { toast('尚無場景', 1); return; }
+  var adj = getAdjValues();
+  var btn = ge('adj-sync-all-btn');
+  btn.textContent = '確定同步到全部 ' + config.scenes.length + ' 個場景？（點再次確認）';
+  btn.dataset.confirmed = btn.dataset.confirmed === 'yes' ? '' : 'yes';
+  if (btn.dataset.confirmed !== 'yes') {
+    config.scenes.forEach(function(sc) { sc.adjust = JSON.parse(JSON.stringify(adj)); });
+    saveConfig();
+    var st = ge('adj-status');
+    st.textContent = '✅ 已同步到全部 ' + config.scenes.length + ' 個場景！記得上傳 JSON。';
+    st.style.color = '#7eb87a';
+    btn.textContent = '🔄 同步套用到全部場景';
+    btn.dataset.confirmed = '';
+    setTimeout(function() { st.textContent = ''; }, 4000);
+  }
+});
+
+// ── 重置調整滑桿 ──────────────────────────────────────────
 ge('adj-reset-btn') && ge('adj-reset-btn').addEventListener('click', function() {
   ['adj-bright','adj-contrast','adj-sat','adj-warm'].forEach(function(id) {
     ge(id).value = 0;
