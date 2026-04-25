@@ -238,10 +238,6 @@ canvas.edit-mode{cursor:default;}
 /* Empty state */
 .empty{text-align:center;padding:2.5rem 1rem;color:#8a9088;font-size:13px;}
 .empty-icon{font-size:32px;margin-bottom:8px;}
-
-/* ── 載入進度條 ── */
-#load-progress-bar{position:absolute;bottom:0;left:0;height:3px;background:#7eb87a;width:0%;transition:width .25s ease;z-index:61;border-radius:0 2px 2px 0;}
-#load-percent{font-size:11px;color:#7eb87a;letter-spacing:.08em;}
 </style>
 </head>
 <body>
@@ -254,9 +250,7 @@ canvas.edit-mode{cursor:default;}
   <div id="loading" class="active">
     <div class="loading-ring"></div>
     <div class="loading-text" id="loading-text">初始化中...</div>
-    <div id="load-percent"></div>
   </div>
-  <div id="load-progress-bar"></div>
 
   <!-- Welcome (no scenes) -->
   <div id="welcome">
@@ -328,6 +322,16 @@ canvas.edit-mode{cursor:default;}
       </div>
       <button class="btn-primary" id="add-scene-btn">+ 新增場景</button>
       <div class="dv"></div>
+      <!-- 切片模式進階設定 -->
+      <div id="tile-section" style="background:rgba(196,163,90,.04);border:1px solid rgba(196,163,90,.18);border-radius:8px;padding:10px 12px;margin-bottom:10px;display:none;">
+        <div style="font-size:11px;color:#c4a35a;font-weight:600;letter-spacing:.08em;margin-bottom:8px;">⚡ 切片模式（選填）</div>
+        <div class="fg" style="margin-bottom:0;">
+          <label class="fl">切片資料夾網址（留空則使用上方全景圖）</label>
+          <input class="fi" id="new-scene-tile-url" placeholder="https://raw.githubusercontent.com/.../tiles/scene1/">
+          <div style="font-size:11px;color:#4a5448;margin-top:4px;">填入後載入速度提升 3-5 倍，需先用切片工具產生 6 張圖片</div>
+        </div>
+      </div>
+      <button type="button" style="width:100%;padding:7px;background:transparent;border:1px dashed rgba(196,163,90,.3);border-radius:8px;color:#c4a35a;font-size:12px;cursor:pointer;margin-bottom:10px;font-family:inherit;" id="toggle-tile-btn" onclick="(function(){var s=document.getElementById('tile-section');s.style.display=s.style.display==='none'?'block':'none';})()">⚡ 切片模式設定（進階）</button>
       <div class="st">場景列表</div>
 
       <!-- 資料夾管理 -->
@@ -585,7 +589,7 @@ function resetSceneUpload() {
 setLoadingText('初始化 3D 場景...');
 var canvas = ge('c');
 var wrap = ge('wrap');
-var renderer, camera, scene3, sphere, mat;
+var renderer, camera, scene3, sphere, mat, cubeMesh, cubeMats;
 
 try {
   renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true });
@@ -597,6 +601,19 @@ try {
   mat = new THREE.MeshBasicMaterial({ side: THREE.BackSide, color: 0x1a2a1a });
   sphere = new THREE.Mesh(geo, mat);
   scene3.add(sphere);
+
+  // ── 切片模式：立方體（6 面各自貼圖）────────────────────
+  // scale.x=-1 配合 BackSide，兩者相消讓貼圖方向正確
+  // rotation.y=PI 讓前面（pz）面對相機預設 -Z 視線
+  var cubeGeo = new THREE.BoxGeometry(200, 200, 200);
+  cubeMats = Array.from({length:6}, function() {
+    return new THREE.MeshBasicMaterial({ side: THREE.BackSide, color: 0x1a2a1a });
+  });
+  cubeMesh = new THREE.Mesh(cubeGeo, cubeMats);
+  cubeMesh.rotation.y = Math.PI;
+  cubeMesh.scale.x = -1;
+  cubeMesh.visible = false;
+  scene3.add(cubeMesh);
 } catch(e) {
   hideLoading();
   alert('⚠️ WebGL 初始化失敗，請使用支援 WebGL 的瀏覽器');
@@ -616,98 +633,112 @@ window.addEventListener('resize', resize);
 var txLoader = new THREE.TextureLoader();
 txLoader.crossOrigin = 'anonymous';
 
-// 行動裝置用較低精細度的球體，減少 GPU 負擔
-var isMobileDevice = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-
-function setProgressBar(pct) {
-  var bar = ge('load-progress-bar');
-  var txt = ge('load-percent');
-  if (bar) bar.style.width = pct + '%';
-  if (txt) txt.textContent = pct > 0 ? pct + '%' : '';
-}
-
 function loadPanoTexture(url, onDone) {
   if (!url) { hideLoading(); if (onDone) onDone(false); return; }
   showLoading('載入全景圖片...');
-  setProgressBar(0);
-
-  // 逾時保護
+  // Per-texture timeout
   var txTimeout = setTimeout(function() {
-    setProgressBar(0);
     hideLoading();
     ge('scene-label').style.display = 'block';
     ge('scene-label').textContent = '⚠️ 圖片載入逾時';
     if (onDone) onDone(false);
-  }, 30000); // 延長到 30 秒
-
-  // 用 Image 先下載，才能追蹤進度
-  var xhr = new XMLHttpRequest();
-  xhr.open('GET', url, true);
-  xhr.responseType = 'blob';
-  xhr.onprogress = function(e) {
-    if (e.lengthComputable) {
-      var pct = Math.round(e.loaded / e.total * 95);
-      setProgressBar(pct);
-      setLoadingText('下載全景圖 ' + pct + '%...');
-    }
-  };
-  xhr.onload = function() {
-    if (xhr.status < 200 || xhr.status >= 300) {
+  }, 15000);
+  txLoader.load(
+    url,
+    function(tex) {
       clearTimeout(txTimeout);
-      setProgressBar(0);
+      tex.encoding = THREE.sRGBEncoding;
+      // 修正左右相反：equirectangular 全景圖需要水平翻轉
+      tex.wrapS = THREE.RepeatWrapping;
+      tex.repeat.x = -1;
+      tex.offset.x = 1;
+      if (mat.map) mat.map.dispose();
+      mat.map = tex;
+      mat.color.set(0xffffff);
+      mat.needsUpdate = true;
+      hideLoading();
+      if (onDone) onDone(true);
+    },
+    undefined,
+    function() {
+      clearTimeout(txTimeout);
       hideLoading();
       ge('scene-label').style.display = 'block';
       ge('scene-label').textContent = '⚠️ 圖片載入失敗';
       if (onDone) onDone(false);
-      return;
     }
-    setProgressBar(97);
-    setLoadingText('處理貼圖中...');
-    var blobUrl = URL.createObjectURL(xhr.response);
-    txLoader.load(
-      blobUrl,
-      function(tex) {
-        clearTimeout(txTimeout);
-        // 行動裝置降低解析度上限，減少 GPU 記憶體使用
-        if (isMobileDevice) {
-          tex.minFilter = THREE.LinearFilter;
-          tex.generateMipmaps = false;
-        }
-        tex.encoding = THREE.sRGBEncoding;
-        tex.wrapS = THREE.RepeatWrapping;
-        tex.repeat.x = -1;
-        tex.offset.x = 1;
-        if (mat.map) { mat.map.dispose(); }
-        mat.map = tex;
-        mat.color.set(0xffffff);
-        mat.needsUpdate = true;
-        URL.revokeObjectURL(blobUrl);
-        setProgressBar(100);
-        setTimeout(function() { setProgressBar(0); }, 400);
-        hideLoading();
-        if (onDone) onDone(true);
-      },
-      undefined,
-      function() {
-        clearTimeout(txTimeout);
-        URL.revokeObjectURL(blobUrl);
-        setProgressBar(0);
-        hideLoading();
-        ge('scene-label').style.display = 'block';
-        ge('scene-label').textContent = '⚠️ 貼圖處理失敗';
-        if (onDone) onDone(false);
+  );
+}
+
+// ── 切片載入（Tile Loading）─────────────────────────────
+// BoxGeometry material index 對應 face（配合 rotation.y=PI + scale.x=-1）:
+// [0]=px(右) [1]=nx(左) [2]=py(頂) [3]=ny(底) [4]=pz(前) [5]=nz(後)
+var CUBE_FACES = ['px','nx','py','ny','pz','nz'];
+var _tileJobId = 0;
+
+function loadTiles(sc, onFirstFaceReady) {
+  var base = sc.tileBaseUrl;
+  if (!base) return;
+  if (base.charAt(base.length-1) !== '/') base += '/';
+
+  var jobId = ++_tileJobId;
+  var loaded = 0, firstDone = false;
+  var perFaceProgress = [0,0,0,0,0,0];
+
+  cubeMats.forEach(function(m) {
+    if (m.map) { m.map.dispose(); m.map = null; }
+    m.color.set(0x1a2a1a); m.needsUpdate = true;
+  });
+
+  showLoading('載入切片中...');
+  setProgressBar(0);
+
+  CUBE_FACES.forEach(function(face, i) {
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', base + face + '.jpg', true);
+    xhr.responseType = 'blob';
+
+    xhr.onprogress = function(e) {
+      if (_tileJobId !== jobId) return;
+      if (e.lengthComputable) {
+        perFaceProgress[i] = e.loaded / e.total;
+        var total = perFaceProgress.reduce(function(a,b){return a+b;},0);
+        setProgressBar(Math.round(total / 6 * 90));
+        setLoadingText('下載切片 ' + Math.round(total) + '/6...');
       }
-    );
-  };
-  xhr.onerror = function() {
-    clearTimeout(txTimeout);
-    setProgressBar(0);
-    hideLoading();
-    ge('scene-label').style.display = 'block';
-    ge('scene-label').textContent = '⚠️ 圖片載入失敗';
-    if (onDone) onDone(false);
-  };
-  xhr.send();
+    };
+    xhr.onload = function() {
+      if (_tileJobId !== jobId) return;
+      perFaceProgress[i] = 1;
+      var blobUrl = URL.createObjectURL(xhr.response);
+      txLoader.load(blobUrl, function(tex) {
+        if (_tileJobId !== jobId) { URL.revokeObjectURL(blobUrl); return; }
+        tex.encoding = THREE.sRGBEncoding;
+        cubeMats[i].map = tex; cubeMats[i].color.set(0xffffff); cubeMats[i].needsUpdate = true;
+        URL.revokeObjectURL(blobUrl);
+        loaded++;
+        setProgressBar(Math.round(loaded / 6 * 100));
+        setLoadingText('載入切片 ' + loaded + '/6...');
+        if (!firstDone) {
+          firstDone = true;
+          hideLoading();
+          setTimeout(function(){setProgressBar(0);},500);
+          if (onFirstFaceReady) onFirstFaceReady();
+        }
+        if (loaded === 6) { setProgressBar(0); hideLoading(); }
+      }, undefined, function() {
+        URL.revokeObjectURL(blobUrl);
+        loaded++;
+        if (loaded === 6) { setProgressBar(0); hideLoading(); }
+      });
+    };
+    xhr.onerror = function() {
+      if (_tileJobId !== jobId) return;
+      loaded++;
+      if (loaded === 6) { setProgressBar(0); hideLoading(); }
+    };
+    xhr.send();
+  });
 }
 
 // ── Mouse / Touch Controls ────────────────────────────────
@@ -899,12 +930,25 @@ function switchScene(id) {
     rebuildHotspotEls();
     updateSceneDots();
     camera.rotation.set(0,0,0); fov = 75; camera.fov = 75; camera.updateProjectionMatrix();
-    if (sc.imageUrl) {
+    if (sc.tileBaseUrl) {
+      // ── 切片模式 ──────────────────────────────────────────
+      sphere.visible = false;
+      cubeMesh.visible = true;
+      loadTiles(sc, function() {
+        fade.classList.remove('in');
+        if (canvasEl) canvasEl.style.filter = '';
+      });
+    } else if (sc.imageUrl) {
+      // ── 等距柱狀全景模式（原本模式）──────────────────────
+      sphere.visible = true;
+      cubeMesh.visible = false;
       loadPanoTexture(sc.imageUrl, function() {
         fade.classList.remove('in');
         if (canvasEl) canvasEl.style.filter = ''; // 清除模糊
       });
     } else {
+      sphere.visible = true;
+      cubeMesh.visible = false;
       mat.map = null; mat.color.set(0x1a2a1a); mat.needsUpdate = true;
       hideLoading(); fade.classList.remove('in');
       if (canvasEl) canvasEl.style.filter = '';
@@ -1361,9 +1405,11 @@ function refreshNewSceneFolderPicker() {
 ge('add-scene-btn').addEventListener('click', function() {
   var name = ge('new-scene-name').value.trim();
   var url = ge('new-scene-img-url').value.trim() || ge('new-scene-url').value.trim();
+  var tileUrl = ge('new-scene-tile-url') ? ge('new-scene-tile-url').value.trim() : '';
   if (!name) { toast('請輸入場景名稱', 1); return; }
-  if (!url) { toast('請上傳圖片或貼上圖片網址', 1); return; }
+  if (!url && !tileUrl) { toast('請上傳圖片或貼上圖片網址', 1); return; }
   var sc = { id: uid(), name: name, imageUrl: url, hotspots: [], folder: _newSceneFolder || '' };
+  if (tileUrl) sc.tileBaseUrl = tileUrl;
   config.scenes.push(sc);
   if (!config.startScene) config.startScene = sc.id;
   saveConfig();
@@ -1371,6 +1417,7 @@ ge('add-scene-btn').addEventListener('click', function() {
   updateSceneDots();
   ge('new-scene-name').value = '';
   ge('new-scene-url').value = '';
+  if (ge('new-scene-tile-url')) ge('new-scene-tile-url').value = '';
   _newSceneFolder = '';
   resetSceneUpload();
   refreshNewSceneFolderPicker();
@@ -1435,6 +1482,10 @@ function makeSceneCard(sc, idx, allIdx) {
     ? '<img class="sc-thumb" src="'+sc.imageUrl+'" alt="" onerror="this.style.display=\'none\'">'
     : '<div class="sc-thumb" style="display:flex;align-items:center;justify-content:center;font-size:11px;color:#4a5448">未設定圖片</div>';
 
+  var tileBadge = sc.tileBaseUrl
+    ? '<div style="font-size:10px;color:#c4a35a;background:rgba(196,163,90,.1);border:1px solid rgba(196,163,90,.25);border-radius:10px;padding:1px 7px;margin-top:4px;display:inline-block;">⚡ 切片模式</div>'
+    : '';
+
   d.innerHTML =
     '<div class="sc-row1">'+
       '<span class="drag-handle" title="拖曳排序">⠿</span>'+
@@ -1449,6 +1500,7 @@ function makeSceneCard(sc, idx, allIdx) {
     (sc.imageUrl
       ? '<img class="sc-thumb-sm" src="'+sc.imageUrl+'" alt="" onerror="this.style.display=\'none\'">'
       : '<div class="sc-no-img">未設定圖片</div>')+
+    (tileBadge ? '<div style="padding:0 8px 6px;">'+tileBadge+'</div>' : '')+
     '<div class="sc-load-row">'+
       '<button class="btn-green sc-load" style="flex:1;padding:6px 0;font-size:12px;">▶ 載入場景</button>'+
     '</div>';
