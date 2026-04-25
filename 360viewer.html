@@ -683,7 +683,6 @@ function loadTiles(sc, onFirstFaceReady) {
 
   var jobId = ++_tileJobId;
   var loaded = 0, firstDone = false;
-  var perFaceProgress = [0,0,0,0,0,0];
 
   cubeMats.forEach(function(m) {
     if (m.map) { m.map.dispose(); m.map = null; }
@@ -691,53 +690,39 @@ function loadTiles(sc, onFirstFaceReady) {
   });
 
   showLoading('載入切片中...');
-  setProgressBar(0);
+  setProgressBar(5);
 
+  // 直接用 THREE.TextureLoader，不用 XHR blob（避免 CORS 問題）
   CUBE_FACES.forEach(function(face, i) {
-    var xhr = new XMLHttpRequest();
-    xhr.open('GET', base + face + '.jpg', true);
-    xhr.responseType = 'blob';
-
-    xhr.onprogress = function(e) {
-      if (_tileJobId !== jobId) return;
-      if (e.lengthComputable) {
-        perFaceProgress[i] = e.loaded / e.total;
-        var total = perFaceProgress.reduce(function(a,b){return a+b;},0);
-        setProgressBar(Math.round(total / 6 * 90));
-        setLoadingText('下載切片 ' + Math.round(total) + '/6...');
-      }
-    };
-    xhr.onload = function() {
-      if (_tileJobId !== jobId) return;
-      perFaceProgress[i] = 1;
-      var blobUrl = URL.createObjectURL(xhr.response);
-      txLoader.load(blobUrl, function(tex) {
-        if (_tileJobId !== jobId) { URL.revokeObjectURL(blobUrl); return; }
+    var url = base + face + '.jpg';
+    txLoader.load(url,
+      function(tex) {
+        if (_tileJobId !== jobId) { tex.dispose(); return; }
         tex.encoding = THREE.sRGBEncoding;
+        if (isMobileDevice) { tex.minFilter = THREE.LinearFilter; tex.generateMipmaps = false; }
         cubeMats[i].map = tex; cubeMats[i].color.set(0xffffff); cubeMats[i].needsUpdate = true;
-        URL.revokeObjectURL(blobUrl);
         loaded++;
-        setProgressBar(Math.round(loaded / 6 * 100));
+        setProgressBar(Math.round(loaded/6*100));
         setLoadingText('載入切片 ' + loaded + '/6...');
         if (!firstDone) {
-          firstDone = true;
-          hideLoading();
-          setTimeout(function(){setProgressBar(0);},500);
+          firstDone = true; hideLoading();
+          setTimeout(function(){setProgressBar(0);},600);
           if (onFirstFaceReady) onFirstFaceReady();
         }
         if (loaded === 6) { setProgressBar(0); hideLoading(); }
-      }, undefined, function() {
-        URL.revokeObjectURL(blobUrl);
+      },
+      undefined,
+      function() {
+        if (_tileJobId !== jobId) return;
         loaded++;
-        if (loaded === 6) { setProgressBar(0); hideLoading(); }
-      });
-    };
-    xhr.onerror = function() {
-      if (_tileJobId !== jobId) return;
-      loaded++;
-      if (loaded === 6) { setProgressBar(0); hideLoading(); }
-    };
-    xhr.send();
+        if (!firstDone && loaded === 6) {
+          hideLoading();
+          ge('scene-label').style.display='block';
+          ge('scene-label').textContent='⚠️ 切片載入失敗，請確認網址正確';
+        }
+        if (loaded === 6 && firstDone) { setProgressBar(0); hideLoading(); }
+      }
+    );
   });
 }
 
