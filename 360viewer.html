@@ -238,6 +238,10 @@ canvas.edit-mode{cursor:default;}
 /* Empty state */
 .empty{text-align:center;padding:2.5rem 1rem;color:#8a9088;font-size:13px;}
 .empty-icon{font-size:32px;margin-bottom:8px;}
+
+/* ── 載入進度條 ── */
+#load-progress-bar{position:absolute;bottom:0;left:0;height:3px;background:#7eb87a;width:0%;transition:width .25s ease;z-index:61;border-radius:0 2px 2px 0;}
+#load-percent{font-size:11px;color:#7eb87a;letter-spacing:.08em;}
 </style>
 </head>
 <body>
@@ -250,7 +254,9 @@ canvas.edit-mode{cursor:default;}
   <div id="loading" class="active">
     <div class="loading-ring"></div>
     <div class="loading-text" id="loading-text">初始化中...</div>
+    <div id="load-percent"></div>
   </div>
+  <div id="load-progress-bar"></div>
 
   <!-- Welcome (no scenes) -->
   <div id="welcome">
@@ -610,41 +616,98 @@ window.addEventListener('resize', resize);
 var txLoader = new THREE.TextureLoader();
 txLoader.crossOrigin = 'anonymous';
 
+// 行動裝置用較低精細度的球體，減少 GPU 負擔
+var isMobileDevice = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+
+function setProgressBar(pct) {
+  var bar = ge('load-progress-bar');
+  var txt = ge('load-percent');
+  if (bar) bar.style.width = pct + '%';
+  if (txt) txt.textContent = pct > 0 ? pct + '%' : '';
+}
+
 function loadPanoTexture(url, onDone) {
   if (!url) { hideLoading(); if (onDone) onDone(false); return; }
   showLoading('載入全景圖片...');
-  // Per-texture timeout
+  setProgressBar(0);
+
+  // 逾時保護
   var txTimeout = setTimeout(function() {
+    setProgressBar(0);
     hideLoading();
     ge('scene-label').style.display = 'block';
     ge('scene-label').textContent = '⚠️ 圖片載入逾時';
     if (onDone) onDone(false);
-  }, 15000);
-  txLoader.load(
-    url,
-    function(tex) {
+  }, 30000); // 延長到 30 秒
+
+  // 用 Image 先下載，才能追蹤進度
+  var xhr = new XMLHttpRequest();
+  xhr.open('GET', url, true);
+  xhr.responseType = 'blob';
+  xhr.onprogress = function(e) {
+    if (e.lengthComputable) {
+      var pct = Math.round(e.loaded / e.total * 95);
+      setProgressBar(pct);
+      setLoadingText('下載全景圖 ' + pct + '%...');
+    }
+  };
+  xhr.onload = function() {
+    if (xhr.status < 200 || xhr.status >= 300) {
       clearTimeout(txTimeout);
-      tex.encoding = THREE.sRGBEncoding;
-      // 修正左右相反：equirectangular 全景圖需要水平翻轉
-      tex.wrapS = THREE.RepeatWrapping;
-      tex.repeat.x = -1;
-      tex.offset.x = 1;
-      if (mat.map) mat.map.dispose();
-      mat.map = tex;
-      mat.color.set(0xffffff);
-      mat.needsUpdate = true;
-      hideLoading();
-      if (onDone) onDone(true);
-    },
-    undefined,
-    function() {
-      clearTimeout(txTimeout);
+      setProgressBar(0);
       hideLoading();
       ge('scene-label').style.display = 'block';
       ge('scene-label').textContent = '⚠️ 圖片載入失敗';
       if (onDone) onDone(false);
+      return;
     }
-  );
+    setProgressBar(97);
+    setLoadingText('處理貼圖中...');
+    var blobUrl = URL.createObjectURL(xhr.response);
+    txLoader.load(
+      blobUrl,
+      function(tex) {
+        clearTimeout(txTimeout);
+        // 行動裝置降低解析度上限，減少 GPU 記憶體使用
+        if (isMobileDevice) {
+          tex.minFilter = THREE.LinearFilter;
+          tex.generateMipmaps = false;
+        }
+        tex.encoding = THREE.sRGBEncoding;
+        tex.wrapS = THREE.RepeatWrapping;
+        tex.repeat.x = -1;
+        tex.offset.x = 1;
+        if (mat.map) { mat.map.dispose(); }
+        mat.map = tex;
+        mat.color.set(0xffffff);
+        mat.needsUpdate = true;
+        URL.revokeObjectURL(blobUrl);
+        setProgressBar(100);
+        setTimeout(function() { setProgressBar(0); }, 400);
+        hideLoading();
+        if (onDone) onDone(true);
+      },
+      undefined,
+      function() {
+        clearTimeout(txTimeout);
+        URL.revokeObjectURL(blobUrl);
+        setProgressBar(0);
+        hideLoading();
+        ge('scene-label').style.display = 'block';
+        ge('scene-label').textContent = '⚠️ 貼圖處理失敗';
+        if (onDone) onDone(false);
+      }
+    );
+  };
+  xhr.onerror = function() {
+    clearTimeout(txTimeout);
+    setProgressBar(0);
+    hideLoading();
+    ge('scene-label').style.display = 'block';
+    ge('scene-label').textContent = '⚠️ 圖片載入失敗';
+    if (onDone) onDone(false);
+  };
+  xhr.send();
 }
 
 // ── Mouse / Touch Controls ────────────────────────────────

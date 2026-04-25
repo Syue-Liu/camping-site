@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Syue & Lynn 旅遊足跡</title>
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;700&family=Noto+Serif+TC:wght@400;500&display=swap" rel="stylesheet">
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <!-- Three.js 改為點擊 360° 才動態載入，加快首頁速度 -->
   <style>
     :root{--bg:#0f1410;--surface:#1a1f1b;--surface2:#222820;--border:#2e352c;--text:#e8e4dc;--muted:#8a9088;--accent:#7eb87a;--accent2:#c4a35a;--radius:12px;}
     *{margin:0;padding:0;box-sizing:border-box;}
@@ -85,6 +85,8 @@
     .pano-ring{width:36px;height:36px;border:3px solid rgba(126,184,122,.15);border-top-color:#7eb87a;border-radius:50%;animation:spin .9s linear infinite;}
     @keyframes spin{to{transform:rotate(360deg);}}
     .pano-loading-text{font-size:12px;color:#8a9088;}
+    .pano-progress-bar{position:absolute;bottom:0;left:0;height:3px;background:#7eb87a;width:0%;transition:width .2s ease;border-radius:0 2px 2px 0;z-index:12;}
+    .pano-progress-pct{font-size:11px;color:#7eb87a;margin-top:4px;}
     .pano-placeholder{width:100%;height:340px;background:var(--surface2);border-radius:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;cursor:pointer;transition:background .15s;margin-top:1.25rem;}
     .pano-placeholder:hover{background:rgba(126,184,122,.08);}
     .pano-placeholder-icon{font-size:38px;}
@@ -175,6 +177,23 @@
     const state={camping:{tag:'全部',loc:'全部',kw:''},moto:{tag:'全部',loc:'全部',kw:''}};
     let cid=0;
 
+    // ── 動態載入 Three.js（只在使用者點擊 360° 時才下載）──
+    var _threeLoaded = false, _threeCallbacks = [];
+    function loadThreeJS(cb) {
+      if (window.THREE) { cb(); return; }
+      _threeCallbacks.push(cb);
+      if (_threeLoaded) return; // 已在載入中
+      _threeLoaded = true;
+      var s = document.createElement('script');
+      s.src = 'https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js';
+      s.onload = function() { _threeCallbacks.forEach(function(f){f();}); _threeCallbacks=[]; };
+      document.head.appendChild(s);
+    }
+
+    // ── 分頁設定 ─────────────────────────────────────────────
+    const PAGE_SIZE = 6; // 首頁每次顯示幾筆
+    var pageState = { camping: PAGE_SIZE, moto: PAGE_SIZE }; // 目前顯示幾筆
+
     // ── 360° inline viewer ─────────────────────────────────
     var _panoViewers = {}; // id → InlinePano instance
 
@@ -200,7 +219,7 @@
       // Canvas
       var canvas = document.createElement('canvas');
       canvas.style.cssText = 'width:100%;height:340px;display:block;';
-      wrap.innerHTML = '<div class="pano-loading"><div class="pano-ring"></div><div class="pano-loading-text">載入中...</div></div>';
+      wrap.innerHTML = '<div class="pano-loading"><div class="pano-ring"></div><div class="pano-loading-text">載入中...</div><div class="pano-progress-pct" id="pct-'+me.containerId+'"></div></div><div class="pano-progress-bar" id="bar-'+me.containerId+'"></div>';
       wrap.appendChild(canvas);
       var loadEl = wrap.querySelector('.pano-loading');
 
@@ -385,20 +404,39 @@
       if (!sc.imageUrl) return;
       var wrap = document.getElementById(me.containerId);
       var ld = wrap && wrap.querySelector('.pano-loading');
-      if (ld) { ld.style.display = 'flex'; ld.innerHTML = '<div class="pano-ring"></div><div class="pano-loading-text">載入中...</div>'; }
+      var bar = document.getElementById('bar-' + me.containerId);
+      var pct = document.getElementById('pct-' + me.containerId);
+      if (ld) { ld.style.display = 'flex'; ld.querySelector('.pano-loading-text').textContent = '下載圖片中...'; }
+      if (bar) bar.style.width = '0%';
 
       var isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
       var maxPx = isMobile ? 2048 : 4096;
 
-      var img = new Image();
-      img.crossOrigin = 'anonymous';
-      img.onload = function() {
-        try {
-          var w = img.naturalWidth, h = img.naturalHeight;
-          if (w > maxPx || h > maxPx) {
-            var r = Math.min(maxPx/w, maxPx/h);
-            w = Math.round(w*r); h = Math.round(h*r);
-          }
+      // XHR 下載以取得進度百分比
+      var xhr = new XMLHttpRequest();
+      xhr.open('GET', sc.imageUrl, true);
+      xhr.responseType = 'blob';
+      xhr.onprogress = function(e) {
+        if (e.lengthComputable) {
+          var p = Math.round(e.loaded / e.total * 90);
+          if (bar) bar.style.width = p + '%';
+          if (pct) pct.textContent = p + '%';
+          var ltxt = ld && ld.querySelector('.pano-loading-text');
+          if (ltxt) ltxt.textContent = '下載中 ' + p + '%';
+        }
+      };
+      xhr.onload = function() {
+        if (bar) bar.style.width = '95%';
+        var blobUrl = URL.createObjectURL(xhr.response);
+        var img = new Image();
+        img.crossOrigin = 'anonymous';
+        img.onload = function() {
+          try {
+            var w = img.naturalWidth, h = img.naturalHeight;
+            if (w > maxPx || h > maxPx) {
+              var r = Math.min(maxPx/w, maxPx/h);
+              w = Math.round(w*r); h = Math.round(h*r);
+            }
           var c = document.createElement('canvas');
           c.width = w; c.height = h;
           c.getContext('2d').drawImage(img, 0, 0, w, h);
@@ -409,7 +447,12 @@
           me.mat.map = tex; me.mat.color.set(0xffffff); me.mat.needsUpdate = true;
           var wrap2 = document.getElementById(me.containerId);
           var ld2 = wrap2 && wrap2.querySelector('.pano-loading');
+          var bar2 = document.getElementById('bar-' + me.containerId);
+          var pct2 = document.getElementById('pct-' + me.containerId);
           if (ld2) ld2.style.display = 'none';
+          if (bar2) { bar2.style.width = '100%'; setTimeout(function(){ bar2.style.width='0%'; }, 400); }
+          if (pct2) pct2.textContent = '';
+          URL.revokeObjectURL(blobUrl);
           // 套用場景調整
           var adj = sc.adjust;
           if (adj && me.renderer && me.renderer.domElement) {
@@ -424,11 +467,17 @@
         } catch(e) {
           if (ld) ld.innerHTML = '<div style="font-size:12px;color:#e05c5c">⚠️ 圖片處理失敗</div>';
         }
+        };
+        img.onerror = function() {
+          URL.revokeObjectURL(blobUrl);
+          if (ld) ld.innerHTML = '<div style="font-size:12px;color:#e05c5c">⚠️ 圖片載入失敗</div>';
+        };
+        img.src = blobUrl;
       };
-      img.onerror = function() {
-        if (ld) ld.innerHTML = '<div style="font-size:12px;color:#e05c5c">⚠️ 圖片載入失敗</div>';
+      xhr.onerror = function() {
+        if (ld) ld.innerHTML = '<div style="font-size:12px;color:#e05c5c">⚠️ 下載失敗，請確認圖片網址</div>';
       };
-      img.src = sc.imageUrl;
+      xhr.send();
     };
 
     InlinePano.prototype.buildDots = function() {
@@ -671,8 +720,13 @@
         '<span class="filter-count">'+count+' 個地點</span>';
     }
 
-    function setTag(t,tag){state[t].tag=tag;buildFilter(t);render(t);}
-    function setLoc(t,loc){state[t].loc=loc;buildFilter(t);render(t);}
+    function loadMore(type) {
+      pageState[type] += PAGE_SIZE;
+      render(type);
+    }
+
+    function setTag(t,tag){state[t].tag=tag;pageState[t]=PAGE_SIZE;buildFilter(t);render(t);}
+    function setLoc(t,loc){state[t].loc=loc;pageState[t]=PAGE_SIZE;buildFilter(t);render(t);}
     function onSearch(t){
       var id=t==='camping'?'camp-search':'moto-search';
       var ci=t==='camping'?'camp-clear':'moto-clear';
@@ -718,7 +772,13 @@
       var filtered=getFiltered(type);var kw=state[type].kw;var g=type==='moto';
       var el=document.getElementById(type==='camping'?'camping-container':'moto-container');
       if(!filtered.length){el.innerHTML='<div class="empty-msg">找不到符合條件的地點</div>';return;}
-      var html=filtered.map(function(p){
+
+      // 分頁：有搜尋/篩選時顯示全部；否則只顯示 pageState 筆數
+      var isFiltering = (state[type].kw || state[type].tag !== '全部' || state[type].loc !== '全部');
+      var showCount = isFiltering ? filtered.length : Math.min(pageState[type], filtered.length);
+      var displayed = filtered.slice(0, showCount);
+
+      var html=displayed.map(function(p){
         cid++;var id='c'+cid;
         var imgP=parseImgField(p.img||'');
         var ku=kuulaEmbed(p.kuula);
@@ -727,7 +787,7 @@
         var descHtml=renderFull(p.desc,kw,g);
         // 第一層封面圖
         var thumbHtml=imgP.img
-          ?'<img class="card-img" src="'+imgP.img+'" alt="'+p.name+'">'
+          ?'<img class="card-img" src="'+imgP.img+'" alt="'+p.name+'" loading="lazy">'
           :'';
         // 標籤
         var tagsHtml=p.tags
@@ -777,6 +837,15 @@
         '</div>';
       }).join('');
       el.innerHTML=html;
+
+      // 「載入更多」按鈕
+      if (!isFiltering && showCount < filtered.length) {
+        var remaining = filtered.length - showCount;
+        var btn = document.createElement('div');
+        btn.style.cssText = 'text-align:center;padding:1.5rem 0 0.5rem;grid-column:1/-1;';
+        btn.innerHTML = '<button onclick="loadMore(\''+type+'\')" style="padding:10px 32px;border:1px solid var(--border);border-radius:20px;background:transparent;color:var(--muted);font-size:13px;cursor:pointer;font-family:inherit;letter-spacing:0.05em;">載入更多（還有 '+remaining+' 個地點）</button>';
+        el.appendChild(btn);
+      }
     }
 
     function loadSocial(data){
@@ -793,15 +862,20 @@
     function initPano360AndReplace(id) {
       var wrap = document.getElementById(id);
       if (!wrap) return;
-      var configUrl = wrap.dataset.configUrl;
-      var imageUrl  = wrap.dataset.imageUrl;
-      var cfgRaw    = wrap.dataset.cfg;
-      var gold      = wrap.dataset.gold === 'true';
-      // Convert placeholder to viewer container
+      // 先顯示「載入中」，再動態載入 Three.js
       wrap.className = 'pano-wrap';
       wrap.style.cssText = 'height:340px;position:relative;border-radius:8px;overflow:hidden;background:#0a0f0a;margin-top:1.25rem;';
       wrap.onclick = null;
       wrap.removeAttribute('onclick');
+      wrap.innerHTML = '<div class="pano-loading"><div class="pano-ring"></div><div class="pano-loading-text">載入 3D 引擎中...</div></div>';
+      loadThreeJS(function() { _doInitPano360(id, wrap); });
+    }
+
+    function _doInitPano360(id, wrap) {
+      var configUrl = wrap.dataset.configUrl;
+      var imageUrl  = wrap.dataset.imageUrl;
+      var cfgRaw    = wrap.dataset.cfg;
+      var gold      = wrap.dataset.gold === 'true';
 
       function startWithConfig(cfg) {
         _panoViewers[id] = new InlinePano(id, cfg, gold);
