@@ -15,8 +15,9 @@ canvas.grabbing{cursor:grabbing;}
 canvas.placing{cursor:crosshair;}
 
 /* ── Fade ── */
-#fade{position:absolute;inset:0;background:#000;opacity:0;pointer-events:none;z-index:10;transition:opacity .45s ease;}
-#fade.in{opacity:1;}
+#fade{display:none;}/* fade disabled - using crossfade overlay instead */
+#xfade{position:absolute;inset:0;pointer-events:none;z-index:11;opacity:1;transition:opacity .6s ease;background:#000;}
+#xfade.hidden{opacity:0;}
 
 /* ── Loading ── */
 #loading{position:absolute;inset:0;background:rgba(15,20,16,.92);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:60;gap:16px;transition:opacity .4s;pointer-events:none;}
@@ -244,7 +245,8 @@ canvas.edit-mode{cursor:default;}
 <div id="wrap">
   <canvas id="c"></canvas>
   <div id="hs-layer"></div>
-  <div id="fade"></div>
+  <div id="fade" style="display:none"></div>
+  <img id="xfade" src="" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;pointer-events:none;z-index:11;opacity:1;transition:opacity .65s ease;" />
 
   <!-- Loading -->
   <div id="loading" class="active">
@@ -879,75 +881,81 @@ function updateHotspotPositions() {
 }
 
 // ── Scene Switch ──────────────────────────────────────────
-// Zoom in → fade → load 效果（傳送點呼叫時）
+// 交互淡化轉場：截圖當前畫面 → 疊在上面 → 載入新場景 → 淡出截圖
 function switchSceneWithZoom(id) {
   if (!id) return;
-  var startFov = fov;
-  var targetFov = 28;
-  var dur = 380;
-  var t0 = Date.now();
   var canvasEl = ge('c');
-  function step() {
-    var p = Math.min((Date.now() - t0) / dur, 1);
-    var ease = 1 - Math.pow(1 - p, 3);
-    fov = startFov + (targetFov - startFov) * ease;
-    camera.fov = fov; camera.updateProjectionMatrix();
-    // 模糊隨縮放增強
-    if (canvasEl) canvasEl.style.filter = 'blur(' + (ease * 7).toFixed(1) + 'px)';
-    if (p < 1) requestAnimationFrame(step);
-    else {
-      switchScene(id);
-    }
+  var xfade = ge('xfade');
+
+  // 截圖當前 WebGL 畫面，強制先 render 一次以確保 buffer 未被清除
+  renderer.render(scene3, camera);
+  var snapshot = '';
+  try { snapshot = canvasEl.toDataURL('image/jpeg', 0.85); } catch(e) {}
+
+  if (snapshot && xfade) {
+    // 顯示截圖覆蓋層（不透明）
+    xfade.src = snapshot;
+    xfade.style.transition = 'none';
+    xfade.style.opacity = '1';
+    xfade.style.display = 'block';
   }
-  step();
+
+  // 立刻切換場景（在截圖遮住的情況下載入新場景）
+  switchScene(id, function onNewSceneReady() {
+    // 新場景準備好後，淡出截圖覆蓋層
+    if (xfade) {
+      xfade.style.transition = 'opacity .65s ease';
+      xfade.style.opacity = '0';
+      setTimeout(function() {
+        xfade.style.display = 'none';
+        xfade.src = '';
+      }, 700);
+    }
+  });
 }
 
-function switchScene(id) {
+function switchScene(id, onReady) {
   var sc = getScene(id); if (!sc) return;
   var canvasEl = ge('c');
-  var fade = ge('fade');
-  fade.classList.add('in');
-  setTimeout(function() {
-    currentSceneId = id;
-    ge('scene-label').style.display = 'block';
-    ge('scene-label').textContent = sc.name || id;
-    ge('welcome').classList.remove('show');
-    rebuildHotspotEls();
-    updateSceneDots();
-    camera.rotation.set(0,0,0); fov = 75; camera.fov = 75; camera.updateProjectionMatrix();
-    if (sc.tileBaseUrl) {
-      // ── 切片模式 ──────────────────────────────────────────
-      sphere.visible = false;
-      cubeMesh.visible = true;
-      loadTiles(sc, function() {
-        fade.classList.remove('in');
-        if (canvasEl) canvasEl.style.filter = '';
-      });
-    } else if (sc.imageUrl) {
-      // ── 等距柱狀全景模式（原本模式）──────────────────────
-      sphere.visible = true;
-      cubeMesh.visible = false;
-      loadPanoTexture(sc.imageUrl, function() {
-        fade.classList.remove('in');
-        if (canvasEl) canvasEl.style.filter = ''; // 清除模糊
-      });
-    } else {
-      sphere.visible = true;
-      cubeMesh.visible = false;
-      mat.map = null; mat.color.set(0x1a2a1a); mat.needsUpdate = true;
-      hideLoading(); fade.classList.remove('in');
-      if (canvasEl) canvasEl.style.filter = '';
-    }
-    renderAdminHotspotList(); updateHsSceneHint();
-    // 套用場景的調整設定
-    var adjSc = getScene(id);
-    var canvasEl = ge('c');
-    if (adjSc && adjSc.adjust && canvasEl) {
-      canvasEl.style.filter = adjToFilter(adjSc.adjust);
-    } else if (canvasEl) {
-      canvasEl.style.filter = '';
-    }
-  }, 380);
+  // crossfade 模式：不用黑色 fade，直接切換場景
+  currentSceneId = id;
+  ge('scene-label').style.display = 'block';
+  ge('scene-label').textContent = sc.name || id;
+  ge('welcome').classList.remove('show');
+  rebuildHotspotEls();
+  updateSceneDots();
+  camera.rotation.set(0,0,0); fov = 75; camera.fov = 75; camera.updateProjectionMatrix();
+  if (sc.tileBaseUrl) {
+    // ── 切片模式 ──────────────────────────────────────────
+    sphere.visible = false;
+    cubeMesh.visible = true;
+    loadTiles(sc, function() {
+      if (canvasEl) { canvasEl.style.filter = ''; }
+      if (onReady) onReady();
+    });
+  } else if (sc.imageUrl) {
+    // ── 等距柱狀全景模式 ──────────────────────────────────
+    sphere.visible = true;
+    cubeMesh.visible = false;
+    loadPanoTexture(sc.imageUrl, function() {
+      if (canvasEl) { canvasEl.style.filter = ''; }
+      if (onReady) onReady();
+    });
+  } else {
+    sphere.visible = true;
+    cubeMesh.visible = false;
+    mat.map = null; mat.color.set(0x1a2a1a); mat.needsUpdate = true;
+    hideLoading();
+    if (canvasEl) { canvasEl.style.filter = ''; }
+    if (onReady) onReady();
+  }
+  renderAdminHotspotList(); updateHsSceneHint();
+  // 套用場景的調整設定（在圖片載入前先套用，讓調整參數不被覆蓋）
+  var adjSc = getScene(id);
+  var canvasEl2 = ge('c');
+  if (adjSc && adjSc.adjust && canvasEl2) {
+    canvasEl2.style.filter = adjToFilter(adjSc.adjust);
+  }
 }
 
 function updateSceneDots() {
