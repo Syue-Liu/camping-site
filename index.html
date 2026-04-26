@@ -166,14 +166,30 @@
       .nav-toggle{display:flex;}
       .nav-links{
         display:none;flex-direction:column;gap:0;
-        position:fixed;top:56px;left:0;right:0;
-        background:rgba(10,15,10,.97);backdrop-filter:blur(12px);
-        border-bottom:1px solid var(--border);
-        padding:.5rem 0;z-index:99;
+        position:fixed;top:0;left:0;right:0;bottom:0;
+        background:rgba(8,12,8,.97);backdrop-filter:blur(18px);
+        z-index:98;padding-top:80px;
+        opacity:0;transform:translateY(-8px);
+        transition:opacity .3s ease, transform .3s ease;
+        pointer-events:none;
       }
-      .nav-links.open{display:flex;}
-      .nav-links a{padding:.85rem 1.5rem;font-size:14px;letter-spacing:.08em;border-bottom:1px solid rgba(255,255,255,.04);}
+      .nav-links.open{
+        display:flex;opacity:1;transform:translateY(0);pointer-events:auto;
+      }
+      .nav-links a{
+        padding:1.1rem 2rem;font-size:18px;letter-spacing:.12em;
+        color:rgba(255,255,255,.55);
+        border-bottom:1px solid rgba(255,255,255,.04);
+        font-family:'Playfair Display',serif;
+        transition:color .2s,padding-left .2s;
+        display:flex;align-items:center;gap:.75rem;
+      }
+      .nav-links a::before{content:'';width:20px;height:1px;background:var(--accent);opacity:0;transition:opacity .2s;}
+      .nav-links a:hover,.nav-links a:active{color:#fff;padding-left:2.5rem;}
+      .nav-links a:hover::before,.nav-links a:active::before{opacity:1;}
       .nav-links a:last-child{border-bottom:none;}
+      /* 裝飾文字 */
+      .nav-menu-deco{padding:2rem 2rem .75rem;font-size:10px;letter-spacing:.2em;color:rgba(255,255,255,.2);text-transform:uppercase;}
 
       /* Hero */
       .hero{min-height:320px;padding:5rem 1.25rem 3.5rem;margin-top:56px;}
@@ -207,6 +223,7 @@
   <nav>
     <div class="nav-logo">Syue &amp; Lynn</div>
     <div class="nav-links" id="nav-links">
+      <div class="nav-menu-deco">Navigation</div>
       <a href="#moto" onclick="closeNav()">重機</a>
       <a href="#camping" onclick="closeNav()">露營</a>
       <a href="#domestic" onclick="closeNav()">國內旅遊</a>
@@ -371,15 +388,19 @@
 
   <script>
     // ── Hamburger Nav ────────────────────────────────────────────────────────
-    function toggleNav(){
-      var tg=document.getElementById('nav-toggle');
-      var nl=document.getElementById('nav-links');
-      tg.classList.toggle('open');
-      nl.classList.toggle('open');
-    }
+
     function closeNav(){
       document.getElementById('nav-toggle').classList.remove('open');
       document.getElementById('nav-links').classList.remove('open');
+      document.body.style.overflow='';
+    }
+    function toggleNav(){
+      var tg=document.getElementById('nav-toggle');
+      var nl=document.getElementById('nav-links');
+      var isOpen=nl.classList.toggle('open');
+      tg.classList.toggle('open');
+      // 開選單時鎖住 body 捲動
+      document.body.style.overflow=isOpen?'hidden':'';
     }
     // 點選 nav 連結後自動關閉選單 + 補正 sticky nav 高度
     document.querySelectorAll('.nav-links a').forEach(function(a){
@@ -387,15 +408,19 @@
     });
 
     // ── Hamburger Nav ─────────────────────────────────────────────────────
-    function toggleNav(){
-      var tg=document.getElementById('nav-toggle');
-      var nl=document.getElementById('nav-links');
-      tg.classList.toggle('open');
-      nl.classList.toggle('open');
-    }
+
     function closeNav(){
       document.getElementById('nav-toggle').classList.remove('open');
       document.getElementById('nav-links').classList.remove('open');
+      document.body.style.overflow='';
+    }
+    function toggleNav(){
+      var tg=document.getElementById('nav-toggle');
+      var nl=document.getElementById('nav-links');
+      var isOpen=nl.classList.toggle('open');
+      tg.classList.toggle('open');
+      // 開選單時鎖住 body 捲動
+      document.body.style.overflow=isOpen?'hidden':'';
     }
 
     // ── Hero 輪播 ────────────────────────────────────────────────────────────
@@ -424,15 +449,19 @@
     })();
 
     // ── Hamburger Nav ────────────────────────────────────────────────────────
-    function toggleNav(){
-      var tg=document.getElementById('nav-toggle');
-      var nl=document.getElementById('nav-links');
-      tg.classList.toggle('open');
-      nl.classList.toggle('open');
-    }
+
     function closeNav(){
       document.getElementById('nav-toggle').classList.remove('open');
       document.getElementById('nav-links').classList.remove('open');
+      document.body.style.overflow='';
+    }
+    function toggleNav(){
+      var tg=document.getElementById('nav-toggle');
+      var nl=document.getElementById('nav-links');
+      var isOpen=nl.classList.toggle('open');
+      tg.classList.toggle('open');
+      // 開選單時鎖住 body 捲動
+      document.body.style.overflow=isOpen?'hidden':'';
     }
     // 點選 nav 連結後自動關閉選單 + 補正 sticky nav 高度
     document.querySelectorAll('.nav-links a').forEach(function(a){
@@ -991,6 +1020,7 @@
 
     function openCardModal(id){
       var d=_cardData[id]; if(!d) return;
+      document.body.style.overflow='hidden';
       var ov=document.getElementById('cmodal-overlay');
       var img=document.getElementById('cmodal-img');
       if(d.img){img.src=d.img;img.style.display='block';}
@@ -1006,8 +1036,10 @@
 
     function closeCardModal(e){
       if(e && e.target!==document.getElementById('cmodal-overlay')) return;
-      document.getElementById('cmodal-overlay').classList.remove('open');
-      document.body.style.overflow='';
+      var ov=document.getElementById('cmodal-overlay');
+      ov.classList.remove('open');
+      // 延遲清除 overflow 避免手機閃動
+      setTimeout(function(){ document.body.style.overflow=''; }, 50);
       // 清掉 360° viewer 避免記憶體洩漏
       var content=document.getElementById('cmodal-content');
       content.querySelectorAll('.pano-wrap canvas').forEach(function(c){

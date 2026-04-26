@@ -265,8 +265,18 @@ textarea.form-input{resize:vertical;min-height:90px;}
             <input type="hidden" id="s-lineQr">
           </div>
         </div>
+        <!-- Hero 背景圖片設定 -->
+        <div class="settings-card" style="margin-top:1.5rem;">
+          <h3>🖼️ 首頁旅遊足跡背景圖片</h3>
+          <p style="font-size:13px;color:var(--muted);margin-bottom:1rem;">設定首頁 Hero 區塊的輪播背景照片網址（每行一張，最多5張）</p>
+          <div class="form-group">
+            <label class="form-label">圖片網址（每行一個，填入 GitHub raw 網址）</label>
+            <textarea class="form-input" id="s-hero-images" rows="5" placeholder="https://raw.githubusercontent.com/.../photo1.jpg&#10;https://raw.githubusercontent.com/.../photo2.jpg" style="font-size:12px;font-family:monospace;line-height:1.6;"></textarea>
+          </div>
+          <div id="hero-img-preview" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:.75rem;"></div>
+        </div>
         <div style="display:flex;gap:1rem;flex-wrap:wrap;">
-          <button class="btn-save-set" id="save-social-btn">儲存社群設定</button>
+          <button class="btn-save-set" id="save-social-btn">儲存設定</button>
           <button class="btn-save-set" style="background:var(--danger);" id="clear-social-btn">清除所有連結</button>
         </div>
       </div>
@@ -930,6 +940,11 @@ async function loadSocialForm() {
       ge('s-line').value = s.line || '';
       ge('s-lineQr').value = s.lineQr || '';
       if (s.lineQr) setImgPreview(s.lineQr, 'qr-zone', 'qr-replace');
+      // Hero 背景圖片
+      if (s.heroImages && s.heroImages.length) {
+        ge('s-hero-images').value = s.heroImages.join('\n');
+        renderHeroImgPreview(s.heroImages);
+      }
     }
   } catch (e) {}
 }
@@ -939,7 +954,8 @@ async function saveSocial() {
     fb: ge('s-fb').value.trim(),
     ig: ge('s-ig').value.trim(),
     line: ge('s-line').value.trim(),
-    lineQr: ge('s-lineQr').value.trim()
+    lineQr: ge('s-lineQr').value.trim(),
+    heroImages: ge('s-hero-images').value.split('\n').map(function(l){return l.trim();}).filter(Boolean)
   };
   ge('saving-mask').classList.add('show');
   try {
@@ -957,6 +973,46 @@ async function clearSocial() {
   ['s-fb', 's-ig', 's-line', 's-lineQr'].forEach(function(id) { ge(id).value = ''; });
   resetUploadZone('qr-zone', 'qr-replace');
   await saveSocial();
+}
+
+// ── Hero 圖片預覽 ─────────────────────────────────────────
+function renderHeroImgPreview(urls) {
+  var el = ge('hero-img-preview'); if(!el) return;
+  el.innerHTML = urls.slice(0,5).map(function(url) {
+    return '<img src="'+url+'" style="width:80px;height:56px;object-fit:cover;border-radius:6px;border:1px solid rgba(255,255,255,.1);" onerror="this.style.opacity=0.3">';
+  }).join('');
+}
+ge('s-hero-images') && ge('s-hero-images').addEventListener('input', function() {
+  var urls = this.value.split('\n').map(function(l){return l.trim();}).filter(Boolean);
+  renderHeroImgPreview(urls);
+});
+
+// ── Hero 圖片預覽 ─────────────────────────────────────────
+function renderHeroImgPreview(urls) {
+  var el = ge('hero-img-preview'); if(!el) return;
+  el.innerHTML = urls.slice(0,5).map(function(url) {
+    return '<img src="'+url+'" style="width:80px;height:56px;object-fit:cover;border-radius:6px;border:1px solid rgba(255,255,255,.1);margin-bottom:4px;" onerror="this.style.opacity=0.3">';
+  }).join('');
+}
+if (ge('s-hero-images')) {
+  ge('s-hero-images').addEventListener('input', function() {
+    var urls = this.value.split('\n').map(function(l){return l.trim();}).filter(Boolean);
+    renderHeroImgPreview(urls);
+  });
+}
+
+// ── Hero 圖片預覽 ─────────────────────────────────────────
+function renderHeroImgPreview(urls) {
+  var el = ge('hero-img-preview'); if(!el) return;
+  el.innerHTML = urls.slice(0,5).map(function(url) {
+    return '<img src="'+url+'" style="width:80px;height:56px;object-fit:cover;border-radius:6px;border:1px solid rgba(255,255,255,.1);margin-bottom:4px;" onerror="this.style.opacity=0.3">';
+  }).join('');
+}
+if (ge('s-hero-images')) {
+  ge('s-hero-images').addEventListener('input', function() {
+    var urls = this.value.split('\n').map(function(l){return l.trim();}).filter(Boolean);
+    renderHeroImgPreview(urls);
+  });
 }
 
 // ── 萬年曆 ───────────────────────────────────────────────
