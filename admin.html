@@ -193,6 +193,8 @@ textarea.form-input{resize:vertical;min-height:90px;}
       <div class="sidebar-item active" data-page="dashboard">◈ 總覽</div>
       <div class="sidebar-item" data-page="camping">▲ 露營地點</div>
       <div class="sidebar-item" data-page="moto">◎ 重機地點</div>
+      <div class="sidebar-item" data-page="domestic">🗺 國內旅遊</div>
+      <div class="sidebar-item" data-page="overseas">✈ 國外旅遊</div>
       <div class="sidebar-label">設定</div>
       <div class="sidebar-item" data-page="social">📱 社群連結</div>
       <div class="sidebar-item" data-page="pano360">🌐 360° 環景</div>
@@ -205,13 +207,17 @@ textarea.form-input{resize:vertical;min-height:90px;}
         <div class="stats-grid">
           <div class="stat-card"><div class="stat-num" id="s-camp">-</div><div class="stat-label">露營地點</div></div>
           <div class="stat-card"><div class="stat-num" id="s-moto">-</div><div class="stat-label">重機地點</div></div>
+          <div class="stat-card"><div class="stat-num" id="s-domestic">-</div><div class="stat-label">國內旅遊</div></div>
+          <div class="stat-card"><div class="stat-num" id="s-overseas">-</div><div class="stat-label">國外旅遊</div></div>
           <div class="stat-card"><div class="stat-num" id="s-360">-</div><div class="stat-label">360 環景</div></div>
         </div>
         <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:1.5rem;">
           <p style="font-size:12px;color:var(--muted);margin-bottom:1rem;letter-spacing:0.08em;text-transform:uppercase;">快速新增</p>
-          <div style="display:flex;gap:1rem;">
+          <div style="display:flex;gap:1rem;flex-wrap:wrap;">
             <button class="btn-add" id="dash-add-camp">+ 露營地點</button>
             <button class="btn-add gold" id="dash-add-moto">+ 重機地點</button>
+            <button class="btn-add" id="dash-add-domestic">+ 國內旅遊</button>
+            <button class="btn-add gold" id="dash-add-overseas">+ 國外旅遊</button>
           </div>
         </div>
       </div>
@@ -224,6 +230,16 @@ textarea.form-input{resize:vertical;min-height:90px;}
       <div class="page" id="page-moto">
         <div class="page-header"><h2>重機地點</h2><button class="btn-add gold" id="add-moto-btn">+ 新增地點</button></div>
         <div id="moto-list"></div>
+      </div>
+      <!-- 國內旅遊 -->
+      <div class="page" id="page-domestic">
+        <div class="page-header"><h2>國內旅遊</h2><button class="btn-add" id="add-domestic-btn">+ 新增地點</button></div>
+        <div id="domestic-list"></div>
+      </div>
+      <!-- 國外旅遊 -->
+      <div class="page" id="page-overseas">
+        <div class="page-header"><h2>國外旅遊</h2><button class="btn-add gold" id="add-overseas-btn">+ 新增地點</button></div>
+        <div id="overseas-list"></div>
       </div>
       <!-- 社群 -->
       <div class="page" id="page-social">
@@ -560,35 +576,45 @@ function showPage(name) {
 }
 
 // ── 資料 ─────────────────────────────────────────────────
-var campingData = [], motoData = [], curType = 'camping', editIdx = null, currentImgUrl = null;
+var campingData = [], motoData = [], domesticData = [], overseasData = [];
+var curType = 'camping', editIdx = null, currentImgUrl = null;
+
+function safeJson(r) { return r.ok ? r.json().catch(function(){return[];}) : []; }
 
 async function loadAll() {
   try {
     var results = await Promise.all([
-      fetch(API + '?sheet=camping').then(function(r) { return r.json(); }),
-      fetch(API + '?sheet=moto').then(function(r) { return r.json(); })
+      fetch(API + '?sheet=camping').then(safeJson),
+      fetch(API + '?sheet=moto').then(safeJson),
+      fetch(API + '?sheet=domestic').then(safeJson),
+      fetch(API + '?sheet=overseas').then(safeJson)
     ]);
-    campingData = results[0];
-    motoData = results[1];
+    campingData  = Array.isArray(results[0]) ? results[0] : [];
+    motoData     = Array.isArray(results[1]) ? results[1] : [];
+    domesticData = Array.isArray(results[2]) ? results[2] : [];
+    overseasData = Array.isArray(results[3]) ? results[3] : [];
     updateStats();
-    renderList('camping');
-    renderList('moto');
+    renderList('camping'); renderList('moto');
+    renderList('domestic'); renderList('overseas');
   } catch (e) {
-    toast('載入失敗', 1);
+    toast('載入失敗：' + e.message, 1);
   }
 }
 
 function updateStats() {
   ge('s-camp').textContent = campingData.length;
   ge('s-moto').textContent = motoData.length;
-  ge('s-360').textContent = campingData.concat(motoData).filter(function(p) { return p.img; }).length;
+  ge('s-domestic').textContent = domesticData.length;
+  ge('s-overseas').textContent = overseasData.length;
+  ge('s-360').textContent = campingData.concat(motoData, domesticData, overseasData).filter(function(p) { return p.img; }).length;
 }
 
 // ── 清單渲染（使用 data-* 屬性避免引號衝突）─────────────
 function renderList(type) {
-  var list = type === 'camping' ? campingData : motoData;
+  var dataMap = {camping:campingData, moto:motoData, domestic:domesticData, overseas:overseasData};
+  var list = dataMap[type] || [];
   var el = ge(type + '-list');
-  var g = type === 'moto';
+  var g = type === 'moto' || type === 'overseas';
   if (!list.length) {
     el.innerHTML = '<div class="empty-state">還沒有地點，點上方按鈕新增！</div>';
     return;
@@ -645,7 +671,8 @@ function openModal(type, idx) {
   calR1 = null; calR2 = null; currentImgUrl = null;
   resetForm();
   if (idx !== undefined) {
-    var p = (type === 'camping' ? campingData : motoData)[idx];
+    var dataMap2 = {camping:campingData, moto:motoData, domestic:domesticData, overseas:overseasData};
+  var p = (dataMap2[type] || [])[idx];
     ge('f-name').value  = p.name     || '';
     ge('f-loc').value   = p.location || '';
     ge('f-date').value  = p.date     || '';
@@ -708,7 +735,8 @@ async function savePlace() {
 
     img:      imgField
   };
-  var arr = type === 'camping' ? campingData : motoData;
+  var _dm = {camping:campingData, moto:motoData, domestic:domesticData, overseas:overseasData};
+  var arr = _dm[type] || [];
   if (editIdx !== null) arr[editIdx] = place; else arr.push(place);
   await pushToSheets(type);
   renderList(type);
@@ -718,7 +746,10 @@ async function savePlace() {
 
 async function delPlace(type, idx) {
   if (!confirm('確定要刪除？')) return;
-  if (type === 'camping') campingData.splice(idx, 1); else motoData.splice(idx, 1);
+  if (type === 'camping') campingData.splice(idx, 1);
+  else if (type === 'moto') motoData.splice(idx, 1);
+  else if (type === 'domestic') domesticData.splice(idx, 1);
+  else if (type === 'overseas') overseasData.splice(idx, 1);
   await pushToSheets(type);
   renderList(type);
   updateStats();
@@ -727,7 +758,8 @@ async function delPlace(type, idx) {
 async function pushToSheets(type) {
   ge('saving-mask').classList.add('show');
   try {
-    var data = type === 'camping' ? campingData : motoData;
+    var _dm2 = {camping:campingData, moto:motoData, domestic:domesticData, overseas:overseasData};
+    var data = _dm2[type] || [];
     await fetch(API, { method: 'POST', body: JSON.stringify({ sheet: type, data: data }) });
     toast('已儲存！');
   } catch (e) {
@@ -1067,6 +1099,12 @@ ge('save-pw-btn').addEventListener('click', savePw);
 document.querySelectorAll('.eye-btn').forEach(function(btn) {
   btn.addEventListener('click', function() { toggleEye(btn.dataset.target); });
 });
+
+// 快速新增按鈕 — 國內/國外
+ge('dash-add-domestic') && ge('dash-add-domestic').addEventListener('click', function() { showPage('domestic'); openModal('domestic'); });
+ge('dash-add-overseas') && ge('dash-add-overseas').addEventListener('click', function() { showPage('overseas'); openModal('overseas'); });
+ge('add-domestic-btn') && ge('add-domestic-btn').addEventListener('click', function() { openModal('domestic'); });
+ge('add-overseas-btn') && ge('add-overseas-btn').addEventListener('click', function() { openModal('overseas'); });
 
 // 社群
 ge('save-social-btn').addEventListener('click', saveSocial);
