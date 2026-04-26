@@ -942,8 +942,8 @@
     async function init(){
       try{
         var results=await Promise.all([
-          fetch(API+'?sheet=camping').then(function(r){return r.json();}),
-          fetch(API+'?sheet=moto').then(function(r){return r.json();}),
+          fetch(API+'?sheet=camping').then(function(r){return r.json();}).catch(function(){return[];}),
+          fetch(API+'?sheet=moto').then(function(r){return r.json();}).catch(function(){return[];}),
           fetch(API+'?sheet=social').then(function(r){return r.json();}).catch(function(){return[];}),
           fetch(API+'?sheet=domestic').then(function(r){return r.json();}).catch(function(){return[];}),
           fetch(API+'?sheet=overseas').then(function(r){return r.json();}).catch(function(){return[];})
