@@ -142,13 +142,79 @@
     .loading{text-align:center;padding:3rem;font-size:13px;color:var(--muted);}
     footer{padding:3rem 2.5rem;text-align:center;font-size:12px;color:var(--muted);border-top:1px solid var(--border);}
 
-    @media(max-width:600px){.hero h1{font-size:34px;}nav{padding:1rem 1.25rem;}.section{padding:3rem 1.25rem;}.social-section{padding:1.5rem 1.25rem;}}
+    /* ── Hamburger Menu ── */
+    .nav-toggle{display:none;flex-direction:column;gap:5px;cursor:pointer;background:none;border:none;padding:4px;}
+    .nav-toggle span{width:22px;height:2px;background:var(--muted);border-radius:2px;transition:all .25s;}
+    .nav-toggle.open span:nth-child(1){transform:rotate(45deg) translate(5px,5px);}
+    .nav-toggle.open span:nth-child(2){opacity:0;}
+    .nav-toggle.open span:nth-child(3){transform:rotate(-45deg) translate(5px,-5px);}
+
+    /* ── RWD 768px ── */
+    @media(max-width:768px){
+      .card-grid{grid-template-columns:1fr;}
+      .section{padding:3rem 1.25rem;}
+      .hero h1{font-size:38px;}
+      .hero{min-height:360px;padding:4rem 1.5rem 4rem;}
+      .cmodal-img{height:220px;}
+      .cmodal{max-height:95vh;border-radius:12px;}
+    }
+
+    /* ── RWD 600px (手機) ── */
+    @media(max-width:600px){
+      /* Nav */
+      nav{padding:.85rem 1.25rem;position:fixed;}
+      .nav-toggle{display:flex;}
+      .nav-links{
+        display:none;flex-direction:column;gap:0;
+        position:fixed;top:56px;left:0;right:0;
+        background:rgba(10,15,10,.97);backdrop-filter:blur(12px);
+        border-bottom:1px solid var(--border);
+        padding:.5rem 0;z-index:99;
+      }
+      .nav-links.open{display:flex;}
+      .nav-links a{padding:.85rem 1.5rem;font-size:14px;letter-spacing:.08em;border-bottom:1px solid rgba(255,255,255,.04);}
+      .nav-links a:last-child{border-bottom:none;}
+
+      /* Hero */
+      .hero{min-height:320px;padding:5rem 1.25rem 3.5rem;margin-top:56px;}
+      .hero h1{font-size:32px;}
+      .hero p{font-size:14px;}
+      .hero-eyebrow{font-size:10px;}
+      .hero-dots{bottom:1rem;}
+
+      /* Sections */
+      .section{padding:2.5rem 1rem;}
+      .section h2{font-size:26px;}
+      .social-section{padding:1.5rem 1rem;}
+
+      /* Cards */
+      .card-grid{grid-template-columns:1fr;gap:1rem;}
+      .card-img{height:180px;}
+
+      /* Modal */
+      .cmodal-overlay{padding:.5rem;align-items:flex-end;}
+      .cmodal{max-height:92vh;border-radius:16px 16px 0 0;}
+      .cmodal-img{height:180px;}
+      .cmodal-title{font-size:20px;}
+
+      /* Filter */
+      .filter-bar{gap:6px;}
+      .filter-tag{font-size:11px;padding:4px 10px;}
+    }
   </style>
 </head>
 <body>
   <nav>
     <div class="nav-logo">Syue &amp; Lynn</div>
-    <div class="nav-links"><a href="#moto">重機</a><a href="#camping">露營</a><a href="#domestic">國內旅遊</a><a href="#overseas">國外旅遊</a></div>
+    <div class="nav-links" id="nav-links">
+      <a href="#moto" onclick="closeNav()">重機</a>
+      <a href="#camping" onclick="closeNav()">露營</a>
+      <a href="#domestic" onclick="closeNav()">國內旅遊</a>
+      <a href="#overseas" onclick="closeNav()">國外旅遊</a>
+    </div>
+    <button class="nav-toggle" id="nav-toggle" aria-label="選單" onclick="toggleNav()">
+      <span></span><span></span><span></span>
+    </button>
   </nav>
 
   <div class="hero" id="hero-section">
@@ -304,6 +370,34 @@
   <footer>© SYUE &amp; LYNN · 用 Osmo 360 記錄每一個足跡</footer>
 
   <script>
+    // ── Hamburger Nav ────────────────────────────────────────────────────────
+    function toggleNav(){
+      var tg=document.getElementById('nav-toggle');
+      var nl=document.getElementById('nav-links');
+      tg.classList.toggle('open');
+      nl.classList.toggle('open');
+    }
+    function closeNav(){
+      document.getElementById('nav-toggle').classList.remove('open');
+      document.getElementById('nav-links').classList.remove('open');
+    }
+    // 點選 nav 連結後自動關閉選單 + 補正 sticky nav 高度
+    document.querySelectorAll('.nav-links a').forEach(function(a){
+      a.addEventListener('click',function(){ closeNav(); });
+    });
+
+    // ── Hamburger Nav ─────────────────────────────────────────────────────
+    function toggleNav(){
+      var tg=document.getElementById('nav-toggle');
+      var nl=document.getElementById('nav-links');
+      tg.classList.toggle('open');
+      nl.classList.toggle('open');
+    }
+    function closeNav(){
+      document.getElementById('nav-toggle').classList.remove('open');
+      document.getElementById('nav-links').classList.remove('open');
+    }
+
     // ── Hero 輪播 ────────────────────────────────────────────────────────────
     (function(){
       var slides = document.querySelectorAll('.hero-slide');
@@ -328,6 +422,22 @@
       var timer = setInterval(function(){ goSlide(cur+1); }, 5000);
       function resetTimer(){ clearInterval(timer); timer=setInterval(function(){ goSlide(cur+1); }, 5000); }
     })();
+
+    // ── Hamburger Nav ────────────────────────────────────────────────────────
+    function toggleNav(){
+      var tg=document.getElementById('nav-toggle');
+      var nl=document.getElementById('nav-links');
+      tg.classList.toggle('open');
+      nl.classList.toggle('open');
+    }
+    function closeNav(){
+      document.getElementById('nav-toggle').classList.remove('open');
+      document.getElementById('nav-links').classList.remove('open');
+    }
+    // 點選 nav 連結後自動關閉選單 + 補正 sticky nav 高度
+    document.querySelectorAll('.nav-links a').forEach(function(a){
+      a.addEventListener('click',function(){ closeNav(); });
+    });
 
     // ── Hero 輪播 ──────────────────────────────────────────────────────────
     (function(){
