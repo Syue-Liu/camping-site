@@ -218,7 +218,9 @@
 
       // Canvas
       var canvas = document.createElement('canvas');
-      canvas.style.cssText = 'width:100%;height:340px;display:block;';
+      var _isMob = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+      var _cvH = _isMob ? 240 : 340;
+      canvas.style.cssText = 'width:100%;height:'+_cvH+'px;display:block;';
       wrap.innerHTML = '<div class="pano-loading"><div class="pano-ring"></div><div class="pano-loading-text">載入中...</div><div class="pano-progress-pct" id="pct-'+me.containerId+'"></div></div><div class="pano-progress-bar" id="bar-'+me.containerId+'"></div>';
       wrap.appendChild(canvas);
       var loadEl = wrap.querySelector('.pano-loading');
@@ -294,11 +296,11 @@
           powerPreference: isMobile ? 'low-power' : 'default',
           preserveDrawingBuffer: false
         });
-        me.renderer.setPixelRatio(Math.min(window.devicePixelRatio, isMobile ? 1.5 : 2));
+        me.renderer.setPixelRatio(isMobile ? 1 : Math.min(window.devicePixelRatio, 2)); // 手機固定1倍，省記憶體
         me.camera = new THREE.PerspectiveCamera(75, 1, 0.1, 200);
         me.camera.rotation.order = 'YXZ';
         me.scene = new THREE.Scene();
-        var segments = isMobile ? 40 : 60;
+        var segments = isMobile ? 32 : 56; // 手機降低球體精細度
         var geo = new THREE.SphereGeometry(100, segments, segments * 2 / 3);
         me.mat = new THREE.MeshBasicMaterial({ side: THREE.BackSide, color: 0x111811 });
         me.sphere = new THREE.Mesh(geo, me.mat);
@@ -324,7 +326,7 @@
       me.resize = function() {
         var inFs = document.fullscreenElement === wrap;
         var w = inFs ? window.innerWidth : wrap.clientWidth;
-        var h = inFs ? window.innerHeight : 340;
+        var h = inFs ? window.innerHeight : (_cvH || 340);
         canvas.style.height = h + 'px';
         me.renderer.setSize(w, h, false);
         me.camera.aspect = w / h;
@@ -370,9 +372,17 @@
         }
       }, { passive: false });
 
-      // Render loop
+      // Render loop — 不在畫面內時自動暫停（避免 iOS 多 WebGL context 崩潰）
+      me._isVisible = false;
       me.raycaster = new THREE.Raycaster();
+      var observer = new IntersectionObserver(function(entries) {
+        me._isVisible = entries[0].isIntersecting;
+        if (me._isVisible && !me.raf) loop();
+      }, { threshold: 0.1 });
+      observer.observe(wrap);
+
       function loop() {
+        if (!me._isVisible) { me.raf = null; return; } // 不在畫面內就停止
         me.raf = requestAnimationFrame(loop);
         if (!me.isDrag) {
           me.velX *= 0.9; me.velY *= 0.9;
@@ -410,7 +420,7 @@
       if (bar) bar.style.width = '0%';
 
       var isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-      var maxPx = isMobile ? 2048 : 4096;
+      var maxPx = isMobile ? 1024 : 4096; // 手機最大貼圖 1024，大幅降低記憶體使用
 
       // XHR 下載以取得進度百分比
       var xhr = new XMLHttpRequest();
