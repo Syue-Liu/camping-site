@@ -453,9 +453,9 @@ canvas.edit-mode{cursor:default;}
       <!-- STEP 3 (主要動作) -->
       <div style="background:rgba(126,184,122,.1);border:2px solid rgba(126,184,122,.4);border-radius:10px;padding:13px;margin-bottom:10px;">
         <div style="font-size:11px;color:#7eb87a;font-weight:700;letter-spacing:.1em;margin-bottom:6px;">STEP 3 — 複製網址貼到後台</div>
-        <div style="font-size:12px;color:#8a9088;margin-bottom:8px;">貼到後台地點編輯的「Kuula 360 嵌入碼」欄位</div>
-        <div id="kuula-url-code" style="background:rgba(0,0,0,.3);border:1px solid rgba(255,255,255,.08);border-radius:7px;padding:9px 12px;font-family:monospace;font-size:11px;color:#7eb87a;word-break:break-all;margin-bottom:8px;min-height:32px;">（請先完成 Step 1 & 2）</div>
-        <button class="btn-primary" id="copy-kuula-url-btn" style="margin:0;">📋 複製網址</button>
+        <div style="font-size:12px;color:#8a9088;margin-bottom:8px;">複製後貼到後台地點編輯的「360° 全景」欄位</div>
+        <div id="pano360-url-code" style="background:rgba(0,0,0,.3);border:1px solid rgba(255,255,255,.08);border-radius:7px;padding:9px 12px;font-family:monospace;font-size:11px;color:#7eb87a;word-break:break-all;margin-bottom:8px;min-height:32px;">（請先完成 Step 1 & 2）</div>
+        <button class="btn-primary" id="copy-pano360-url-btn" style="margin:0;">📋 複製網址</button>
       </div>
 
       <!-- 備用：其他網站 iframe -->
@@ -2147,24 +2147,24 @@ function renderEmbedTab() {
   var ghCfg = getGhStatus ? getGhStatus() : null;
   var sceneCount = config.scenes.length;
 
-  // ── 給 Syue & Lynn 後台的 Kuula 欄位（純 GitHub JSON URL）
+  // ── 給 Syue & Lynn 後台的 360° 全景連結欄位
   var rawConfigUrl = ghCfg
     ? 'https://raw.githubusercontent.com/' + ghCfg.user + '/' + ghCfg.repo + '/main/360/config.json'
     : null;
 
-  var kuulaEl = ge('kuula-url-code');
-  var copyKuulaBtn = ge('copy-kuula-url-btn');
+  var pano360El = ge('pano360-url-code');
+  var copyKuulaBtn = ge('copy-pano360-url-btn');
   if (rawConfigUrl && sceneCount) {
-    kuulaEl.textContent = rawConfigUrl;
-    kuulaEl.dataset.url = rawConfigUrl;
+    pano360El.textContent = rawConfigUrl;
+    pano360El.dataset.url = rawConfigUrl;
     copyKuulaBtn.disabled = false;
     copyKuulaBtn.style.opacity = '1';
   } else if (!ghCfg) {
-    kuulaEl.textContent = '⚠️ 請先設定 GitHub Token 並上傳 config.json';
+    pano360El.textContent = '⚠️ 請先設定 GitHub Token 並上傳 config.json';
     copyKuulaBtn.disabled = true;
     copyKuulaBtn.style.opacity = '0.4';
   } else {
-    kuulaEl.textContent = '⚠️ 請先新增場景並上傳 JSON 到 GitHub';
+    pano360El.textContent = '⚠️ 請先新增場景並上傳 JSON 到 GitHub';
     copyKuulaBtn.disabled = true;
     copyKuulaBtn.style.opacity = '0.4';
   }
@@ -2188,11 +2188,11 @@ function renderEmbedTab() {
   }
 }
 
-ge('copy-kuula-url-btn') && ge('copy-kuula-url-btn').addEventListener('click', function() {
-  var url = ge('kuula-url-code').dataset.url || ge('kuula-url-code').textContent;
+ge('copy-pano360-url-btn') && ge('copy-pano360-url-btn').addEventListener('click', function() {
+  var url = ge('pano360-url-code').dataset.url || ge('pano360-url-code').textContent;
   if (!url || url.startsWith('⚠️')) return;
   navigator.clipboard.writeText(url).then(function() {
-    alert('✅ 已複製！\n\n現在請：\n1. 開啟後台 admin.html\n2. 找到對應的地點 → 點「編輯」\n3. 在「Kuula 360 嵌入碼」欄位貼上這個網址\n4. 儲存\n\n前台 index.html 會自動顯示 360° 全景！');
+    alert('✅ 已複製！\n\n現在請：\n1. 開啟後台 admin.html\n2. 找到對應的地點 → 點「編輯」\n3. 在「360° 全景」欄位貼上這個網址\n4. 儲存\n\n前台 index.html 會自動顯示 360° 全景！');
   });
 });
 ge('copy-embed-btn').addEventListener('click', function() {

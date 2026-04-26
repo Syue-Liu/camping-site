@@ -275,8 +275,8 @@ textarea.form-input{resize:vertical;min-height:90px;}
           <div id="pano-scene-list" style="margin-top:1rem;"></div>
         </div>
         <div class="settings-card">
-          <h3>📋 Kuula 欄位 — 貼上用網址</h3>
-          <p style="font-size:13px;color:var(--muted);margin-bottom:0.75rem;">複製後貼到地點編輯的「Kuula 360 嵌入碼」欄位：</p>
+          <h3>📋 360° 全景連結</h3>
+          <p style="font-size:13px;color:var(--muted);margin-bottom:0.75rem;">複製後貼到地點編輯的「360° 全景」欄位：</p>
           <div class="current-info" id="pano-config-url" style="word-break:break-all;font-size:12px;">（請先設定 GitHub）</div>
           <button class="btn-save-set" id="p-copy-url-btn" style="margin-top:0.5rem;">📋 複製網址</button>
         </div>
@@ -343,7 +343,7 @@ textarea.form-input{resize:vertical;min-height:90px;}
       <button type="button" class="btn-add-block" id="add-block-btn">+ 新增區塊</button>
       <input type="hidden" id="f-desc">
     </div>
-    <div class="form-group"><label class="form-label">Kuula 360 嵌入碼</label><textarea class="form-input" id="f-kuula" placeholder="貼上 Kuula 的 script 嵌入碼..." style="min-height:70px;font-size:12px;font-family:monospace;"></textarea></div>
+
     <div class="form-row">
       <div class="form-group"><label class="form-label">YouTube 影片網址</label><input class="form-input" type="text" id="f-youtube" placeholder="https://youtu.be/xxxxx"></div>
       <div class="form-group"><label class="form-label">Instagram 貼文網址</label><input class="form-input" type="text" id="f-ig" placeholder="https://www.instagram.com/p/xxxxx"></div>
@@ -581,7 +581,7 @@ async function loadAll() {
 function updateStats() {
   ge('s-camp').textContent = campingData.length;
   ge('s-moto').textContent = motoData.length;
-  ge('s-360').textContent = campingData.concat(motoData).filter(function(p) { return p.kuula; }).length;
+  ge('s-360').textContent = campingData.concat(motoData).filter(function(p) { return p.img; }).length;
 }
 
 // ── 清單渲染（使用 data-* 屬性避免引號衝突）─────────────
@@ -600,7 +600,7 @@ function renderList(type) {
       return '<span class="badge-tag' + (g ? ' gold' : '') + '">' + t.trim() + '</span>';
     }).join('') : '';
     var desc = p.desc ? p.desc.substring(0, 80) + '...' : '';
-    var ku = p.kuula ? ' · <span style="color:var(--accent)">360°</span>' : '';
+
     var ytIcon = imgP.youtube ? ' · <span style="color:#ff4444">▶ YT</span>' : '';
     var igIcon = imgP.ig ? ' · <span style="color:#e1306c">📸 IG</span>' : '';
     html += '<div class="place-card">' +
@@ -650,7 +650,7 @@ function openModal(type, idx) {
     ge('f-loc').value   = p.location || '';
     ge('f-date').value  = p.date     || '';
     ge('f-tags').value  = p.tags     || '';
-    ge('f-kuula').value = p.kuula    || '';
+
     // 解包 img 欄位（可能包含 youtube / ig）
     var imgParsed = parseImgField(p.img || '');
     currentImgUrl = imgParsed.img;
@@ -673,7 +673,7 @@ function closeModal() {
 }
 
 function resetForm() {
-  ['f-name', 'f-loc', 'f-date', 'f-tags', 'f-kuula', 'f-youtube', 'f-ig'].forEach(function(id) {
+  ['f-name', 'f-loc', 'f-date', 'f-tags', 'f-youtube', 'f-ig'].forEach(function(id) {
     ge(id).value = '';
   });
   var t = ge('cal-trigger-text');
@@ -705,7 +705,7 @@ async function savePlace() {
     date:     ge('f-date').value.trim(),
     tags:     ge('f-tags').value.trim(),
     desc:     getDescValue(),
-    kuula:    ge('f-kuula').value.trim(),
+
     img:      imgField
   };
   var arr = type === 'camping' ? campingData : motoData;
@@ -1125,7 +1125,7 @@ try {
     var url = urlEl ? urlEl.dataset.url : '';
     if (!url) { toast('請先設定 GitHub', 1); return; }
     navigator.clipboard.writeText(url).then(function() {
-      toast('✅ 已複製！貼到地點的「Kuula 360 嵌入碼」欄位');
+      toast('✅ 已複製！貼到地點的「360° 全景」欄位');
     });
   });
 
