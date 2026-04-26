@@ -164,7 +164,7 @@
       <button class="s-clear" id="camp-clear" onclick="clearSearch('camping')">×</button>
     </div>
     <div class="filter-bar" id="camp-filter-bar"><span style="font-size:13px;color:var(--muted)">載入中...</span></div>
-    <div id="camping-container"><div class="loading">載入中...</div></div>
+    <div class="card-grid" id="camping-container"><div class="loading" style="grid-column:1/-1">載入中...</div></div>
   </div>
 
   <hr class="divider">
@@ -845,7 +845,7 @@
             // 直接圖片網址
             panoAttrs+=' data-image-url="'+panoRaw+'"';
           }
-          pano360Html='<div class="pano-placeholder" id="'+panoId+'"'+panoAttrs+' onclick="initPano360AndReplace(''+panoId+'')">'+
+          pano360Html='<div class="pano-placeholder" id="'+panoId+'"'+panoAttrs+' onclick="initPano360AndReplace(\''+panoId+'\')">'+
             '<div class="pano-placeholder-icon">🌐</div>'+
             '<div class="pano-placeholder-text">360° 互動全景</div>'+
             '<div class="pano-placeholder-btn">▶ 點擊載入</div>'+
@@ -948,12 +948,18 @@
           fetch(API+'?sheet=domestic').then(function(r){return r.json();}).catch(function(){return[];}),
           fetch(API+'?sheet=overseas').then(function(r){return r.json();}).catch(function(){return[];})
         ]);
-        campingData=results[0];motoData=results[1];
+        campingData=Array.isArray(results[0])?results[0]:[];
+        motoData=Array.isArray(results[1])?results[1]:[];
         domesticData=Array.isArray(results[3])?results[3]:[];
         overseasData=Array.isArray(results[4])?results[4]:[];
         var soc=results[2];
         if(soc&&soc[0]&&soc[0].data)loadSocial(soc[0].data);
-        ALL_TYPES.forEach(function(t){buildFilter(t);render(t);});
+        ALL_TYPES.forEach(function(t){
+          try { buildFilter(t); render(t); } catch(te) {
+            var el=document.getElementById(containerId(t));
+            if(el)el.innerHTML='<div class="empty-msg">顯示失敗（'+te.message+'）</div>';
+          }
+        });
       }catch(e){
         ALL_TYPES.forEach(function(t){
           var el=document.getElementById(containerId(t));
