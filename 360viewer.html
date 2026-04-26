@@ -246,7 +246,7 @@ canvas.edit-mode{cursor:default;}
   <canvas id="c"></canvas>
   <div id="hs-layer"></div>
   <div id="fade" style="display:none"></div>
-  <img id="xfade" src="" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;pointer-events:none;z-index:11;opacity:1;transition:opacity .65s ease;" />
+  <img id="xfade" src="" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;pointer-events:none;z-index:11;opacity:0;display:none;transition:opacity .65s ease;" />
 
   <!-- Loading -->
   <div id="loading" class="active">
@@ -594,7 +594,7 @@ var wrap = ge('wrap');
 var renderer, camera, scene3, sphere, mat, cubeMesh, cubeMats;
 
 try {
-  renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true });
+  renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true, preserveDrawingBuffer: true });
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
   camera = new THREE.PerspectiveCamera(75, 1, 0.1, 200);
   camera.rotation.order = 'YXZ';
@@ -887,31 +887,40 @@ function switchSceneWithZoom(id) {
   var canvasEl = ge('c');
   var xfade = ge('xfade');
 
-  // 截圖當前 WebGL 畫面，強制先 render 一次以確保 buffer 未被清除
+  // 強制 render 一次，確保 buffer 有內容（需要 preserveDrawingBuffer:true）
   renderer.render(scene3, camera);
+
   var snapshot = '';
-  try { snapshot = canvasEl.toDataURL('image/jpeg', 0.85); } catch(e) {}
+  try {
+    snapshot = canvasEl.toDataURL('image/jpeg', 0.80);
+    // 空白截圖檢查（全黑時 length 很短）
+    if (snapshot.length < 5000) snapshot = '';
+  } catch(e) { snapshot = ''; }
 
   if (snapshot && xfade) {
-    // 顯示截圖覆蓋層（不透明）
+    // 交互淡化：把截圖蓋在畫面上，背景載入新場景後再淡出
+    xfade.onload = null;
     xfade.src = snapshot;
+    xfade.style.display = 'block';
     xfade.style.transition = 'none';
     xfade.style.opacity = '1';
-    xfade.style.display = 'block';
-  }
 
-  // 立刻切換場景（在截圖遮住的情況下載入新場景）
-  switchScene(id, function onNewSceneReady() {
-    // 新場景準備好後，淡出截圖覆蓋層
-    if (xfade) {
-      xfade.style.transition = 'opacity .65s ease';
+    switchScene(id, function onNewSceneReady() {
+      // 新場景 ready → 截圖淡出
+      xfade.style.transition = 'opacity .7s ease';
       xfade.style.opacity = '0';
       setTimeout(function() {
         xfade.style.display = 'none';
         xfade.src = '';
-      }, 700);
-    }
-  });
+      }, 750);
+    });
+  } else {
+    // 備用：簡單淡黑過場（snapshot 失敗時）
+    if (canvasEl) { canvasEl.style.transition = 'opacity .3s ease'; canvasEl.style.opacity = '0'; }
+    switchScene(id, function() {
+      if (canvasEl) { canvasEl.style.transition = 'opacity .4s ease'; canvasEl.style.opacity = '1'; }
+    });
+  }
 }
 
 function switchScene(id, onReady) {
