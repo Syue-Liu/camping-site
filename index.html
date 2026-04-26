@@ -829,9 +829,32 @@
             }).join('')+'</div>'
           :'';
         // 展開內容
-        var hasExpand=!!(descHtml||ytUrl||igUrl);
+        // 解析 pano360 欄位：支援圖片 / 切片資料夾 / config.json
+        var pano360Html='';
+        var panoRaw=(p.pano360||'').trim();
+        if(panoRaw){
+          var panoId='pano-'+id;
+          var panoAttrs=' data-gold="'+g+'"';
+          if(panoRaw.endsWith('/')){
+            // 切片模式（tileBaseUrl）
+            panoAttrs+=' data-tile-url="'+panoRaw+'"';
+          } else if(panoRaw.endsWith('.json')||panoRaw.includes('raw.githubusercontent.com')){
+            // GitHub config.json
+            panoAttrs+=' data-config-url="'+panoRaw+'"';
+          } else {
+            // 直接圖片網址
+            panoAttrs+=' data-image-url="'+panoRaw+'"';
+          }
+          pano360Html='<div class="pano-placeholder" id="'+panoId+'"'+panoAttrs+' onclick="initPano360AndReplace(''+panoId+'')">'+
+            '<div class="pano-placeholder-icon">🌐</div>'+
+            '<div class="pano-placeholder-text">360° 互動全景</div>'+
+            '<div class="pano-placeholder-btn">▶ 點擊載入</div>'+
+          '</div>';
+        }
+        var hasExpand=!!(descHtml||pano360Html||ytUrl||igUrl);
         var expandHtml='';
         if(descHtml)expandHtml+=descHtml;
+        if(pano360Html)expandHtml+=pano360Html;
         if(ytUrl)expandHtml+=
           '<div class="yt-wrap"><iframe src="'+ytUrl+'"'+
           ' allow="accelerometer;autoplay;clipboard-write;encrypted-media;gyroscope;picture-in-picture"'+
@@ -888,6 +911,7 @@
     function _doInitPano360(id, wrap) {
       var configUrl = wrap.dataset.configUrl;
       var imageUrl  = wrap.dataset.imageUrl;
+      var tileUrl   = wrap.dataset.tileUrl;
       var cfgRaw    = wrap.dataset.cfg;
       var gold      = wrap.dataset.gold === 'true';
 
@@ -895,7 +919,10 @@
         _panoViewers[id] = new InlinePano(id, cfg, gold);
       }
 
-      if (configUrl) {
+      // 切片模式：自動建立單場景 config
+      if (tileUrl) {
+        startWithConfig({ scenes: [{ id:'s1', name:'360° 環景', tileBaseUrl: tileUrl, hotspots:[] }] });
+      } else if (configUrl) {
         wrap.innerHTML = '<div class="pano-loading"><div class="pano-ring"></div><div class="pano-loading-text">載入設定中...</div></div>';
         fetch(configUrl)
           .then(function(r) { return r.json(); })

@@ -365,6 +365,16 @@ textarea.form-input{resize:vertical;min-height:90px;}
       <div class="form-group"><label class="form-label">Instagram 貼文網址</label><input class="form-input" type="text" id="f-ig" placeholder="https://www.instagram.com/p/xxxxx"></div>
     </div>
     <div class="form-group">
+      <label class="form-label">360° 全景（選填）</label>
+      <input class="form-input" type="text" id="f-pano360" placeholder="貼上圖片網址 / 切片資料夾網址 / config.json 網址">
+      <div style="font-size:11px;color:var(--muted);margin-top:5px;line-height:1.6;">
+        支援三種格式：<br>
+        ① 等距全景圖片網址（.jpg / .png）<br>
+        ② 切片資料夾網址（以 / 結尾，如 .../tiles/scene1/）<br>
+        ③ GitHub config.json 網址（.../config.json）
+      </div>
+    </div>
+    <div class="form-group">
       <label class="form-label">封面照片</label>
       <div class="upload-zone" id="upload-zone"><div class="icon">📷</div><p>點擊上傳照片</p><p class="hint">自動上傳到雲端，所有人都能看到</p></div>
       <div class="upload-replace" id="upload-replace" style="display:none">點擊更換照片</div>
@@ -627,13 +637,14 @@ function renderList(type) {
     }).join('') : '';
     var desc = p.desc ? p.desc.substring(0, 80) + '...' : '';
 
+    var panoIcon = p.pano360 ? ' · <span style="color:#7eb87a">🌐 360°</span>' : '';
     var ytIcon = imgP.youtube ? ' · <span style="color:#ff4444">▶ YT</span>' : '';
     var igIcon = imgP.ig ? ' · <span style="color:#e1306c">📸 IG</span>' : '';
     html += '<div class="place-card">' +
       '<div class="place-thumb">' + (imgP.img ? '<img src="' + imgP.img + '" alt="">' : (g ? '◎' : '▲')) + '</div>' +
       '<div class="place-info">' +
         '<div class="place-name">' + (p.name || '') + '</div>' +
-        '<div class="place-meta">' + (p.location || '') + (p.date ? ' · ' + p.date : '') + ytIcon + igIcon + '</div>' +
+        '<div class="place-meta">' + (p.location || '') + (p.date ? ' · ' + p.date : '') + panoIcon + ytIcon + igIcon + '</div>' +
         tags +
         '<div class="place-desc">' + desc + '</div>' +
       '</div>' +
@@ -683,6 +694,7 @@ function openModal(type, idx) {
     currentImgUrl = imgParsed.img;
     ge('f-youtube').value = imgParsed.youtube;
     ge('f-ig').value      = imgParsed.ig;
+    ge('f-pano360').value = p.pano360 || '';
     if (p.date) {
       var t = ge('cal-trigger-text');
       t.textContent = p.date;
@@ -700,7 +712,7 @@ function closeModal() {
 }
 
 function resetForm() {
-  ['f-name', 'f-loc', 'f-date', 'f-tags', 'f-youtube', 'f-ig'].forEach(function(id) {
+  ['f-name', 'f-loc', 'f-date', 'f-tags', 'f-youtube', 'f-ig', 'f-pano360'].forEach(function(id) {
     ge(id).value = '';
   });
   var t = ge('cal-trigger-text');
@@ -731,6 +743,7 @@ async function savePlace() {
     location: ge('f-loc').value.trim(),
     date:     ge('f-date').value.trim(),
     tags:     ge('f-tags').value.trim(),
+    pano360:  pano360Val,
     desc:     getDescValue(),
 
     img:      imgField
