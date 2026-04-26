@@ -832,25 +832,6 @@
         var hasExpand=!!(descHtml||ytUrl||igUrl);
         var expandHtml='';
         if(descHtml)expandHtml+=descHtml;
-        if(ku){
-          if(ku.type==='pano360'){
-            var panoId='pano-'+id;
-            var dataAttrs='';
-            if(ku.configUrl)dataAttrs+=' data-config-url="'+ku.configUrl+'"';
-            if(ku.imageUrl)dataAttrs+=' data-image-url="'+ku.imageUrl+'"';
-            if(ku.cfg)dataAttrs+=' data-cfg="'+encodeURIComponent(JSON.stringify(ku.cfg))+'"';
-            dataAttrs+=' data-gold="'+g+'"';
-            expandHtml+='<div class="pano-placeholder" id="'+panoId+'"'+dataAttrs+' onclick="initPano360AndReplace(\''+panoId+'\')">'+
-              '<div class="pano-placeholder-icon">🌐</div>'+
-              '<div class="pano-placeholder-text">360° 互動全景</div>'+
-              '<div class="pano-placeholder-btn">▶ 點擊載入</div>'+
-            '</div>';
-          } else if(ku.type==='iframe'){
-
-          } else {
-
-          }
-        }
         if(ytUrl)expandHtml+=
           '<div class="yt-wrap"><iframe src="'+ytUrl+'"'+
           ' allow="accelerometer;autoplay;clipboard-write;encrypted-media;gyroscope;picture-in-picture"'+
