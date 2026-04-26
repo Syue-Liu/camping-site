@@ -553,16 +553,19 @@
                   xf.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;object-fit:cover;pointer-events:none;z-index:20;opacity:0;display:none;transition:opacity .65s ease;';
                   wrap.appendChild(xf);
                 }
+                // 把 canvas 的 CSS filter（調色）複製給 overlay，讓截圖顏色一致
+                var currentFilter = me.renderer.domElement.style.filter || '';
                 xf.src = snapshot;
+                xf.style.filter = currentFilter;
                 xf.style.display = 'block';
                 xf.style.transition = 'none';
                 xf.style.opacity = '1';
                 // 切換場景（在截圖遮住時背景載入）
                 me.goScene(tidx, null, function() {
-                  // 新場景 ready → 淡出截圖
+                  // 新場景 ready → 淡出截圖，清除 filter
                   xf.style.transition = 'opacity .65s ease';
                   xf.style.opacity = '0';
-                  setTimeout(function() { xf.style.display='none'; xf.src=''; }, 700);
+                  setTimeout(function() { xf.style.display='none'; xf.src=''; xf.style.filter=''; }, 700);
                 });
               } else {
                 // 備用：canvas 淡出

@@ -898,20 +898,23 @@ function switchSceneWithZoom(id) {
   } catch(e) { snapshot = ''; }
 
   if (snapshot && xfade) {
-    // 交互淡化：把截圖蓋在畫面上，背景載入新場景後再淡出
+    // 把 canvas 的 CSS filter 複製給 xfade，讓截圖看起來跟畫面一致
+    var canvasFilter = canvasEl ? canvasEl.style.filter : '';
     xfade.onload = null;
     xfade.src = snapshot;
+    xfade.style.filter = canvasFilter; // 關鍵：套用相同的調色
     xfade.style.display = 'block';
     xfade.style.transition = 'none';
     xfade.style.opacity = '1';
 
     switchScene(id, function onNewSceneReady() {
-      // 新場景 ready → 截圖淡出
+      // 新場景 ready → 截圖淡出，同時清掉 filter
       xfade.style.transition = 'opacity .7s ease';
       xfade.style.opacity = '0';
       setTimeout(function() {
         xfade.style.display = 'none';
         xfade.src = '';
+        xfade.style.filter = '';
       }, 750);
     });
   } else {
