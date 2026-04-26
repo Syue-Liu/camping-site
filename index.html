@@ -51,21 +51,35 @@
     .filter-tag.gold.active{background:var(--accent2);border-color:var(--accent2);}
     .filter-select{font-size:12px;padding:5px 14px;border-radius:20px;border:1px solid var(--border);background:var(--surface2);color:var(--muted);cursor:pointer;outline:none;font-family:inherit;}
     .filter-count{font-size:12px;color:var(--muted);margin-left:auto;}
-    .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:2rem;}
-    .card:hover{border-color:#3e4a3c;}
-    .card-img{width:100%;height:260px;object-fit:cover;display:block;}
-    @media(max-width:768px){.card-img{height:auto;aspect-ratio:16/9;}}
-    .card-body{padding:1.75rem;}
-    .card-title{font-family:'Playfair Display',serif;font-size:22px;font-weight:500;margin-bottom:6px;}
+    /* ── Card ── */
+    .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;cursor:pointer;transition:border-color .2s,transform .2s,box-shadow .2s;display:flex;flex-direction:column;}
+    .card:hover{border-color:var(--accent);transform:translateY(-3px);box-shadow:0 8px 30px rgba(0,0,0,.3);}
+    .card-img{width:100%;height:220px;object-fit:cover;display:block;flex-shrink:0;}
+    @media(max-width:768px){.card-img{height:180px;}}
+    .card-body{padding:1.5rem;flex:1;display:flex;flex-direction:column;}
+    .card-title{font-family:'Playfair Display',serif;font-size:20px;font-weight:500;margin-bottom:6px;}
     .card-meta{font-size:12px;color:var(--muted);margin-bottom:0.75rem;}
     .card-tags{display:block;margin-bottom:0.75rem;line-height:2;}
     .badge{display:inline-block;font-size:11px;padding:3px 10px;border-radius:20px;margin-right:6px;margin-bottom:4px;}
     .badge-green{background:rgba(126,184,122,0.12);color:var(--accent);border:1px solid rgba(126,184,122,0.25);}
     .badge-gold{background:rgba(196,163,90,0.12);color:var(--accent2);border:1px solid rgba(196,163,90,0.25);}
-    .btn-more{display:block;width:fit-content;margin-top:0.5rem;padding:6px 16px;border:1px solid var(--border);border-radius:20px;background:transparent;color:var(--muted);font-size:12px;cursor:pointer;font-family:inherit;letter-spacing:0.05em;}
-    .btn-more:hover{border-color:var(--accent);color:var(--accent);}
-    .card-full{display:none;margin-top:1.25rem;padding-top:1.25rem;border-top:1px solid var(--border);}
-    .card-full.open{display:block;}
+    .card-hint{margin-top:auto;font-size:11px;color:#4a5448;letter-spacing:.08em;padding-top:.75rem;}
+    /* ── Card Modal ── */
+    .cmodal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:500;display:flex;align-items:center;justify-content:center;padding:1rem;opacity:0;pointer-events:none;transition:opacity .25s;}
+    .cmodal-overlay.open{opacity:1;pointer-events:auto;}
+    .cmodal{background:var(--surface);border:1px solid var(--border);border-radius:16px;width:100%;max-width:680px;max-height:90vh;overflow:hidden;display:flex;flex-direction:column;transform:translateY(20px);transition:transform .25s;}
+    .cmodal-overlay.open .cmodal{transform:translateY(0);}
+    .cmodal-img{width:100%;height:280px;object-fit:cover;display:block;flex-shrink:0;}
+    @media(max-width:600px){.cmodal-img{height:200px;}}
+    .cmodal-hdr{display:flex;align-items:flex-start;justify-content:space-between;padding:1.5rem 1.5rem .75rem;gap:1rem;flex-shrink:0;}
+    .cmodal-title-area{}
+    .cmodal-title{font-family:'Playfair Display',serif;font-size:24px;font-weight:500;margin-bottom:4px;}
+    .cmodal-meta{font-size:12px;color:var(--muted);}
+    .cmodal-close{width:32px;height:32px;border-radius:50%;border:1px solid var(--border);background:transparent;color:var(--muted);font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;line-height:1;transition:all .15s;}
+    .cmodal-close:hover{border-color:var(--text);color:var(--text);}
+    .cmodal-tags{padding:0 1.5rem .75rem;flex-shrink:0;}
+    .cmodal-body{overflow-y:auto;padding:0 1.5rem 1.5rem;flex:1;}
+    .cmodal-divider{height:1px;background:var(--border);margin-bottom:1.25rem;}
     .desc-block{margin-bottom:1.1rem;}
     .desc-title{font-size:13px;font-weight:600;letter-spacing:0.05em;margin-bottom:0.4rem;}
     .desc-text{font-size:14px;color:var(--muted);line-height:1.8;}
@@ -199,6 +213,63 @@
     </div>
     <div class="filter-bar" id="overseas-filter-bar"><span style="font-size:13px;color:var(--muted)">載入中...</span></div>
     <div class="card-grid" id="overseas-container"><div class="loading" style="grid-column:1/-1">載入中...</div></div>
+  </div>
+
+  <!-- ── Card Detail Modal ── -->
+  <div class="cmodal-overlay" id="cmodal-overlay" onclick="closeCardModal(event)">
+    <div class="cmodal" id="cmodal">
+      <img class="cmodal-img" id="cmodal-img" src="" alt="" style="display:none">
+      <div class="cmodal-hdr">
+        <div class="cmodal-title-area">
+          <div class="cmodal-title" id="cmodal-title"></div>
+          <div class="cmodal-meta" id="cmodal-meta"></div>
+        </div>
+        <button class="cmodal-close" onclick="closeCardModal()">×</button>
+      </div>
+      <div class="cmodal-tags" id="cmodal-tags"></div>
+      <div class="cmodal-body">
+        <div class="cmodal-divider"></div>
+        <div id="cmodal-content"></div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ── Card Detail Modal ── -->
+  <div class="cmodal-overlay" id="cmodal-overlay" onclick="closeCardModal(event)">
+    <div class="cmodal" id="cmodal">
+      <img class="cmodal-img" id="cmodal-img" src="" alt="" style="display:none">
+      <div class="cmodal-hdr">
+        <div class="cmodal-title-area">
+          <div class="cmodal-title" id="cmodal-title"></div>
+          <div class="cmodal-meta" id="cmodal-meta"></div>
+        </div>
+        <button class="cmodal-close" onclick="closeCardModal()">×</button>
+      </div>
+      <div class="cmodal-tags" id="cmodal-tags"></div>
+      <div class="cmodal-body">
+        <div class="cmodal-divider"></div>
+        <div id="cmodal-content"></div>
+      </div>
+    </div>
+  </div>
+  <!-- ── Card Detail Modal ── -->
+  <div class="cmodal-overlay" id="cmodal-overlay" onclick="closeCardModal(event)">
+    <div class="cmodal" id="cmodal">
+      <img class="cmodal-img" id="cmodal-img" src="" alt="" style="display:none">
+      <div class="cmodal-hdr">
+        <div class="cmodal-title-area">
+          <div class="cmodal-title" id="cmodal-title"></div>
+          <div class="cmodal-meta" id="cmodal-meta"></div>
+        </div>
+        <button class="cmodal-close" onclick="closeCardModal()">×</button>
+      </div>
+      <div class="cmodal-tags" id="cmodal-tags"></div>
+      <div class="cmodal-body">
+        <div class="cmodal-divider"></div>
+        <div id="cmodal-content"></div>
+      </div>
+    </div>
   </div>
 
   <footer>© SYUE &amp; LYNN · 用 Osmo 360 記錄每一個足跡</footer>
@@ -729,11 +800,32 @@
       return'<div class="desc-text">'+hl(desc,kw,g)+'</div>';
     }
 
-    function toggleMore(btn,id){
-      var el=document.getElementById('full-'+id);
-      var open=el.classList.contains('open');
-      el.classList.toggle('open');
-      btn.textContent=open?'展開更多 ∨':'收起 ∧';
+    var _cardData={};
+
+    function openCardModal(id){
+      var d=_cardData[id]; if(!d) return;
+      var ov=document.getElementById('cmodal-overlay');
+      var img=document.getElementById('cmodal-img');
+      if(d.img){img.src=d.img;img.style.display='block';}
+      else{img.style.display='none';}
+      document.getElementById('cmodal-title').textContent=d.name||'';
+      var meta=(d.location||'')+(d.date?' · '+d.date:'');
+      document.getElementById('cmodal-meta').textContent=meta;
+      document.getElementById('cmodal-tags').innerHTML=d.tags||'';
+      document.getElementById('cmodal-content').innerHTML=d.expand||'';
+      ov.classList.add('open');
+      document.body.style.overflow='hidden';
+    }
+
+    function closeCardModal(e){
+      if(e && e.target!==document.getElementById('cmodal-overlay')) return;
+      document.getElementById('cmodal-overlay').classList.remove('open');
+      document.body.style.overflow='';
+      // 清掉 360° viewer 避免記憶體洩漏
+      var content=document.getElementById('cmodal-content');
+      content.querySelectorAll('.pano-wrap canvas').forEach(function(c){
+        try{ var gl=c.getContext('webgl'); if(gl) gl.getExtension('WEBGL_lose_context') && gl.getExtension('WEBGL_lose_context').loseContext(); }catch(e){}
+      });
     }
 
     function filterId(type){return{camping:'camp-filter-bar',moto:'moto-filter-bar',domestic:'domestic-filter-bar',overseas:'overseas-filter-bar'}[type]||type+'-filter-bar';}
@@ -862,14 +954,16 @@
         if(igUrl)expandHtml+=
           '<a class="ig-link" href="'+igUrl+'" target="_blank" rel="noopener">'+
           '<span style="font-size:16px">📸</span>在 Instagram 查看貼文</a>';
-        return'<div class="card">'+
+        // 儲存展開內容供 modal 讀取
+        _cardData[id]={name:p.name,location:p.location,date:p.date,img:imgP.img,tags:tagsHtml,expand:expandHtml,gold:g};
+        var clickAttr=hasExpand?' onclick="openCardModal(\''+id+'\')" role="button" tabindex="0"':'';
+        return'<div class="card"'+clickAttr+'>'+
           thumbHtml+
           '<div class="card-body">'+
             '<div class="card-title">'+hl(p.name,kw,g)+'</div>'+
             '<div class="card-meta">'+hl(p.location||'',kw,g)+(p.date?' · '+p.date:'')+'</div>'+
             tagsHtml+
-            (hasExpand?'<button class="btn-more" onclick="toggleMore(this,\''+id+'\')">展開更多 ∨</button>':'')+
-            (hasExpand?'<div class="card-full" id="full-'+id+'">'+expandHtml+'</div>':'')+
+            (hasExpand?'<div class="card-hint">點擊查看詳情 →</div>':'')+
           '</div>'+
         '</div>';
       }).join('');
