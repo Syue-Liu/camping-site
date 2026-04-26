@@ -15,7 +15,18 @@
     .nav-links{display:flex;gap:2rem;}
     .nav-links a{font-size:13px;color:var(--muted);text-decoration:none;letter-spacing:0.1em;text-transform:uppercase;}
     .nav-links a:hover{color:var(--text);}
-    .hero{padding:6rem 2.5rem 5rem;text-align:center;border-bottom:1px solid var(--border);}
+    .hero{padding:6rem 2.5rem 5rem;text-align:center;border-bottom:1px solid var(--border);position:relative;overflow:hidden;min-height:420px;display:flex;flex-direction:column;align-items:center;justify-content:center;}
+    /* 輪播背景 */
+    .hero-bg{position:absolute;inset:0;z-index:0;}
+    .hero-slide{position:absolute;inset:0;background-size:cover;background-position:center;opacity:0;transition:opacity 1.5s ease;will-change:opacity;}
+    .hero-slide.active{opacity:1;}
+    .hero-overlay{position:absolute;inset:0;background:linear-gradient(to bottom, rgba(10,15,10,.55) 0%, rgba(10,15,10,.7) 60%, rgba(10,15,10,.92) 100%);}
+    /* Hero 文字浮在背景上 */
+    .hero > *:not(.hero-bg){position:relative;z-index:1;}
+    /* 輪播指示點 */
+    .hero-dots{position:absolute;bottom:1.25rem;left:50%;transform:translateX(-50%);display:flex;gap:6px;z-index:2;}
+    .hero-dot{width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,.3);cursor:pointer;transition:all .3s;border:none;padding:0;}
+    .hero-dot.active{background:#7eb87a;width:18px;border-radius:4px;}
     .hero-eyebrow{font-size:11px;letter-spacing:0.2em;text-transform:uppercase;color:var(--accent);margin-bottom:1.25rem;}
     .hero h1{font-family:'Playfair Display',serif;font-size:52px;font-weight:700;line-height:1.2;margin-bottom:1.25rem;}
     .hero p{font-size:16px;color:var(--muted);}
@@ -67,18 +78,20 @@
     /* ── Card Modal ── */
     .cmodal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:500;display:flex;align-items:center;justify-content:center;padding:1rem;opacity:0;pointer-events:none;transition:opacity .25s;}
     .cmodal-overlay.open{opacity:1;pointer-events:auto;}
-    .cmodal{background:var(--surface);border:1px solid var(--border);border-radius:16px;width:100%;max-width:680px;max-height:90vh;overflow:hidden;display:flex;flex-direction:column;transform:translateY(20px);transition:transform .25s;}
+    .cmodal{background:var(--surface);border:1px solid var(--border);border-radius:16px;width:100%;max-width:680px;max-height:90vh;overflow:hidden;display:flex;flex-direction:column;transform:translateY(20px);transition:transform .25s;position:relative;}
     .cmodal-overlay.open .cmodal{transform:translateY(0);}
-    .cmodal-img{width:100%;height:280px;object-fit:cover;display:block;flex-shrink:0;}
+    /* 關閉按鈕固定在右上角，不會隨捲動消失 */
+    .cmodal-close{position:absolute;top:12px;right:12px;z-index:10;width:34px;height:34px;border-radius:50%;border:1px solid rgba(255,255,255,.2);background:rgba(0,0,0,.5);color:#fff;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;transition:all .15s;backdrop-filter:blur(6px);}
+    .cmodal-close:hover{background:rgba(0,0,0,.75);border-color:rgba(255,255,255,.5);}
+    /* 整個內容區域可以捲動，包含圖片 */
+    .cmodal-scroll{overflow-y:auto;flex:1;}
+    .cmodal-img{width:100%;height:280px;object-fit:cover;display:block;}
     @media(max-width:600px){.cmodal-img{height:200px;}}
-    .cmodal-hdr{display:flex;align-items:flex-start;justify-content:space-between;padding:1.5rem 1.5rem .75rem;gap:1rem;flex-shrink:0;}
-    .cmodal-title-area{}
+    .cmodal-hdr{padding:1.5rem 1.5rem .75rem;}
     .cmodal-title{font-family:'Playfair Display',serif;font-size:24px;font-weight:500;margin-bottom:4px;}
     .cmodal-meta{font-size:12px;color:var(--muted);}
-    .cmodal-close{width:32px;height:32px;border-radius:50%;border:1px solid var(--border);background:transparent;color:var(--muted);font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;line-height:1;transition:all .15s;}
-    .cmodal-close:hover{border-color:var(--text);color:var(--text);}
-    .cmodal-tags{padding:0 1.5rem .75rem;flex-shrink:0;}
-    .cmodal-body{overflow-y:auto;padding:0 1.5rem 1.5rem;flex:1;}
+    .cmodal-tags{padding:0 1.5rem .75rem;}
+    .cmodal-body{padding:0 1.5rem 1.5rem;}
     .cmodal-divider{height:1px;background:var(--border);margin-bottom:1.25rem;}
     .desc-block{margin-bottom:1.1rem;}
     .desc-title{font-size:13px;font-weight:600;letter-spacing:0.05em;margin-bottom:0.4rem;}
@@ -138,10 +151,20 @@
     <div class="nav-links"><a href="#moto">重機</a><a href="#camping">露營</a><a href="#domestic">國內旅遊</a><a href="#overseas">國外旅遊</a></div>
   </nav>
 
-  <div class="hero">
+  <div class="hero" id="hero-section">
+    <!-- 輪播背景 — 請把下方 background-image 換成你自己的照片網址 -->
+    <div class="hero-bg" id="hero-bg">
+      <div class="hero-slide active" style="background-image:url('https://images.unsplash.com/photo-1501854140801-50d01698950b?w=1600&q=80')"></div>
+      <div class="hero-slide" style="background-image:url('https://images.unsplash.com/photo-1504701954957-2010ec3bcec1?w=1600&q=80')"></div>
+      <div class="hero-slide" style="background-image:url('https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=1600&q=80')"></div>
+      <div class="hero-overlay"></div>
+    </div>
+    <!-- 文字內容 -->
     <div class="hero-eyebrow">Travel Journal</div>
     <h1>旅遊足跡</h1>
     <p>記錄我們騎過的山路、住過的營地、走過的城市<br>每一個地點都是一段故事</p>
+    <!-- 輪播指示點 -->
+    <div class="hero-dots" id="hero-dots"></div>
   </div>
 
   <div class="social-section" id="social-section" style="display:none;">
@@ -218,18 +241,20 @@
   <!-- ── Card Detail Modal ── -->
   <div class="cmodal-overlay" id="cmodal-overlay" onclick="closeCardModal(event)">
     <div class="cmodal" id="cmodal">
-      <img class="cmodal-img" id="cmodal-img" src="" alt="" style="display:none">
-      <div class="cmodal-hdr">
-        <div class="cmodal-title-area">
+      <!-- 關閉按鈕固定在右上角 -->
+      <button class="cmodal-close" onclick="closeCardModal()">×</button>
+      <!-- 全部內容可捲動（包含圖片） -->
+      <div class="cmodal-scroll">
+        <img class="cmodal-img" id="cmodal-img" src="" alt="" style="display:none">
+        <div class="cmodal-hdr">
           <div class="cmodal-title" id="cmodal-title"></div>
           <div class="cmodal-meta" id="cmodal-meta"></div>
         </div>
-        <button class="cmodal-close" onclick="closeCardModal()">×</button>
-      </div>
-      <div class="cmodal-tags" id="cmodal-tags"></div>
-      <div class="cmodal-body">
-        <div class="cmodal-divider"></div>
-        <div id="cmodal-content"></div>
+        <div class="cmodal-tags" id="cmodal-tags"></div>
+        <div class="cmodal-body">
+          <div class="cmodal-divider"></div>
+          <div id="cmodal-content"></div>
+        </div>
       </div>
     </div>
   </div>
@@ -238,36 +263,40 @@
   <!-- ── Card Detail Modal ── -->
   <div class="cmodal-overlay" id="cmodal-overlay" onclick="closeCardModal(event)">
     <div class="cmodal" id="cmodal">
-      <img class="cmodal-img" id="cmodal-img" src="" alt="" style="display:none">
-      <div class="cmodal-hdr">
-        <div class="cmodal-title-area">
+      <!-- 關閉按鈕固定在右上角 -->
+      <button class="cmodal-close" onclick="closeCardModal()">×</button>
+      <!-- 全部內容可捲動（包含圖片） -->
+      <div class="cmodal-scroll">
+        <img class="cmodal-img" id="cmodal-img" src="" alt="" style="display:none">
+        <div class="cmodal-hdr">
           <div class="cmodal-title" id="cmodal-title"></div>
           <div class="cmodal-meta" id="cmodal-meta"></div>
         </div>
-        <button class="cmodal-close" onclick="closeCardModal()">×</button>
-      </div>
-      <div class="cmodal-tags" id="cmodal-tags"></div>
-      <div class="cmodal-body">
-        <div class="cmodal-divider"></div>
-        <div id="cmodal-content"></div>
+        <div class="cmodal-tags" id="cmodal-tags"></div>
+        <div class="cmodal-body">
+          <div class="cmodal-divider"></div>
+          <div id="cmodal-content"></div>
+        </div>
       </div>
     </div>
   </div>
   <!-- ── Card Detail Modal ── -->
   <div class="cmodal-overlay" id="cmodal-overlay" onclick="closeCardModal(event)">
     <div class="cmodal" id="cmodal">
-      <img class="cmodal-img" id="cmodal-img" src="" alt="" style="display:none">
-      <div class="cmodal-hdr">
-        <div class="cmodal-title-area">
+      <!-- 關閉按鈕固定在右上角 -->
+      <button class="cmodal-close" onclick="closeCardModal()">×</button>
+      <!-- 全部內容可捲動（包含圖片） -->
+      <div class="cmodal-scroll">
+        <img class="cmodal-img" id="cmodal-img" src="" alt="" style="display:none">
+        <div class="cmodal-hdr">
           <div class="cmodal-title" id="cmodal-title"></div>
           <div class="cmodal-meta" id="cmodal-meta"></div>
         </div>
-        <button class="cmodal-close" onclick="closeCardModal()">×</button>
-      </div>
-      <div class="cmodal-tags" id="cmodal-tags"></div>
-      <div class="cmodal-body">
-        <div class="cmodal-divider"></div>
-        <div id="cmodal-content"></div>
+        <div class="cmodal-tags" id="cmodal-tags"></div>
+        <div class="cmodal-body">
+          <div class="cmodal-divider"></div>
+          <div id="cmodal-content"></div>
+        </div>
       </div>
     </div>
   </div>
@@ -275,6 +304,54 @@
   <footer>© SYUE &amp; LYNN · 用 Osmo 360 記錄每一個足跡</footer>
 
   <script>
+    // ── Hero 輪播 ────────────────────────────────────────────────────────────
+    (function(){
+      var slides = document.querySelectorAll('.hero-slide');
+      var dotsEl = document.getElementById('hero-dots');
+      var cur = 0;
+      if (!slides.length) return;
+      // 建立指示點
+      slides.forEach(function(_, i) {
+        var d = document.createElement('button');
+        d.className = 'hero-dot' + (i===0?' active':'');
+        d.setAttribute('aria-label', '第'+(i+1)+'張');
+        d.addEventListener('click', function(){ goSlide(i); resetTimer(); });
+        dotsEl.appendChild(d);
+      });
+      function goSlide(n) {
+        slides[cur].classList.remove('active');
+        document.querySelectorAll('.hero-dot')[cur].classList.remove('active');
+        cur = (n + slides.length) % slides.length;
+        slides[cur].classList.add('active');
+        document.querySelectorAll('.hero-dot')[cur].classList.add('active');
+      }
+      var timer = setInterval(function(){ goSlide(cur+1); }, 5000);
+      function resetTimer(){ clearInterval(timer); timer=setInterval(function(){ goSlide(cur+1); }, 5000); }
+    })();
+
+    // ── Hero 輪播 ──────────────────────────────────────────────────────────
+    (function(){
+      var slides = document.querySelectorAll('.hero-slide');
+      var dotsEl = document.getElementById('hero-dots');
+      var cur = 0;
+      if (!slides.length || !dotsEl) return;
+      slides.forEach(function(_, i) {
+        var d = document.createElement('button');
+        d.className = 'hero-dot' + (i===0?' active':'');
+        d.addEventListener('click', function(){ goSlide(i); resetTimer(); });
+        dotsEl.appendChild(d);
+      });
+      function goSlide(n) {
+        slides[cur].classList.remove('active');
+        dotsEl.children[cur].classList.remove('active');
+        cur = (n + slides.length) % slides.length;
+        slides[cur].classList.add('active');
+        dotsEl.children[cur].classList.add('active');
+      }
+      var timer = setInterval(function(){ goSlide(cur+1); }, 5000);
+      function resetTimer(){ clearInterval(timer); timer=setInterval(function(){ goSlide(cur+1); },5000); }
+    })();
+
     const API='https://script.google.com/macros/s/AKfycbzPguC2eh8JP1x1GAOaqodo9r4nb1BPEE4JayJoQxBF-31jZTLl02pIj1ADQ8SGyHxcDw/exec';
     let campingData=[],motoData=[],domesticData=[],overseasData=[];
     const state={camping:{tag:'全部',loc:'全部',kw:''},moto:{tag:'全部',loc:'全部',kw:''},domestic:{tag:'全部',loc:'全部',kw:''},overseas:{tag:'全部',loc:'全部',kw:''}};
