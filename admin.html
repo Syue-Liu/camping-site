@@ -731,8 +731,9 @@ async function savePlace() {
   var name = ge('f-name').value.trim();
   if (!name) { toast('請填寫地點名稱', 1); return; }
   var type = ge('e-type').value || curType;
-  var ytVal  = ge('f-youtube').value.trim();
-  var igVal  = ge('f-ig').value.trim();
+  var ytVal    = ge('f-youtube').value.trim();
+  var igVal    = ge('f-ig').value.trim();
+  var pano360Val = ge('f-pano360').value.trim();
   var rawImg = currentImgUrl || '';
   // 把 youtube / ig 打包進 img 欄位（JSON），讓現有後端不需修改就能儲存
   var imgField = (ytVal || igVal)
