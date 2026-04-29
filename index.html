@@ -2,7 +2,7 @@
 <html lang="zh-TW">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>Syue & Lynn 旅遊足跡</title>
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;700&family=Noto+Serif+TC:wght@400;500&display=swap" rel="stylesheet">
   <!-- Three.js 改為點擊 360° 才動態載入，加快首頁速度 -->
@@ -101,9 +101,15 @@
     .pano-wrap{position:relative;width:100%;border-radius:8px;overflow:hidden;background:#0a0f0a;margin-top:1.25rem;user-select:none;}
     .pano-wrap canvas{display:block;width:100% !important;height:100% !important;cursor:grab;touch-action:none;}
     .pano-wrap canvas.grabbing{cursor:grabbing;}
-    .pano-btn-bar{position:absolute;top:8px;right:8px;display:flex;gap:6px;z-index:10;}
-    .pano-btn{width:32px;height:32px;border-radius:8px;background:rgba(0,0,0,.55);border:1px solid rgba(255,255,255,.15);color:#fff;font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(8px);transition:background .15s;}
+    .pano-btn-bar{position:absolute;top:8px;right:8px;display:flex;gap:6px;z-index:40;}
+    .pano-btn{width:36px;height:36px;border-radius:10px;background:rgba(0,0,0,.62);border:1px solid rgba(255,255,255,.18);color:#fff;font-size:17px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(8px);transition:background .15s,transform .15s;}
     .pano-btn:hover{background:rgba(255,255,255,.2);}
+    .pano-wrap.pano-fs .pano-btn-bar,
+    .pano-wrap:fullscreen .pano-btn-bar,
+    .pano-wrap:-webkit-full-screen .pano-btn-bar{top:calc(env(safe-area-inset-top,0px) + 18px);right:calc(env(safe-area-inset-right,0px) + 22px);}
+    .pano-wrap.pano-fs .pano-btn,
+    .pano-wrap:fullscreen .pano-btn,
+    .pano-wrap:-webkit-full-screen .pano-btn{width:52px;height:52px;border-radius:50%;font-size:24px;background:rgba(0,0,0,.68);border-color:rgba(255,255,255,.28);box-shadow:0 4px 18px rgba(0,0,0,.38);}
     .pano-wrap:-webkit-full-screen{width:100vw;height:100vh;}
     .pano-wrap:fullscreen{width:100vw !important;height:100vh !important;}
     .pano-wrap:fullscreen canvas{height:100% !important;}
@@ -552,12 +558,14 @@
           if (!_inPseudoFs) {
             _origWrapStyle = wrap.getAttribute('style') || '';
             wrap.style.cssText = 'position:fixed;top:0;left:0;width:100vw;height:100dvh;z-index:9999;border-radius:0;overflow:hidden;background:#0a0f0a;';
+            wrap.classList.add('pano-fs');
             fsBtn.textContent = '✕';
             _inPseudoFs = true; me.isPseudoFs = true;
             setTimeout(function() { me.resize(); }, 60);
           } else {
             if (_origWrapStyle) wrap.setAttribute('style', _origWrapStyle);
             else wrap.removeAttribute('style');
+            wrap.classList.remove('pano-fs');
             fsBtn.textContent = '⛶';
             _inPseudoFs = false; me.isPseudoFs = false;
             setTimeout(function() { me.resize(); }, 60);
@@ -574,6 +582,7 @@
       });
       me.addHandler(document, 'fullscreenchange', function() {
         var inFs = document.fullscreenElement === wrap;
+        wrap.classList.toggle('pano-fs', inFs);
         fsBtn.textContent = inFs ? '✕' : '⛶';
         setTimeout(function() { me.resize(); }, 50);
         if (inFs) setTimeout(function() { me.resize(); }, 300);
