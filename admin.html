@@ -1030,10 +1030,10 @@ function addHeroSlot(url, i) {
   div.style.cssText = 'display:flex;align-items:center;gap:10px;margin-bottom:10px;';
   div.innerHTML =
     '<div style="width:72px;height:48px;border-radius:6px;overflow:hidden;border:1px solid rgba(255,255,255,.1);flex-shrink:0;background:#1a2a1a;">' +
-      '<img id="hero-prev-'+idx+'" src="'+(url||'')+'" style="width:100%;height:100%;object-fit:cover;display:'+(url?'block':'none')+';" onerror="this.style.display='none'">' +
+      '<img id="hero-prev-'+idx+'" src="'+(url||'')+'" style="width:100%;height:100%;object-fit:cover;display:'+(url?'block':'none')+';" onerror="this.style.opacity=0.2">' +
     '</div>' +
     '<input class="form-input hero-url-input" id="hero-url-'+idx+'" type="text" value="'+(url||'')+'" placeholder="貼上照片網址（支援自動轉換 GitHub 網址）" style="flex:1;font-size:12px;font-family:monospace;">' +
-    '<button type="button" onclick="removeHeroSlot('hero-slot-'+idx+'')" style="width:28px;height:28px;border-radius:6px;border:1px solid rgba(229,68,68,.3);background:transparent;color:#e05c5c;font-size:16px;cursor:pointer;flex-shrink:0;line-height:1;">×</button>';
+    '<button type="button" data-slot="hero-slot-'+idx+'" onclick="removeHeroSlot(this.dataset.slot)" style="width:28px;height:28px;border-radius:6px;border:1px solid rgba(229,68,68,.3);background:transparent;color:#e05c5c;font-size:16px;cursor:pointer;flex-shrink:0;line-height:1;">×</button>';
   container.appendChild(div);
   var input = div.querySelector('.hero-url-input');
   var preview = div.querySelector('img');
@@ -1071,71 +1071,6 @@ ge('hero-add-btn') && ge('hero-add-btn').addEventListener('click', function() {
 });
 
 buildHeroSlots([]);
-
-      if (converted !== el.value) el.value = converted;
-    }, 10);
-  });
-  el.addEventListener('blur', function() {
-    var converted = convertGithubUrl(el.value);
-    if (converted !== el.value) { el.value = converted; el.style.borderColor='#7eb87a'; setTimeout(function(){el.style.borderColor='';},1200); }
-  });
-});
-
-// ── Hero 圖片預覽 ─────────────────────────────────────────
-function renderHeroImgPreview(urls) {
-  var el = ge('hero-img-preview'); if(!el) return;
-  el.innerHTML = urls.slice(0,5).map(function(url) {
-    return '<img src="'+url+'" style="width:80px;height:56px;object-fit:cover;border-radius:6px;border:1px solid rgba(255,255,255,.1);margin-bottom:4px;" onerror="this.style.opacity=0.3">';
-  }).join('');
-}
-if (ge('s-hero-images')) {
-  ge('s-hero-images').addEventListener('input', function() {
-    // 自動把 GitHub blob 網址轉成 raw 網址
-    var lines = this.value.split('\n');
-    var converted = lines.map(function(line) {
-      return line.trim()
-        .replace('https://github.com/', 'https://raw.githubusercontent.com/')
-        .replace('/blob/', '/');
-    });
-    // 只有真的有轉換才更新（避免游標跳動）
-    var newVal = converted.join('\n');
-    if (newVal !== this.value) {
-      var pos = this.selectionStart;
-      this.value = newVal;
-      this.setSelectionRange(pos, pos);
-    }
-    var urls = converted.filter(Boolean);
-    renderHeroImgPreview(urls);
-  });
-  // 也監聽貼上事件，立即轉換
-  ge('s-hero-images').addEventListener('paste', function() {
-    setTimeout(function() {
-      ge('s-hero-images').dispatchEvent(new Event('input'));
-    }, 10);
-  });
-}
-
-// ── GitHub URL 自動轉換 ──────────────────────────────────────
-function convertGithubUrl(url) {
-  return url.trim()
-    .replace('https://github.com/', 'https://raw.githubusercontent.com/')
-    .replace('/blob/', '/');
-}
-// 套用到所有 URL input 欄位
-['new-scene-img-url', 'new-scene-url', 'new-scene-tile-url', 'f-pano360'].forEach(function(id) {
-  var el = ge(id);
-  if (!el) return;
-  el.addEventListener('paste', function() {
-    setTimeout(function() {
-      var converted = convertGithubUrl(el.value);
-      if (converted !== el.value) el.value = converted;
-    }, 10);
-  });
-  el.addEventListener('blur', function() {
-    var converted = convertGithubUrl(el.value);
-    if (converted !== el.value) { el.value = converted; el.style.borderColor='#7eb87a'; setTimeout(function(){el.style.borderColor='';},1200); }
-  });
-});
 
 // ── Hero 圖片預覽 ─────────────────────────────────────────
 function renderHeroImgPreview(urls) {
