@@ -959,10 +959,19 @@ async function saveSocial() {
   };
   ge('saving-mask').classList.add('show');
   try {
-    await fetch(API, { method: 'POST', body: JSON.stringify({ sheet: 'social', data: [{ data: JSON.stringify(obj) }] }) });
-    toast('社群設定已儲存！');
+    var res = await fetch(API, {
+      method: 'POST',
+      body: JSON.stringify({ sheet: 'social', data: [{ data: JSON.stringify(obj) }] })
+    });
+    // Apps Script POST 成功會回傳 JSON
+    var json = await res.json().catch(function(){ return null; });
+    if (json && json.error) {
+      toast('儲存失敗：' + json.error, 1);
+    } else {
+      toast('✅ 設定已儲存！前台刷新後生效');
+    }
   } catch (e) {
-    toast('儲存失敗', 1);
+    toast('儲存失敗，請確認 Apps Script 已更新並重新部署：' + e.message, 1);
   } finally {
     ge('saving-mask').classList.remove('show');
   }

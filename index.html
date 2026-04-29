@@ -25,9 +25,9 @@
     /* Hero 文字浮在背景上 */
     .hero > *:not(.hero-bg){position:relative;z-index:1;}
     /* 輪播指示點 */
-    .hero-dots{position:absolute;bottom:1.25rem;left:50%;transform:translateX(-50%);display:flex;gap:6px;z-index:2;}
-    .hero-dot{width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,.3);cursor:pointer;transition:all .3s;border:none;padding:0;}
-    .hero-dot.active{background:#7eb87a;width:18px;border-radius:4px;}
+    .hero-dots{position:absolute;bottom:1.1rem;right:1.25rem;display:flex;gap:5px;z-index:2;}
+    .hero-dot{width:5px;height:5px;border-radius:50%;background:rgba(255,255,255,.25);cursor:pointer;transition:all .35s;border:none;padding:0;flex-shrink:0;}
+    .hero-dot.active{background:rgba(255,255,255,.85);width:14px;border-radius:3px;}
     .hero-eyebrow{font-size:11px;letter-spacing:0.2em;text-transform:uppercase;color:var(--accent);margin-bottom:1.25rem;}
     .hero h1{font-family:'Playfair Display',serif;font-size:52px;font-weight:700;line-height:1.2;margin-bottom:1.25rem;}
     .hero p{font-size:16px;color:var(--muted);}
@@ -420,72 +420,56 @@
       // max-height 做法不需要鎖住 body，選單不會全螢幕
     }
 
-    // ── Hero 輪播 ────────────────────────────────────────────────────────────
-    (function(){
-      var slides = document.querySelectorAll('.hero-slide');
+
+    // ── Hero 輪播（命名函式，方便 loadSocial 重新初始化）────────────────────
+    var _heroTimer = null, _heroCur = 0;
+    function initHeroSlideshow() {
+      var slides = document.querySelectorAll('#hero-bg .hero-slide');
       var dotsEl = document.getElementById('hero-dots');
-      var cur = 0;
-      if (!slides.length) return;
-      // 建立指示點（先清空避免重複）
+      if (!dotsEl) return;
+      // 清除舊 timer + dots，重設 active
+      if (_heroTimer) { clearInterval(_heroTimer); _heroTimer = null; }
       dotsEl.innerHTML = '';
+      _heroCur = 0;
+      if (!slides.length) return;
+      slides.forEach(function(s,i){ s.classList.toggle('active', i===0); });
+      // 建立 dots
       slides.forEach(function(_, i) {
         var d = document.createElement('button');
         d.className = 'hero-dot' + (i===0?' active':'');
         d.setAttribute('aria-label', '第'+(i+1)+'張');
-        d.addEventListener('click', function(){ goSlide(i); resetTimer(); });
+        d.addEventListener('click', (function(idx){ return function(){ _heroGo(idx); }; })(i));
         dotsEl.appendChild(d);
       });
-      function goSlide(n) {
-        slides[cur].classList.remove('active');
-        document.querySelectorAll('.hero-dot')[cur].classList.remove('active');
-        cur = (n + slides.length) % slides.length;
-        slides[cur].classList.add('active');
-        document.querySelectorAll('.hero-dot')[cur].classList.add('active');
+      function _heroGo(n) {
+        var ss = document.querySelectorAll('#hero-bg .hero-slide');
+        if (!ss.length || n >= ss.length) return;
+        ss[_heroCur].classList.remove('active');
+        if (dotsEl.children[_heroCur]) dotsEl.children[_heroCur].classList.remove('active');
+        _heroCur = (n + ss.length) % ss.length;
+        ss[_heroCur].classList.add('active');
+        if (dotsEl.children[_heroCur]) dotsEl.children[_heroCur].classList.add('active');
       }
-      var timer = setInterval(function(){ goSlide(cur+1); }, 5000);
-      function resetTimer(){ clearInterval(timer); timer=setInterval(function(){ goSlide(cur+1); }, 5000); }
-    })();
+      _heroTimer = setInterval(function(){ _heroGo(_heroCur+1); }, 5000);
+    }
+    initHeroSlideshow();
 
-    // ── Hamburger Nav ────────────────────────────────────────────────────────
-
+    // ── Hamburger Nav ─────────────────────────────────────────────────────────
     function closeNav(){
       document.getElementById('nav-toggle').classList.remove('open');
       document.getElementById('nav-links').classList.remove('open');
+      document.body.style.overflow='';
     }
     function toggleNav(){
       var tg=document.getElementById('nav-toggle');
       var nl=document.getElementById('nav-links');
       var isOpen=nl.classList.toggle('open');
       tg.classList.toggle('open');
-      // max-height 做法不需要鎖住 body，選單不會全螢幕
+      document.body.style.overflow=isOpen?'hidden':'';
     }
-    // 點選 nav 連結後自動關閉選單 + 補正 sticky nav 高度
     document.querySelectorAll('.nav-links a').forEach(function(a){
       a.addEventListener('click',function(){ closeNav(); });
     });
-
-    // ── Hero 輪播 ──────────────────────────────────────────────────────────
-    (function(){
-      var slides = document.querySelectorAll('.hero-slide');
-      var dotsEl = document.getElementById('hero-dots');
-      var cur = 0;
-      if (!slides.length || !dotsEl) return;
-      slides.forEach(function(_, i) {
-        var d = document.createElement('button');
-        d.className = 'hero-dot' + (i===0?' active':'');
-        d.addEventListener('click', function(){ goSlide(i); resetTimer(); });
-        dotsEl.appendChild(d);
-      });
-      function goSlide(n) {
-        slides[cur].classList.remove('active');
-        dotsEl.children[cur].classList.remove('active');
-        cur = (n + slides.length) % slides.length;
-        slides[cur].classList.add('active');
-        dotsEl.children[cur].classList.add('active');
-      }
-      var timer = setInterval(function(){ goSlide(cur+1); }, 5000);
-      function resetTimer(){ clearInterval(timer); timer=setInterval(function(){ goSlide(cur+1); },5000); }
-    })();
 
     const API='https://script.google.com/macros/s/AKfycbzPguC2eh8JP1x1GAOaqodo9r4nb1BPEE4JayJoQxBF-31jZTLl02pIj1ADQ8SGyHxcDw/exec';
     let campingData=[],motoData=[],domesticData=[],overseasData=[];
