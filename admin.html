@@ -981,11 +981,6 @@ async function clearSocial() {
 }
 
 // ── GitHub URL 自動轉換 ──────────────────────────────────────
-function convertGithubUrl(url) {
-  return url.trim()
-    .replace('https://github.com/', 'https://raw.githubusercontent.com/')
-    .replace('/blob/', '/');
-}
 // 套用到所有 URL input 欄位
 ['new-scene-img-url', 'new-scene-url', 'new-scene-tile-url', 'f-pano360'].forEach(function(id) {
   var el = ge(id);
@@ -1002,12 +997,6 @@ function convertGithubUrl(url) {
   });
 });
 
-// ── GitHub URL 自動轉換 ──────────────────────────────────────
-function convertGithubUrl(url) {
-  return (url||'').trim()
-    .replace('https://github.com/', 'https://raw.githubusercontent.com/')
-    .replace('/blob/', '/');
-}
 // 套用到所有 URL input 欄位（封面照片、pano360、圖片直連網址）
 ['new-scene-img-url','new-scene-url','new-scene-tile-url','f-pano360'].forEach(function(id) {
   var el = ge(id); if (!el) return;
@@ -1020,31 +1009,69 @@ function convertGithubUrl(url) {
 });
 
 
-// ── Hero 圖片預覽 ─────────────────────────────────────────
-function renderHeroImgPreview(urls) {
-  var el = ge('hero-img-preview'); if(!el) return;
-  el.innerHTML = urls.slice(0,5).map(function(url) {
-    return '<img src="'+url+'" style="width:80px;height:56px;object-fit:cover;border-radius:6px;border:1px solid rgba(255,255,255,.1);" onerror="this.style.opacity=0.3">';
-  }).join('');
+
+// ── Hero 圖片獨立欄位 ───────────────────────────────────────
+var HERO_MAX = 5;
+
+function buildHeroSlots(urls) {
+  var container = ge('hero-slots'); if (!container) return;
+  container.innerHTML = '';
+  var list = (urls && urls.length) ? urls : [''];
+  list.slice(0, HERO_MAX).forEach(function(url, i) { addHeroSlot(url, i); });
+  updateHeroAddBtn();
 }
-ge('s-hero-images') && ge('s-hero-images').addEventListener('input', function() {
-  var urls = this.value.split('\n').map(function(l){return l.trim();}).filter(Boolean);
-  renderHeroImgPreview(urls);
+
+function addHeroSlot(url, i) {
+  var container = ge('hero-slots'); if (!container) return;
+  var idx = (i !== undefined) ? i : container.children.length;
+  var div = document.createElement('div');
+  div.className = 'hero-slot';
+  div.id = 'hero-slot-' + idx;
+  div.style.cssText = 'display:flex;align-items:center;gap:10px;margin-bottom:10px;';
+  div.innerHTML =
+    '<div style="width:72px;height:48px;border-radius:6px;overflow:hidden;border:1px solid rgba(255,255,255,.1);flex-shrink:0;background:#1a2a1a;">' +
+      '<img id="hero-prev-'+idx+'" src="'+(url||'')+'" style="width:100%;height:100%;object-fit:cover;display:'+(url?'block':'none')+';" onerror="this.style.display='none'">' +
+    '</div>' +
+    '<input class="form-input hero-url-input" id="hero-url-'+idx+'" type="text" value="'+(url||'')+'" placeholder="貼上照片網址（支援自動轉換 GitHub 網址）" style="flex:1;font-size:12px;font-family:monospace;">' +
+    '<button type="button" onclick="removeHeroSlot('hero-slot-'+idx+'')" style="width:28px;height:28px;border-radius:6px;border:1px solid rgba(229,68,68,.3);background:transparent;color:#e05c5c;font-size:16px;cursor:pointer;flex-shrink:0;line-height:1;">×</button>';
+  container.appendChild(div);
+  var input = div.querySelector('.hero-url-input');
+  var preview = div.querySelector('img');
+  function syncPreview() {
+    var cv = convertGithubUrl(input.value);
+    if (cv !== input.value) { input.value = cv; input.style.borderColor='#7eb87a'; setTimeout(function(){input.style.borderColor='';},1200); }
+    preview.src = cv;
+    preview.style.display = cv ? 'block' : 'none';
+  }
+  input.addEventListener('paste', function(){ setTimeout(syncPreview, 10); });
+  input.addEventListener('blur', syncPreview);
+  input.addEventListener('input', function(){ preview.src = input.value; preview.style.display = input.value ? 'block' : 'none'; });
+}
+
+function removeHeroSlot(slotId) {
+  var el = ge(slotId); if (el) el.remove();
+  updateHeroAddBtn();
+}
+
+function updateHeroAddBtn() {
+  var btn = ge('hero-add-btn'); if (!btn) return;
+  var count = ge('hero-slots') ? ge('hero-slots').children.length : 0;
+  btn.style.display = count >= HERO_MAX ? 'none' : 'block';
+}
+
+function getHeroUrls() {
+  return Array.from(document.querySelectorAll('.hero-url-input'))
+    .map(function(inp){ return inp.value.trim(); }).filter(Boolean);
+}
+
+ge('hero-add-btn') && ge('hero-add-btn').addEventListener('click', function() {
+  var c = ge('hero-slots'); if (!c || c.children.length >= HERO_MAX) return;
+  addHeroSlot('', c.children.length);
+  updateHeroAddBtn();
 });
 
-// ── GitHub URL 自動轉換 ──────────────────────────────────────
-function convertGithubUrl(url) {
-  return url.trim()
-    .replace('https://github.com/', 'https://raw.githubusercontent.com/')
-    .replace('/blob/', '/');
-}
-// 套用到所有 URL input 欄位
-['new-scene-img-url', 'new-scene-url', 'new-scene-tile-url', 'f-pano360'].forEach(function(id) {
-  var el = ge(id);
-  if (!el) return;
-  el.addEventListener('paste', function() {
-    setTimeout(function() {
-      var converted = convertGithubUrl(el.value);
+buildHeroSlots([]);
+
       if (converted !== el.value) el.value = converted;
     }, 10);
   });
