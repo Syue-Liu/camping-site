@@ -1203,6 +1203,28 @@
       if(s.line)links.push('<a class="social-btn line" href="'+s.line+'" target="_blank"><span style="font-size:16px">💬</span>Line 加好友</a>');
       if(s.lineQr)links.push('<div class="qr-block"><img src="'+s.lineQr+'" alt="Line QR"><div class="qr-label">掃描加入 Line</div></div>');
       if(links.length){document.getElementById('social-section').style.display='block';document.getElementById('social-links').innerHTML=links.join('');}
+
+      // ── Hero 背景圖片 ─────────────────────────────────────────
+      var heroImgs = s.heroImages;
+      // heroImages 可能是陣列或逗號字串
+      if(typeof heroImgs === 'string') heroImgs = heroImgs.split(',').map(function(u){return u.trim();}).filter(Boolean);
+      if(heroImgs && heroImgs.length){
+        var bg = document.getElementById('hero-bg');
+        if(bg){
+          var overlay = bg.querySelector('.hero-overlay');
+          // 移除舊的 slides
+          bg.querySelectorAll('.hero-slide').forEach(function(s){s.remove();});
+          // 重建 slides
+          heroImgs.slice(0,5).forEach(function(url,i){
+            var slide = document.createElement('div');
+            slide.className = 'hero-slide' + (i===0?' active':'');
+            slide.style.backgroundImage = 'url('+url+')';
+            bg.insertBefore(slide, overlay);
+          });
+          // 重新初始化輪播
+          initHeroSlideshow();
+        }
+      }
     }
 
     function initPano360AndReplace(id) {
