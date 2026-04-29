@@ -975,6 +975,46 @@ async function clearSocial() {
   await saveSocial();
 }
 
+// ── GitHub URL 自動轉換 ──────────────────────────────────────
+function convertGithubUrl(url) {
+  return url.trim()
+    .replace('https://github.com/', 'https://raw.githubusercontent.com/')
+    .replace('/blob/', '/');
+}
+// 套用到所有 URL input 欄位
+['new-scene-img-url', 'new-scene-url', 'new-scene-tile-url', 'f-pano360'].forEach(function(id) {
+  var el = ge(id);
+  if (!el) return;
+  el.addEventListener('paste', function() {
+    setTimeout(function() {
+      var converted = convertGithubUrl(el.value);
+      if (converted !== el.value) el.value = converted;
+    }, 10);
+  });
+  el.addEventListener('blur', function() {
+    var converted = convertGithubUrl(el.value);
+    if (converted !== el.value) { el.value = converted; el.style.borderColor='#7eb87a'; setTimeout(function(){el.style.borderColor='';},1200); }
+  });
+});
+
+// ── GitHub URL 自動轉換 ──────────────────────────────────────
+function convertGithubUrl(url) {
+  return (url||'').trim()
+    .replace('https://github.com/', 'https://raw.githubusercontent.com/')
+    .replace('/blob/', '/');
+}
+// 套用到所有 URL input 欄位（封面照片、pano360、圖片直連網址）
+['new-scene-img-url','new-scene-url','new-scene-tile-url','f-pano360'].forEach(function(id) {
+  var el = ge(id); if (!el) return;
+  function tryConvert() {
+    var cv = convertGithubUrl(el.value);
+    if (cv !== el.value) { el.value = cv; el.style.borderColor='#7eb87a'; setTimeout(function(){el.style.borderColor='';},1200); }
+  }
+  el.addEventListener('paste', function(){ setTimeout(tryConvert, 10); });
+  el.addEventListener('blur', tryConvert);
+});
+
+
 // ── Hero 圖片預覽 ─────────────────────────────────────────
 function renderHeroImgPreview(urls) {
   var el = ge('hero-img-preview'); if(!el) return;
@@ -987,19 +1027,27 @@ ge('s-hero-images') && ge('s-hero-images').addEventListener('input', function() 
   renderHeroImgPreview(urls);
 });
 
-// ── Hero 圖片預覽 ─────────────────────────────────────────
-function renderHeroImgPreview(urls) {
-  var el = ge('hero-img-preview'); if(!el) return;
-  el.innerHTML = urls.slice(0,5).map(function(url) {
-    return '<img src="'+url+'" style="width:80px;height:56px;object-fit:cover;border-radius:6px;border:1px solid rgba(255,255,255,.1);margin-bottom:4px;" onerror="this.style.opacity=0.3">';
-  }).join('');
+// ── GitHub URL 自動轉換 ──────────────────────────────────────
+function convertGithubUrl(url) {
+  return url.trim()
+    .replace('https://github.com/', 'https://raw.githubusercontent.com/')
+    .replace('/blob/', '/');
 }
-if (ge('s-hero-images')) {
-  ge('s-hero-images').addEventListener('input', function() {
-    var urls = this.value.split('\n').map(function(l){return l.trim();}).filter(Boolean);
-    renderHeroImgPreview(urls);
+// 套用到所有 URL input 欄位
+['new-scene-img-url', 'new-scene-url', 'new-scene-tile-url', 'f-pano360'].forEach(function(id) {
+  var el = ge(id);
+  if (!el) return;
+  el.addEventListener('paste', function() {
+    setTimeout(function() {
+      var converted = convertGithubUrl(el.value);
+      if (converted !== el.value) el.value = converted;
+    }, 10);
   });
-}
+  el.addEventListener('blur', function() {
+    var converted = convertGithubUrl(el.value);
+    if (converted !== el.value) { el.value = converted; el.style.borderColor='#7eb87a'; setTimeout(function(){el.style.borderColor='';},1200); }
+  });
+});
 
 // ── Hero 圖片預覽 ─────────────────────────────────────────
 function renderHeroImgPreview(urls) {
@@ -1010,8 +1058,84 @@ function renderHeroImgPreview(urls) {
 }
 if (ge('s-hero-images')) {
   ge('s-hero-images').addEventListener('input', function() {
-    var urls = this.value.split('\n').map(function(l){return l.trim();}).filter(Boolean);
+    // 自動把 GitHub blob 網址轉成 raw 網址
+    var lines = this.value.split('\n');
+    var converted = lines.map(function(line) {
+      return line.trim()
+        .replace('https://github.com/', 'https://raw.githubusercontent.com/')
+        .replace('/blob/', '/');
+    });
+    // 只有真的有轉換才更新（避免游標跳動）
+    var newVal = converted.join('\n');
+    if (newVal !== this.value) {
+      var pos = this.selectionStart;
+      this.value = newVal;
+      this.setSelectionRange(pos, pos);
+    }
+    var urls = converted.filter(Boolean);
     renderHeroImgPreview(urls);
+  });
+  // 也監聽貼上事件，立即轉換
+  ge('s-hero-images').addEventListener('paste', function() {
+    setTimeout(function() {
+      ge('s-hero-images').dispatchEvent(new Event('input'));
+    }, 10);
+  });
+}
+
+// ── GitHub URL 自動轉換 ──────────────────────────────────────
+function convertGithubUrl(url) {
+  return url.trim()
+    .replace('https://github.com/', 'https://raw.githubusercontent.com/')
+    .replace('/blob/', '/');
+}
+// 套用到所有 URL input 欄位
+['new-scene-img-url', 'new-scene-url', 'new-scene-tile-url', 'f-pano360'].forEach(function(id) {
+  var el = ge(id);
+  if (!el) return;
+  el.addEventListener('paste', function() {
+    setTimeout(function() {
+      var converted = convertGithubUrl(el.value);
+      if (converted !== el.value) el.value = converted;
+    }, 10);
+  });
+  el.addEventListener('blur', function() {
+    var converted = convertGithubUrl(el.value);
+    if (converted !== el.value) { el.value = converted; el.style.borderColor='#7eb87a'; setTimeout(function(){el.style.borderColor='';},1200); }
+  });
+});
+
+// ── Hero 圖片預覽 ─────────────────────────────────────────
+function renderHeroImgPreview(urls) {
+  var el = ge('hero-img-preview'); if(!el) return;
+  el.innerHTML = urls.slice(0,5).map(function(url) {
+    return '<img src="'+url+'" style="width:80px;height:56px;object-fit:cover;border-radius:6px;border:1px solid rgba(255,255,255,.1);margin-bottom:4px;" onerror="this.style.opacity=0.3">';
+  }).join('');
+}
+if (ge('s-hero-images')) {
+  ge('s-hero-images').addEventListener('input', function() {
+    // 自動把 GitHub blob 網址轉成 raw 網址
+    var lines = this.value.split('\n');
+    var converted = lines.map(function(line) {
+      return line.trim()
+        .replace('https://github.com/', 'https://raw.githubusercontent.com/')
+        .replace('/blob/', '/');
+    });
+    // 只有真的有轉換才更新（避免游標跳動）
+    var newVal = converted.join('\n');
+    if (newVal !== this.value) {
+      var pos = this.selectionStart;
+      this.value = newVal;
+      this.setSelectionRange(pos, pos);
+    }
+    var urls = converted.filter(Boolean);
+    renderHeroImgPreview(urls);
+  });
+  // 也監聽貼上事件，立即轉換
+  ge('s-hero-images').addEventListener('paste', function() {
+    setTimeout(function() {
+      ge('s-hero-images').dispatchEvent(new Event('input'));
+    }, 10);
   });
 }
 
