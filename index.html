@@ -25,7 +25,7 @@
     /* Hero 文字浮在背景上 */
     .hero > *:not(.hero-bg){position:relative;z-index:1;}
     /* 輪播指示點 */
-    .hero-dots{position:absolute;bottom:1.1rem;right:1.25rem;display:flex;gap:5px;z-index:2;}
+    .hero-dots{position:absolute;bottom:.85rem;left:50%;transform:translateX(-50%);display:flex;gap:5px;z-index:2;}
     .hero-dot{width:5px;height:5px;border-radius:50%;background:rgba(255,255,255,.25);cursor:pointer;transition:all .35s;border:none;padding:0;flex-shrink:0;}
     .hero-dot.active{background:rgba(255,255,255,.85);width:14px;border-radius:3px;}
     .hero-eyebrow{font-size:11px;letter-spacing:0.2em;text-transform:uppercase;color:var(--accent);margin-bottom:1.25rem;}
@@ -236,11 +236,8 @@
   </nav>
 
   <div class="hero" id="hero-section">
-    <!-- 輪播背景 — 請把下方 background-image 換成你自己的照片網址 -->
+    <!-- 輪播背景 — 由後台社群設定管理 -->
     <div class="hero-bg" id="hero-bg">
-      <div class="hero-slide active" style="background-image:url('https://images.unsplash.com/photo-1501854140801-50d01698950b?w=1600&q=80')"></div>
-      <div class="hero-slide" style="background-image:url('https://images.unsplash.com/photo-1504701954957-2010ec3bcec1?w=1600&q=80')"></div>
-      <div class="hero-slide" style="background-image:url('https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=1600&q=80')"></div>
       <div class="hero-overlay"></div>
     </div>
     <!-- 文字內容 -->
