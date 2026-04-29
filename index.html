@@ -132,8 +132,11 @@
     .yt-wrap{border-radius:8px;overflow:hidden;margin-top:1.25rem;margin-bottom:0.25rem;position:relative;padding-bottom:56.25%;height:0;}
     .yt-wrap iframe{position:absolute;top:0;left:0;width:100%;height:100%;border:none;display:block;}
     .yt-caption{font-size:11px;color:var(--muted);text-align:center;letter-spacing:0.08em;margin-bottom:0.5rem;}
-    .ig-link{display:inline-flex;align-items:center;gap:8px;margin-top:1rem;padding:9px 18px;border:1px solid rgba(225,48,108,0.3);border-radius:var(--radius);font-size:13px;color:#e1306c;text-decoration:none;background:rgba(225,48,108,0.06);transition:all 0.15s;}
-    .ig-link:hover{background:rgba(225,48,108,0.12);border-color:#e1306c;}
+    .ig-embed-wrap{margin-top:1.25rem;padding:1rem;border:1px solid rgba(225,48,108,0.22);border-radius:10px;background:rgba(225,48,108,0.045);}
+    .ig-embed-label{display:flex;align-items:center;gap:8px;margin-bottom:0.75rem;font-size:11px;letter-spacing:0.12em;text-transform:uppercase;color:#e1306c;}
+    .ig-embed-wrap .instagram-media{min-width:0!important;width:100%!important;max-width:540px!important;margin:0 auto!important;border-radius:8px!important;overflow:hidden;}
+    .ig-fallback{display:inline-flex;align-items:center;gap:7px;margin-top:0.8rem;font-size:12px;color:#e1306c;text-decoration:none;text-underline-offset:3px;}
+    .ig-fallback:hover{text-decoration:underline;}
     .card-expand-img{width:100%;max-height:320px;object-fit:cover;border-radius:8px;margin-bottom:1rem;display:block;}
     .card-expand-placeholder{width:100%;height:180px;background:var(--surface2);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:13px;color:var(--muted);margin-bottom:1rem;}
     .card-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:1.5rem;}
@@ -1009,6 +1012,7 @@
       document.getElementById('cmodal-tags').innerHTML=d.tags||'';
       document.getElementById('cmodal-content').innerHTML=d.expand||'';
       ov.classList.add('open');
+      if(d.hasInstagram) setTimeout(processInstagramEmbeds, 80);
       document.body.style.overflow='hidden';
     }
 
@@ -1090,6 +1094,43 @@
       return null;
     }
 
+    function safeAttr(v){
+      return String(v||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    }
+
+    function instagramPermalink(url){
+      if(!url||!url.trim())return '';
+      var u=url.trim().split('?')[0];
+      if(!/^https:\/\/(www\.)?instagram\.com\/(p|reel|tv)\//.test(u)) return '';
+      return u.endsWith('/') ? u : u + '/';
+    }
+
+    function instagramEmbedHtml(url){
+      var permalink=instagramPermalink(url);
+      if(!permalink) return '';
+      var safe=safeAttr(permalink);
+      return '<div class="ig-embed-wrap">'+
+        '<div class="ig-embed-label"><span>📸</span><span>Instagram Preview</span></div>'+
+        '<blockquote class="instagram-media" data-instgrm-permalink="'+safe+'" data-instgrm-version="14">'+
+          '<a href="'+safe+'" target="_blank" rel="noopener">在 Instagram 查看這篇貼文</a>'+
+        '</blockquote>'+
+        '<a class="ig-fallback" href="'+safe+'" target="_blank" rel="noopener">開啟 Instagram 原始貼文 ↗</a>'+
+      '</div>';
+    }
+
+    function processInstagramEmbeds(){
+      if(window.instgrm && window.instgrm.Embeds){
+        window.instgrm.Embeds.process();
+        return;
+      }
+      if(document.getElementById('instagram-embed-js')) return;
+      var s=document.createElement('script');
+      s.id='instagram-embed-js';
+      s.async=true;
+      s.src='https://www.instagram.com/embed.js';
+      document.body.appendChild(s);
+    }
+
     function containerId(type){return{camping:'camping-container',moto:'moto-container',domestic:'domestic-container',overseas:'overseas-container'}[type]||type+'-container';}
     function render(type){
       var filtered=getFiltered(type);var kw=state[type].kw;var g=isGold(type);
@@ -1148,11 +1189,10 @@
           '<div class="yt-wrap"><iframe src="'+ytUrl+'"'+
           ' allow="accelerometer;autoplay;clipboard-write;encrypted-media;gyroscope;picture-in-picture"'+
           ' allowfullscreen></iframe></div><p class="yt-caption">▶ YouTube 影片</p>';
-        if(igUrl)expandHtml+=
-          '<a class="ig-link" href="'+igUrl+'" target="_blank" rel="noopener">'+
-          '<span style="font-size:16px">📸</span>在 Instagram 查看貼文</a>';
+        var igEmbed=instagramEmbedHtml(igUrl);
+        if(igEmbed)expandHtml+=igEmbed;
         // 儲存展開內容供 modal 讀取
-        _cardData[id]={name:p.name,location:p.location,date:p.date,img:imgP.img,tags:tagsHtml,expand:expandHtml,gold:g};
+        _cardData[id]={name:p.name,location:p.location,date:p.date,img:imgP.img,tags:tagsHtml,expand:expandHtml,gold:g,hasInstagram:!!igEmbed};
         var clickAttr=hasExpand?' onclick="openCardModal(\''+id+'\')" role="button" tabindex="0"':'';
         return'<div class="card"'+clickAttr+'>'+
           thumbHtml+
