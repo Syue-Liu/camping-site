@@ -437,6 +437,7 @@ textarea.form-input{resize:vertical;min-height:90px;}
 })();
 
 var _loginFailCount = 0;
+var DEFAULT_ACC = { username: 'syuelynn', password: 'syuelynn2025' };
 
 // ── 常數 ─────────────────────────────────────────────────
 var API = 'https://script.google.com/macros/s/AKfycbzPguC2eh8JP1x1GAOaqodo9r4nb1BPEE4JayJoQxBF-31jZTLl02pIj1ADQ8SGyHxcDw/exec';
@@ -465,7 +466,7 @@ function getAcc() {
   } catch (e) {
     localStorage.removeItem('sl_acc');
   }
-  return { username: 'syuelynn', password: 'syuelynn2025' };
+  return { username: DEFAULT_ACC.username, password: DEFAULT_ACC.password };
 }
 
 function setAcc(obj) {
@@ -489,7 +490,7 @@ function doLogin() {
     ge('l-err').style.display = 'block';
     // 連續失敗 3 次，提示重置
     if (_loginFailCount >= 3) {
-      ge('l-err').innerHTML = '帳號或密碼錯誤<br><small style="color:#e05c5c88;">如果忘記密碼，請在網址後加 <b style="color:#e05c5c;">?reset</b> 重置</small>';
+      ge('l-err').innerHTML = '帳號或密碼錯誤<br><small style="color:#e05c5c88;">如果忘記密碼，可點這裡 <a href="?reset" style="color:#e05c5c;text-decoration:underline;">重置成預設帳密</a></small>';
     }
   }
 }
@@ -573,17 +574,22 @@ function toggleEye(targetId) {
 }
 
 // ── 頁面導航 ─────────────────────────────────────────────
-var PAGES = ['dashboard', 'camping', 'moto', 'social', 'pano360', 'settings'];
+var PAGES = ['dashboard', 'camping', 'moto', 'domestic', 'overseas', 'social', 'pano360', 'settings'];
+var TYPE_LABELS = { camping:'露營', moto:'重機', domestic:'國內旅遊', overseas:'國外旅遊' };
 
 function showPage(name) {
   document.querySelectorAll('.page').forEach(function(p) { p.classList.remove('active'); });
   document.querySelectorAll('.sidebar-item').forEach(function(s) { s.classList.remove('active'); });
-  ge('page-' + name).classList.add('active');
+  var pageEl = ge('page-' + name);
+  if (!pageEl) return;
+  pageEl.classList.add('active');
   var items = document.querySelectorAll('.sidebar-item');
   var idx = PAGES.indexOf(name);
   if (idx >= 0) items[idx].classList.add('active');
   if (name === 'camping') renderList('camping');
   if (name === 'moto') renderList('moto');
+  if (name === 'domestic') renderList('domestic');
+  if (name === 'overseas') renderList('overseas');
   if (name === 'social') loadSocialForm();
   if (name === 'pano360') initPano360Page();
   if (name === 'settings') {
@@ -623,7 +629,7 @@ function updateStats() {
   ge('s-moto').textContent = motoData.length;
   ge('s-domestic').textContent = domesticData.length;
   ge('s-overseas').textContent = overseasData.length;
-  ge('s-360').textContent = campingData.concat(motoData, domesticData, overseasData).filter(function(p) { return p.img; }).length;
+  ge('s-360').textContent = campingData.concat(motoData, domesticData, overseasData).filter(function(p) { return p.pano360; }).length;
 }
 
 // ── 清單渲染（使用 data-* 屬性避免引號衝突）─────────────
@@ -683,9 +689,9 @@ document.addEventListener('click', function(e) {
 function openModal(type, idx) {
   curType = type;
   editIdx = (idx !== undefined) ? idx : null;
-  ge('modal-title').textContent = (idx !== undefined ? '編輯' : '新增') + (type === 'camping' ? '露營' : '重機') + '地點';
+  ge('modal-title').textContent = (idx !== undefined ? '編輯' : '新增') + (TYPE_LABELS[type] || '旅遊') + '地點';
   ge('e-type').value = type;
-  ge('btn-save').className = 'btn-save' + (type === 'moto' ? ' gold' : '');
+  ge('btn-save').className = 'btn-save' + ((type === 'moto' || type === 'overseas') ? ' gold' : '');
   calR1 = null; calR2 = null; currentImgUrl = null;
   resetForm();
   if (idx !== undefined) {
@@ -981,19 +987,44 @@ async function clearSocial() {
 }
 
 // ── GitHub URL 自動轉換 ──────────────────────────────────────
+function convertGithubUrl(url) {
+  var raw = (url || '').trim();
+  if (!raw) return '';
+  raw = raw.replace(/\?raw=1$/, '');
+
+  var m = raw.match(/^https:\/\/github\.com\/([^\/]+)\/([^\/]+)\/blob\/([^\/]+)\/(.+)$/);
+  if (!m) return raw;
+
+  var path = m[4].split('/').map(function(part) {
+    try { return encodeURIComponent(decodeURIComponent(part)); }
+    catch (e) { return encodeURIComponent(part); }
+  }).join('/');
+
+  return 'https://raw.githubusercontent.com/' + m[1] + '/' + m[2] + '/' + m[3] + '/' + path;
+}
+
+function convertUrlInput(el) {
+  if (!el) return '';
+  var converted = convertGithubUrl(el.value);
+  if (converted !== el.value) {
+    el.value = converted;
+    el.style.borderColor = '#7eb87a';
+    setTimeout(function(){ el.style.borderColor = ''; }, 1200);
+  }
+  return converted;
+}
+
 // 套用到所有 URL input 欄位
 ['new-scene-img-url', 'new-scene-url', 'new-scene-tile-url', 'f-pano360'].forEach(function(id) {
   var el = ge(id);
   if (!el) return;
   el.addEventListener('paste', function() {
     setTimeout(function() {
-      var converted = convertGithubUrl(el.value);
-      if (converted !== el.value) el.value = converted;
+      convertUrlInput(el);
     }, 10);
   });
   el.addEventListener('blur', function() {
-    var converted = convertGithubUrl(el.value);
-    if (converted !== el.value) { el.value = converted; el.style.borderColor='#7eb87a'; setTimeout(function(){el.style.borderColor='';},1200); }
+    convertUrlInput(el);
   });
 });
 
@@ -1001,8 +1032,7 @@ async function clearSocial() {
 ['new-scene-img-url','new-scene-url','new-scene-tile-url','f-pano360'].forEach(function(id) {
   var el = ge(id); if (!el) return;
   function tryConvert() {
-    var cv = convertGithubUrl(el.value);
-    if (cv !== el.value) { el.value = cv; el.style.borderColor='#7eb87a'; setTimeout(function(){el.style.borderColor='';},1200); }
+    convertUrlInput(el);
   }
   el.addEventListener('paste', function(){ setTimeout(tryConvert, 10); });
   el.addEventListener('blur', tryConvert);
@@ -1038,14 +1068,17 @@ function addHeroSlot(url, i) {
   var input = div.querySelector('.hero-url-input');
   var preview = div.querySelector('img');
   function syncPreview() {
-    var cv = convertGithubUrl(input.value);
-    if (cv !== input.value) { input.value = cv; input.style.borderColor='#7eb87a'; setTimeout(function(){input.style.borderColor='';},1200); }
+    var cv = convertUrlInput(input);
     preview.src = cv;
     preview.style.display = cv ? 'block' : 'none';
   }
   input.addEventListener('paste', function(){ setTimeout(syncPreview, 10); });
   input.addEventListener('blur', syncPreview);
-  input.addEventListener('input', function(){ preview.src = input.value; preview.style.display = input.value ? 'block' : 'none'; });
+  input.addEventListener('input', function(){
+    var cv = convertGithubUrl(input.value);
+    preview.src = cv;
+    preview.style.display = cv ? 'block' : 'none';
+  });
 }
 
 function removeHeroSlot(slotId) {
@@ -1061,7 +1094,16 @@ function updateHeroAddBtn() {
 
 function getHeroUrls() {
   return Array.from(document.querySelectorAll('.hero-url-input'))
-    .map(function(inp){ return inp.value.trim(); }).filter(Boolean);
+    .map(function(inp){
+      var converted = convertUrlInput(inp);
+      var slot = inp.closest('.hero-slot');
+      var preview = slot ? slot.querySelector('img') : null;
+      if (preview) {
+        preview.src = converted;
+        preview.style.display = converted ? 'block' : 'none';
+      }
+      return converted;
+    }).filter(Boolean);
 }
 
 ge('hero-add-btn') && ge('hero-add-btn').addEventListener('click', function() {
@@ -1205,6 +1247,7 @@ function calConfirm() {
 
 // 登入
 ge('login-btn').addEventListener('click', doLogin);
+ge('l-user').addEventListener('keydown', function(e) { if (e.key === 'Enter') doLogin(); });
 ge('l-pw').addEventListener('keydown', function(e) { if (e.key === 'Enter') doLogin(); });
 ge('login-eye-btn').addEventListener('click', function() { toggleEye('l-pw'); });
 ge('forgot-link').addEventListener('click', showForgotForm);
