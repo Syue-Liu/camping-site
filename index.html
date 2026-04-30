@@ -1508,6 +1508,14 @@
         .catch(function(){ return []; });
     }
 
+    function fetchStaticData(){
+      return fetch('data.json', { cache: 'default' })
+        .then(function(r){
+          if (!r.ok) throw new Error('data json unavailable');
+          return r.json();
+        });
+    }
+
     function fetchFreshData(){
       return Promise.all([
         fetchSheet('camping'),
@@ -1530,6 +1538,16 @@
       var cached = getCachedData();
       var hasFreshCache = cached && (Date.now() - (cached.time || 0) < DATA_CACHE_MAX_AGE);
       if (cached) applySiteData(cached.data);
+
+      if (!cached) {
+        try {
+          var staticData = await fetchStaticData();
+          saveCachedData(staticData);
+          applySiteData(staticData);
+          cached = { time: Date.now(), data: staticData };
+        } catch(e) {}
+      }
+
       if (hasFreshCache) return;
       try{
         var fresh = await fetchFreshData();
