@@ -1274,7 +1274,7 @@
       if(!url || !/res\.cloudinary\.com\/[^/]+\/image\/upload\//.test(url)) return url || '';
       if(/\/image\/upload\/[^/]*(f_auto|q_auto|w_)\b/.test(url)) return url;
       width = width || 900;
-      return url.replace('/image/upload/', '/image/upload/f_auto,q_auto:eco,c_fill,w_'+width+',dpr_auto/');
+      return url.replace('/image/upload/', '/image/upload/f_auto,q_auto,w_'+width+'/');
     }
 
     function localHeroImageUrl(url){
@@ -1283,7 +1283,7 @@
       try { decoded = decodeURIComponent(url); } catch(e) { decoded = url; }
       var map = {
         'tqskv1xb7haikbcwc7jt.webp': '網站封面照片/tqskv1xb7haikbcwc7jt.webp',
-        'gwivczkqi0i83wgglrdf.jpg': '網站封面照片/optimized/gwivczkqi0i83wgglrdf-hero.jpg',
+        'gwivczkqi0i83wgglrdf.jpg': '網站封面照片/gwivczkqi0i83wgglrdf.jpg',
         'bn5oxqxzl30upmridnx0.jpg': '網站封面照片/optimized/bn5oxqxzl30upmridnx0-hero.jpg',
         '清邁.jpg': '網站封面照片/optimized/清邁-hero.jpg',
         'IMG_4566.JPG': '網站封面照片/optimized/IMG_4566-hero.jpg'
