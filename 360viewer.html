@@ -1710,10 +1710,45 @@ function renderAdminSceneList() {
       header.innerHTML = '<span class="folder-toggle">▶</span>'+
         '<span class="folder-name">📁 '+folder.name+'</span>'+
         '<span class="folder-count">'+inFolder.length+'</span>'+
+        '<button class="btn-green" style="padding:2px 8px;font-size:11px;margin-left:4px;" data-rename-folder="'+folder.id+'">改名</button>'+
         '<button class="btn-red" style="padding:2px 8px;font-size:11px;margin-left:4px;" data-del-folder="'+folder.id+'">🗑</button>';
       var content = document.createElement('div');
       content.className = 'folder-scenes' + (folder.open === false ? ' hidden' : '');
       header.addEventListener('click', function(e) {
+        if (e.target.dataset.renameFolder) {
+          e.stopPropagation();
+          var existing = header.nextSibling;
+          if (existing && existing.classList && existing.classList.contains('folder-rename-row')) {
+            existing.remove();
+            return;
+          }
+          var editRow = document.createElement('div');
+          editRow.className = 'folder-rename-row';
+          editRow.style.cssText = 'display:flex;gap:6px;margin:0 0 8px 18px;padding:8px;background:rgba(196,163,90,.06);border:1px solid rgba(196,163,90,.18);border-radius:8px;';
+          editRow.innerHTML =
+            '<input class="fi folder-rename-input" value="'+String(folder.name || '').replace(/"/g,'&quot;')+'" style="flex:1;margin:0;font-size:12px;padding:6px 10px;">'+
+            '<button class="btn-green folder-rename-save" style="padding:6px 10px;font-size:12px;">儲存</button>'+
+            '<button class="btn-outline folder-rename-cancel" style="padding:6px 9px;margin:0;width:auto;font-size:12px;">取消</button>';
+          el.insertBefore(editRow, content);
+          var input = editRow.querySelector('.folder-rename-input');
+          input.focus();
+          input.select();
+          function saveRename() {
+            var newName = input.value.trim();
+            if (!newName) return;
+            folder.name = newName;
+            saveConfig();
+            renderAdminSceneList();
+            refreshNewSceneFolderPicker();
+          }
+          editRow.querySelector('.folder-rename-save').addEventListener('click', function(ev) { ev.stopPropagation(); saveRename(); });
+          editRow.querySelector('.folder-rename-cancel').addEventListener('click', function(ev) { ev.stopPropagation(); editRow.remove(); });
+          input.addEventListener('keydown', function(ev) {
+            if (ev.key === 'Enter') saveRename();
+            if (ev.key === 'Escape') editRow.remove();
+          });
+          return;
+        }
         if (e.target.dataset.delFolder) {
           var btn = e.target;
           if (btn.dataset.confirmed !== 'yes') {
