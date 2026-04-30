@@ -255,7 +255,7 @@
   <div class="hero" id="hero-section">
     <!-- 輪播背景 — 由後台社群設定管理 -->
     <div class="hero-bg" id="hero-bg">
-      <div class="hero-slide active" style="background-image:url('https://raw.githubusercontent.com/Syue-Liu/camping-site/main/%E7%B6%B2%E7%AB%99%E5%B0%81%E9%9D%A2%E7%85%A7%E7%89%87/%E6%B8%85%E9%82%81.jpg')"></div>
+      <div class="hero-slide active" style="background-image:url('網站封面照片/optimized/清邁-hero.jpg')"></div>
       <div class="hero-overlay"></div>
     </div>
     <!-- 文字內容 -->
@@ -1270,6 +1270,34 @@
       return String(v||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
     }
 
+    function cloudinaryImageUrl(url, width){
+      if(!url || !/res\.cloudinary\.com\/[^/]+\/image\/upload\//.test(url)) return url || '';
+      if(/\/image\/upload\/[^/]*(f_auto|q_auto|w_)\b/.test(url)) return url;
+      width = width || 900;
+      return url.replace('/image/upload/', '/image/upload/f_auto,q_auto:eco,c_fill,w_'+width+',dpr_auto/');
+    }
+
+    function localHeroImageUrl(url){
+      if(!url) return '';
+      var decoded = '';
+      try { decoded = decodeURIComponent(url); } catch(e) { decoded = url; }
+      var map = {
+        'tqskv1xb7haikbcwc7jt.webp': '網站封面照片/tqskv1xb7haikbcwc7jt.webp',
+        'gwivczkqi0i83wgglrdf.jpg': '網站封面照片/optimized/gwivczkqi0i83wgglrdf-hero.jpg',
+        'bn5oxqxzl30upmridnx0.jpg': '網站封面照片/optimized/bn5oxqxzl30upmridnx0-hero.jpg',
+        '清邁.jpg': '網站封面照片/optimized/清邁-hero.jpg',
+        'IMG_4566.JPG': '網站封面照片/optimized/IMG_4566-hero.jpg'
+      };
+      for(var name in map){
+        if(decoded.indexOf('/網站封面照片/'+name) !== -1 || decoded.slice(-name.length) === name) return map[name];
+      }
+      return url;
+    }
+
+    function displayImageUrl(url, width){
+      return cloudinaryImageUrl(localHeroImageUrl(url), width);
+    }
+
     function instagramPermalink(url){
       if(!url||!url.trim())return '';
       var u=url.trim().split('?')[0];
@@ -1317,12 +1345,14 @@
       var html=displayed.map(function(p){
         cid++;var id='c'+cid;
         var imgP=parseImgField(p.img||'');
+        var cardImg=displayImageUrl(imgP.img,720);
+        var modalImg=displayImageUrl(imgP.img,1200);
         var ytUrl=youtubeEmbedUrl(imgP.youtube||p.youtube||'');
         var igUrl=(imgP.ig||p.ig||'').trim();
         var descHtml=renderFull(p.desc,kw,g);
         // 第一層封面圖
-        var thumbHtml=imgP.img
-          ?'<img class="card-img" src="'+imgP.img+'" alt="'+p.name+'" loading="lazy" decoding="async">'
+        var thumbHtml=cardImg
+          ?'<img class="card-img" src="'+safeAttr(cardImg)+'" alt="'+safeAttr(p.name)+'" loading="lazy" decoding="async" sizes="(max-width: 760px) 100vw, 460px">'
           :'';
         // 標籤
         var tagsHtml=p.tags
@@ -1364,7 +1394,7 @@
         var igEmbed=instagramEmbedHtml(igUrl);
         if(igEmbed)expandHtml+=igEmbed;
         // 儲存展開內容供 modal 讀取
-        _cardData[id]={name:p.name,location:p.location,date:p.date,img:imgP.img,tags:tagsHtml,expand:expandHtml,gold:g,hasInstagram:!!igEmbed};
+        _cardData[id]={name:p.name,location:p.location,date:p.date,img:modalImg,tags:tagsHtml,expand:expandHtml,gold:g,hasInstagram:!!igEmbed};
         var clickAttr=hasExpand?' onclick="openCardModal(\''+id+'\')" role="button" tabindex="0"':'';
         return'<div class="card"'+clickAttr+'>'+
           thumbHtml+
@@ -1410,14 +1440,15 @@
           bg.querySelectorAll('.hero-slide').forEach(function(s){s.remove();});
           // 重建 slides
           heroImgs.slice(0,5).forEach(function(url,i){
+            var displayUrl = displayImageUrl(url, 1600);
             if (i === 0) {
               var pre = new Image();
               pre.decoding = 'async';
-              pre.src = url;
+              pre.src = displayUrl;
             }
             var slide = document.createElement('div');
             slide.className = 'hero-slide' + (i===0?' active':'');
-            slide.style.backgroundImage = 'url('+url+')';
+            slide.style.backgroundImage = 'url("'+displayUrl.replace(/"/g, '%22')+'")';
             bg.insertBefore(slide, overlay);
           });
           // 重新初始化輪播
