@@ -759,6 +759,7 @@
       me.camera.rotation.set(0, 0, 0); me.fov = 75; me.camera.fov = 75; me.camera.updateProjectionMatrix();
       me.buildDots();
       me.buildHs(sc.hotspots || []);
+      me.applyAdjust(sc.adjust);
 
       if (sc.tileBaseUrl) {
         me.sphere.visible = false;
@@ -826,8 +827,8 @@
           if (bar2) { bar2.style.width = '100%'; setTimeout(function(){ bar2.style.width='0%'; }, 400); }
           if (pct2) pct2.textContent = '';
           URL.revokeObjectURL(blobUrl);
-          if (onReady) onReady(); // 通知轉場：新場景已 ready
           me.applyAdjust(sc.adjust);
+          if (onReady) onReady(); // 通知轉場：新場景已 ready
         } catch(e) {
           if (ld) ld.innerHTML = '<div style="font-size:12px;color:#e05c5c">⚠️ 圖片處理失敗</div>';
         }

@@ -940,6 +940,12 @@ function switchSceneWithZoom(id) {
   }
 }
 
+function applySceneFilter(sc) {
+  var canvasEl = ge('c');
+  if (!canvasEl) return;
+  canvasEl.style.filter = sc && sc.adjust ? adjToFilter(sc.adjust) : '';
+}
+
 function switchScene(id, onReady) {
   var sc = getScene(id); if (!sc) return;
   var canvasEl = ge('c');
@@ -951,12 +957,13 @@ function switchScene(id, onReady) {
   rebuildHotspotEls();
   updateSceneDots();
   camera.rotation.set(0,0,0); fov = 75; camera.fov = 75; camera.updateProjectionMatrix();
+  applySceneFilter(sc);
   if (sc.tileBaseUrl) {
     // ── 切片模式 ──────────────────────────────────────────
     sphere.visible = false;
     cubeMesh.visible = true;
     loadTiles(sc, function() {
-      if (canvasEl) { canvasEl.style.filter = ''; }
+      applySceneFilter(sc);
       if (onReady) onReady();
     });
   } else if (sc.imageUrl) {
@@ -964,7 +971,7 @@ function switchScene(id, onReady) {
     sphere.visible = true;
     cubeMesh.visible = false;
     loadPanoTexture(sc.imageUrl, function() {
-      if (canvasEl) { canvasEl.style.filter = ''; }
+      applySceneFilter(sc);
       if (onReady) onReady();
     });
   } else {
@@ -972,16 +979,10 @@ function switchScene(id, onReady) {
     cubeMesh.visible = false;
     mat.map = null; mat.color.set(0x1a2a1a); mat.needsUpdate = true;
     hideLoading();
-    if (canvasEl) { canvasEl.style.filter = ''; }
+    applySceneFilter(sc);
     if (onReady) onReady();
   }
   renderAdminHotspotList(); updateHsSceneHint();
-  // 套用場景的調整設定（在圖片載入前先套用，讓調整參數不被覆蓋）
-  var adjSc = getScene(id);
-  var canvasEl2 = ge('c');
-  if (adjSc && adjSc.adjust && canvasEl2) {
-    canvasEl2.style.filter = adjToFilter(adjSc.adjust);
-  }
 }
 
 function updateSceneDots() {
