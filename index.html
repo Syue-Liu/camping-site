@@ -462,7 +462,7 @@
       });
       function _heroGo(n) {
         var ss = document.querySelectorAll('#hero-bg .hero-slide');
-        if (!ss.length || n >= ss.length) return;
+        if (!ss.length) return;
         ss[_heroCur].classList.remove('active');
         if (dotsEl.children[_heroCur]) dotsEl.children[_heroCur].classList.remove('active');
         _heroCur = (n + ss.length) % ss.length;
@@ -1226,6 +1226,16 @@
           try{ var gl=c&&c.getContext('webgl'); if(gl) gl.getExtension('WEBGL_lose_context') && gl.getExtension('WEBGL_lose_context').loseContext(); }catch(e){}
         }
       });
+      content.querySelectorAll('iframe').forEach(function(frame){
+        try { frame.src = 'about:blank'; } catch(e) {}
+      });
+      setTimeout(function(){
+        if (!ov.classList.contains('open')) {
+          content.innerHTML = '';
+          var img = document.getElementById('cmodal-img');
+          if (img) { img.removeAttribute('src'); img.style.display = 'none'; }
+        }
+      }, 260);
     }
 
     function filterId(type){return{camping:'camp-filter-bar',moto:'moto-filter-bar',domestic:'domestic-filter-bar',overseas:'overseas-filter-bar'}[type]||type+'-filter-bar';}
