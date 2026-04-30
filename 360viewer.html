@@ -61,7 +61,11 @@ canvas.placing{cursor:crosshair;}
 .hs-label{position:absolute;bottom:calc(100% + 7px);left:50%;transform:translateX(-50%);white-space:nowrap;background:rgba(0,0,0,.75);color:#fff;font-size:11px;padding:4px 10px;border-radius:12px;pointer-events:none;opacity:0;transition:opacity .2s;}
 .hs:hover .hs-label{opacity:1;}
 .hs-pulse{position:absolute;inset:0;border-radius:50%;animation:pr 1.9s ease-out infinite;}
+.hs-effect-glow .hs-inner{box-shadow:0 0 0 4px var(--hs-soft),0 0 24px var(--hs-color),0 3px 14px rgba(0,0,0,.55);}
+.hs-effect-breathe .hs-inner{animation:hsb 2.4s ease-in-out infinite;}
+.hs-arrow{position:absolute;left:50%;top:calc(100% + 4px);width:0;height:0;border-left:7px solid transparent;border-right:7px solid transparent;border-top:10px solid var(--hs-color);filter:drop-shadow(0 2px 5px rgba(0,0,0,.55));transform:translateX(-50%);}
 @keyframes pr{0%{transform:scale(1);opacity:.7;}100%{transform:scale(2.4);opacity:0;}}
+@keyframes hsb{0%,100%{transform:scale(1);}50%{transform:scale(1.12);}}
 
 /* ── Admin Panel ── */
 #admin{position:absolute;top:0;right:0;width:350px;height:100vh;background:rgba(13,18,14,.97);border-left:1px solid rgba(255,255,255,.07);backdrop-filter:blur(18px);z-index:80;display:flex;flex-direction:column;transform:translateX(100%);transition:transform .3s ease;}
@@ -309,9 +313,9 @@ canvas.edit-mode{cursor:default;}
       <div class="fg"><label class="fl">場景名稱</label><input class="fi" id="new-scene-name" placeholder="例：入口廣場"></div>
       <label class="fl">360° 全景圖片</label>
       <div class="uz" id="gh-upload-zone" style="margin-top:6px;">
-        <div class="uz-icon">🐱</div>
-        <div class="uz-text">點擊選擇圖片上傳至 GitHub</div>
-        <div class="uz-hint">需先在「嵌入」頁設定 GitHub Token</div>
+        <div class="uz-icon">🌐</div>
+        <div class="uz-text">點擊上傳單張 360° 照片</div>
+        <div class="uz-hint">推薦：直接上傳等距全景 JPG，不需要切片</div>
       </div>
       <input type="file" id="gh-img-file" accept="image/*" style="display:none">
       <input type="hidden" id="new-scene-img-url">
@@ -330,10 +334,10 @@ canvas.edit-mode{cursor:default;}
         <div class="fg" style="margin-bottom:0;">
           <label class="fl">切片資料夾網址（留空則使用上方全景圖）</label>
           <input class="fi" id="new-scene-tile-url" placeholder="https://raw.githubusercontent.com/.../tiles/scene1/">
-          <div style="font-size:11px;color:#4a5448;margin-top:4px;">填入後載入速度提升 3-5 倍，需先用切片工具產生 6 張圖片</div>
+          <div style="font-size:11px;color:#4a5448;margin-top:4px;">只有超大圖或大量場景才需要；一般使用請直接上傳單張 360° 照片。</div>
         </div>
       </div>
-      <button type="button" style="width:100%;padding:7px;background:transparent;border:1px dashed rgba(196,163,90,.3);border-radius:8px;color:#c4a35a;font-size:12px;cursor:pointer;margin-bottom:10px;font-family:inherit;" id="toggle-tile-btn" onclick="(function(){var s=document.getElementById('tile-section');s.style.display=s.style.display==='none'?'block':'none';})()">⚡ 切片模式設定（進階）</button>
+      <button type="button" style="width:100%;padding:7px;background:transparent;border:1px dashed rgba(196,163,90,.3);border-radius:8px;color:#c4a35a;font-size:12px;cursor:pointer;margin-bottom:10px;font-family:inherit;" id="toggle-tile-btn" onclick="(function(){var s=document.getElementById('tile-section');s.style.display=s.style.display==='none'?'block':'none';})()">進階：切片模式設定</button>
       <div class="st">場景列表</div>
 
       <!-- 資料夾管理 -->
@@ -375,7 +379,17 @@ canvas.edit-mode{cursor:default;}
           <label class="fl">大小</label>
           <div class="range-row"><input type="range" class="range" id="hs-size" min="28" max="80" value="44"><span class="range-val" id="hs-size-val">44</span>px</div>
         </div>
-        <div class="tog-row">
+        <div class="fg">
+          <label class="fl">動態效果</label>
+          <select class="fi" id="hs-effect">
+            <option value="pulse">柔和光環</option>
+            <option value="glow">固定光暈</option>
+            <option value="breathe">呼吸放大</option>
+            <option value="arrow">指標箭頭</option>
+            <option value="none">無效果</option>
+          </select>
+        </div>
+        <div class="tog-row" style="display:none;">
           <span class="tog-label">閃動光環</span>
           <label class="tog"><input type="checkbox" id="hs-pulse" checked><span class="tog-slider"></span></label>
         </div>
@@ -553,6 +567,8 @@ var editingHsId = null;
 var selectedIcon = ICONS[0];
 var selectedColor = COLORS[0];
 var pendingSceneImgUrl = '';
+var CLOUDINARY_CLOUD = 'ddcalhl1s';
+var CLOUDINARY_PRESET = 'g3gyuyoi';
 
 try {
   var saved = localStorage.getItem('pano360_config');
@@ -579,7 +595,7 @@ function resetSceneUpload() {
   var z = ge('gh-upload-zone');
   if (z) {
     z.className = 'uz';
-    z.innerHTML = '<div class="uz-icon">🐱</div><div class="uz-text">點擊選擇圖片上傳至 GitHub</div><div class="uz-hint">需先在「嵌入」頁設定 GitHub Token</div>';
+    z.innerHTML = '<div class="uz-icon">🌐</div><div class="uz-text">點擊上傳單張 360° 照片</div><div class="uz-hint">推薦：直接上傳等距全景 JPG，不需要切片</div>';
   }
   var inp = ge('new-scene-img-url');
   if (inp) inp.value = '';
@@ -808,21 +824,32 @@ function getSceneHotspots() {
   return sc ? (sc.hotspots || []) : [];
 }
 function getScene(id) { return config.scenes.find(function(s) { return s.id === id; }); }
+function effectName(effect) {
+  return { pulse:'柔和光環', glow:'固定光暈', breathe:'呼吸放大', arrow:'指標箭頭', none:'無效果' }[effect || 'pulse'] || '柔和光環';
+}
 
 function buildHotspotEl(hs) {
   var div = document.createElement('div');
-  div.className = 'hs'; div.dataset.id = hs.id;
+  var effect = hs.effect || (hs.pulse !== false ? 'pulse' : 'none');
+  div.className = 'hs hs-effect-' + effect; div.dataset.id = hs.id;
   var size = hs.size || 44, color = hs.color || '#7eb87a', icon = hs.icon || '🔵';
+  div.style.setProperty('--hs-color', color);
+  div.style.setProperty('--hs-soft', color + '33');
   var inner = document.createElement('div');
   inner.className = 'hs-inner';
   inner.style.cssText = 'width:'+size+'px;height:'+size+'px;background:'+color+'22;border:2.5px solid '+color+';font-size:'+Math.round(size*.42)+'px;';
-  if (hs.pulse !== false) {
+  if (effect === 'pulse') {
     var pulse = document.createElement('div');
     pulse.className = 'hs-pulse';
     pulse.style.background = color + '55';
     inner.appendChild(pulse);
   }
   inner.appendChild(document.createTextNode(icon));
+  if (effect === 'arrow') {
+    var arrow = document.createElement('div');
+    arrow.className = 'hs-arrow';
+    inner.appendChild(arrow);
+  }
   var label = document.createElement('div');
   label.className = 'hs-label';
   label.textContent = hs.label || '前往';
@@ -1092,19 +1119,27 @@ ge('hs-edit-mode-btn') && ge('hs-edit-mode-btn').addEventListener('click', funct
 var _origBuildHotspotEl = buildHotspotEl;
 buildHotspotEl = function(hs) {
   var div = document.createElement('div');
-  div.className = 'hs' + (editModeActive ? ' editable' : '');
+  var effect = hs.effect || (hs.pulse !== false ? 'pulse' : 'none');
+  div.className = 'hs hs-effect-' + effect + (editModeActive ? ' editable' : '');
   div.dataset.id = hs.id;
   var size = hs.size || 44, color = hs.color || '#7eb87a', icon = hs.icon || '🔵';
+  div.style.setProperty('--hs-color', color);
+  div.style.setProperty('--hs-soft', color + '33');
   var inner = document.createElement('div');
   inner.className = 'hs-inner';
   inner.style.cssText = 'width:'+size+'px;height:'+size+'px;background:'+color+'22;border:2.5px solid '+color+';font-size:'+Math.round(size*.42)+'px;';
-  if (hs.pulse !== false && !editModeActive) {
+  if (effect === 'pulse' && !editModeActive) {
     var pulse = document.createElement('div');
     pulse.className = 'hs-pulse';
     pulse.style.background = color + '55';
     inner.appendChild(pulse);
   }
   inner.appendChild(document.createTextNode(icon));
+  if (effect === 'arrow') {
+    var arrow = document.createElement('div');
+    arrow.className = 'hs-arrow';
+    inner.appendChild(arrow);
+  }
   var label = document.createElement('div');
   label.className = 'hs-label';
   label.textContent = hs.label || '前往';
@@ -1307,6 +1342,17 @@ ge('gh-upload-config-btn') && ge('gh-upload-config-btn').addEventListener('click
   }
 });
 // ── GitHub Upload ─────────────────────────────────────────
+async function uploadToCloudinary(file) {
+  var fd = new FormData();
+  fd.append('file', file);
+  fd.append('upload_preset', CLOUDINARY_PRESET);
+  fd.append('folder', 'pano360');
+  var res = await fetch('https://api.cloudinary.com/v1_1/' + CLOUDINARY_CLOUD + '/image/upload', { method: 'POST', body: fd });
+  var data = await res.json();
+  if (!res.ok || !data.secure_url) throw new Error(data.error && data.error.message ? data.error.message : 'Cloudinary 上傳失敗');
+  return data.secure_url;
+}
+
 function uploadToGitHub(file) {
   return new Promise(function(resolve, reject) {
     var gh = getGhStatus();
@@ -1358,20 +1404,14 @@ ge('gh-upload-zone') && ge('gh-upload-zone').addEventListener('click', function(
 ge('gh-img-file') && ge('gh-img-file').addEventListener('change', function() {
   var file = this.files[0]; if (!file) return;
   var z = ge('gh-upload-zone');
-  var gh = getGhStatus();
-  if (!gh) {
-    z.className = 'uz error-state';
-    z.innerHTML = '<div class="uz-icon">⚠️</div><div class="uz-text">請先設定 GitHub Token</div><div class="uz-hint">至「嵌入」頁填寫設定</div>';
-    return;
-  }
   z.className = 'uz uploading';
-  z.innerHTML = '<div class="uz-icon">⏫</div><div class="uz-text">上傳至 GitHub...</div><div class="uz-hint">'+gh.user+'/'+gh.repo+'</div>';
-  uploadToGitHub(file)
+  z.innerHTML = '<div class="uz-icon">⏫</div><div class="uz-text">上傳單張 360° 照片中...</div><div class="uz-hint">不用切片，完成後可直接新增場景</div>';
+  uploadToCloudinary(file)
     .then(function(url) {
       // uploaded
       ge('new-scene-img-url').value = url;
       z.className = 'uz has-img';
-      z.innerHTML = '<div style="padding:10px 12px;"><div style="font-size:11px;color:#7eb87a;font-weight:600;margin-bottom:4px;">✅ 已上傳到 GitHub</div><div style="font-size:10px;color:#8a9088;word-break:break-all;">'+url+'</div></div>';
+      z.innerHTML = '<div style="padding:10px 12px;"><div style="font-size:11px;color:#7eb87a;font-weight:600;margin-bottom:4px;">✅ 已上傳單張 360° 照片</div><div style="font-size:10px;color:#8a9088;word-break:break-all;">'+url+'</div></div>';
     })
     .catch(function(err) {
       z.className = 'uz error-state';
@@ -1644,7 +1684,7 @@ function makeSceneCard(sc, idx, allIdx) {
       inp.type = 'file'; inp.accept = 'image/*';
       inp.onchange = function() {
         var f = inp.files[0]; if (!f) return;
-        uploadToGitHub(f)
+        uploadToCloudinary(f)
           .then(function(url) {
             sc.imageUrl = url; saveConfig(); renderAdminSceneList(); updateSceneDots();
             if (sc.id === currentSceneId) loadPanoTexture(url, function(){});
@@ -1857,6 +1897,7 @@ ge('hs-save-btn').addEventListener('click', function() {
   var phi = parseFloat(ge('hs-phi').value);
   var theta = parseFloat(ge('hs-theta').value);
   if (isNaN(phi) || isNaN(theta)) { toast('請先點擊 360° 畫面選擇位置', 1); return; }
+  var effect = ge('hs-effect') ? ge('hs-effect').value : 'pulse';
   var hs = {
     id: editingHsId || uid(),
     phi: phi, theta: theta,
@@ -1865,7 +1906,8 @@ ge('hs-save-btn').addEventListener('click', function() {
     icon: ge('hs-icon-custom').value.trim() || selectedIcon,
     color: selectedColor,
     size: parseInt(ge('hs-size').value),
-    pulse: ge('hs-pulse').checked
+    effect: effect,
+    pulse: effect === 'pulse'
   };
   var sc = getScene(currentSceneId); if (!sc) return;
   if (!sc.hotspots) sc.hotspots = [];
@@ -1909,7 +1951,7 @@ function renderAdminHotspotList() {
       '<div class="hs-detail">'+
         '<div class="hdd">→ <span>'+(target?target.name:'未設定')+'</span></div>'+
         '<div class="hdd">大小 <span>'+hs.size+'px</span></div>'+
-        '<div class="hdd">閃動 <span>'+(hs.pulse!==false?'開':'關')+'</span></div>'+
+        '<div class="hdd">效果 <span>'+effectName(hs.effect || (hs.pulse!==false?'pulse':'none'))+'</span></div>'+
         '<div class="hdd">顏色 <span style="color:'+hs.color+'">●</span></div>'+
       '</div>'+
       '<div class="sc-actions" style="margin-top:8px;"><button class="btn-green hs-edit-btn">✏ 編輯</button></div>';
@@ -1929,6 +1971,7 @@ function renderAdminHotspotList() {
       ge('hs-label').value = hs.label;
       ge('hs-size').value = hs.size; ge('hs-size-val').textContent = hs.size;
       ge('hs-pulse').checked = hs.pulse !== false;
+      if (ge('hs-effect')) ge('hs-effect').value = hs.effect || (hs.pulse !== false ? 'pulse' : 'none');
       selectedIcon = hs.icon; selectedColor = hs.color;
       ge('hs-icon-custom').value = '';
       document.getElementById('icon-picker').querySelectorAll('.ib').forEach(function(b) { b.classList.toggle('sel', b.textContent===hs.icon); });
@@ -2124,6 +2167,10 @@ COLORS.forEach(function(col) {
 
 ge('hs-size').addEventListener('input', function() {
   ge('hs-size-val').textContent = this.value;
+  syncPreviewStyle();
+});
+ge('hs-effect') && ge('hs-effect').addEventListener('change', function() {
+  if (ge('hs-pulse')) ge('hs-pulse').checked = this.value === 'pulse';
   syncPreviewStyle();
 });
 

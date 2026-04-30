@@ -142,7 +142,11 @@
     .pano-hs-label{position:absolute;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%);white-space:nowrap;background:rgba(0,0,0,.75);color:#fff;font-size:11px;padding:3px 9px;border-radius:10px;opacity:0;transition:opacity .2s;pointer-events:none;}
     .pano-hs:hover .pano-hs-label{opacity:1;}
     .pano-hs-pulse{position:absolute;inset:0;border-radius:50%;animation:pr 1.9s ease-out infinite;}
+    .pano-hs-effect-glow .pano-hs-inner{box-shadow:0 0 0 4px var(--hs-soft),0 0 24px var(--hs-color),0 2px 10px rgba(0,0,0,.55);}
+    .pano-hs-effect-breathe .pano-hs-inner{animation:hsb 2.4s ease-in-out infinite;}
+    .pano-hs-arrow{position:absolute;left:50%;top:calc(100% + 4px);width:0;height:0;border-left:7px solid transparent;border-right:7px solid transparent;border-top:10px solid var(--hs-color);filter:drop-shadow(0 2px 5px rgba(0,0,0,.55));transform:translateX(-50%);}
     @keyframes pr{0%{transform:scale(1);opacity:.65;}100%{transform:scale(2.3);opacity:0;}}
+    @keyframes hsb{0%,100%{transform:scale(1);}50%{transform:scale(1.12);}}
     .yt-wrap{border-radius:8px;overflow:hidden;margin-top:1.25rem;margin-bottom:0.25rem;position:relative;padding-bottom:56.25%;height:0;}
     .yt-wrap iframe{position:absolute;top:0;left:0;width:100%;height:100%;border:none;display:block;}
     .yt-caption{font-size:11px;color:var(--muted);text-align:center;letter-spacing:0.08em;margin-bottom:0.5rem;}
@@ -946,18 +950,26 @@
       me.hsLayer.innerHTML = '';
       hotspots.forEach(function(hs) {
         var div = document.createElement('div');
-        div.className = 'pano-hs'; div.dataset.hsid = hs.id;
+        var effect = hs.effect || (hs.pulse !== false ? 'pulse' : 'none');
+        div.className = 'pano-hs pano-hs-effect-' + effect; div.dataset.hsid = hs.id;
         var size = hs.size || 40, color = hs.color || '#7eb87a';
+        div.style.setProperty('--hs-color', color);
+        div.style.setProperty('--hs-soft', color + '33');
         var inner = document.createElement('div');
         inner.className = 'pano-hs-inner';
         inner.style.cssText = 'width:'+size+'px;height:'+size+'px;background:'+color+'22;border:2.5px solid '+color+';font-size:'+Math.round(size*.42)+'px;';
-        if (hs.pulse !== false) {
+        if (effect === 'pulse') {
           var pulse = document.createElement('div');
           pulse.className = 'pano-hs-pulse';
           pulse.style.background = color + '55';
           inner.appendChild(pulse);
         }
         inner.appendChild(document.createTextNode(hs.icon || '🔵'));
+        if (effect === 'arrow') {
+          var arrow = document.createElement('div');
+          arrow.className = 'pano-hs-arrow';
+          inner.appendChild(arrow);
+        }
         var lbl = document.createElement('div');
         lbl.className = 'pano-hs-label';
         lbl.textContent = hs.label || '前往';
