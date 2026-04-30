@@ -201,7 +201,8 @@ textarea.fi{resize:vertical;min-height:60px;}
 canvas.edit-mode{cursor:default;}
 .hs.editable{cursor:move !important;}
 .hs.editable .hs-inner{border-style:dashed !important;box-shadow:0 0 0 3px rgba(196,163,90,.5);}
-.hs-edit-handle{position:absolute;top:-8px;right:-8px;width:20px;height:20px;background:#c4a35a;border-radius:50%;border:2px solid #fff;display:flex;align-items:center;justify-content:center;font-size:10px;cursor:pointer;z-index:2;}
+.hs.editable{cursor:grab;}
+.hs.editable:active{cursor:grabbing;}
 #edit-mode-bar{position:absolute;top:1rem;left:50%;transform:translateX(-50%);background:rgba(196,163,90,.95);color:#0f1410;padding:8px 22px;border-radius:20px;font-size:13px;font-weight:700;z-index:25;display:none;gap:12px;align-items:center;white-space:nowrap;}
 #edit-mode-bar.show{display:flex;}
 #edit-mode-bar button{background:rgba(0,0,0,.15);border:1px solid rgba(0,0,0,.2);color:#0f1410;padding:4px 12px;border-radius:12px;font-size:12px;font-weight:700;cursor:pointer;}
@@ -328,20 +329,7 @@ canvas.edit-mode{cursor:default;}
       </div>
       <button class="btn-primary" id="add-scene-btn">+ 新增場景</button>
       <div class="dv"></div>
-      <!-- 切片模式進階設定 -->
-      <div id="tile-section" style="background:rgba(196,163,90,.04);border:1px solid rgba(196,163,90,.18);border-radius:8px;padding:10px 12px;margin-bottom:10px;display:none;">
-        <div style="font-size:11px;color:#c4a35a;font-weight:600;letter-spacing:.08em;margin-bottom:8px;">⚡ 切片模式（選填）</div>
-        <div class="fg" style="margin-bottom:0;">
-          <label class="fl">切片資料夾網址（留空則使用上方全景圖）</label>
-          <input class="fi" id="new-scene-tile-url" placeholder="https://raw.githubusercontent.com/.../tiles/scene1/">
-          <div style="font-size:11px;color:#4a5448;margin-top:4px;">只有超大圖或大量場景才需要；一般使用請直接上傳單張 360° 照片。</div>
-        </div>
-      </div>
-      <button type="button" style="width:100%;padding:7px;background:transparent;border:1px dashed rgba(196,163,90,.3);border-radius:8px;color:#c4a35a;font-size:12px;cursor:pointer;margin-bottom:10px;font-family:inherit;" id="toggle-tile-btn" onclick="(function(){var s=document.getElementById('tile-section');s.style.display=s.style.display==='none'?'block':'none';})()">進階：切片模式設定</button>
       <div class="st">場景列表</div>
-
-      <!-- 資料夾管理 -->
-      <div id="folder-mgmt-area"></div>
 
       <!-- 新增資料夾：內嵌表單，不用 prompt() -->
       <div id="new-folder-form" style="display:none;background:rgba(196,163,90,.06);border:1px solid rgba(196,163,90,.2);border-radius:8px;padding:10px;margin-bottom:8px;">
@@ -397,8 +385,7 @@ canvas.edit-mode{cursor:default;}
         <button class="btn-outline" id="hs-cancel-btn">取消</button>
       </div>
       <button class="btn-add" id="hs-place-btn">+ 點擊畫面放置傳送點</button>
-      <button class="btn-add" id="hs-edit-mode-btn" style="margin-top:6px;border-color:rgba(196,163,90,.3);color:#c4a35a;background:rgba(196,163,90,.05);">✏️ 拖曳編輯傳送點位置</button>
-      <p class="hint" style="margin-top:6px;">點下方按鈕後，點擊 360° 畫面任意位置放置</p>
+      <p class="hint" style="margin-top:6px;">新增時先點畫面放置；編輯既有傳送點時可直接拖曳畫面上的點。</p>
       <div class="dv"></div>
       <div class="st" id="hs-list-title">傳送點列表</div>
       <div id="hotspots-list"></div>
@@ -1109,12 +1096,6 @@ function exitEditMode() {
 }
 ge('edit-mode-done') && ge('edit-mode-done').addEventListener('click', exitEditMode);
 
-ge('hs-edit-mode-btn') && ge('hs-edit-mode-btn').addEventListener('click', function() {
-  if (!currentSceneId) { alert('請先載入一個場景'); return; }
-  if (!getSceneHotspots().length) { alert('此場景尚無傳送點'); return; }
-  enterEditMode();
-});
-
 // Override buildHotspotEl to support drag when in editMode
 var _origBuildHotspotEl = buildHotspotEl;
 buildHotspotEl = function(hs) {
@@ -1145,24 +1126,15 @@ buildHotspotEl = function(hs) {
   label.textContent = hs.label || '前往';
 
   if (editModeActive) {
-    // 拖曳手把
-    var handle = document.createElement('div');
-    handle.className = 'hs-edit-handle';
-    handle.textContent = '✥';
-    handle.title = '拖曳移動';
-    div.appendChild(handle);
-
-    var isDraggingHs = false;
-    handle.addEventListener('mousedown', function(e) {
+    div.title = '拖曳調整位置';
+    div.addEventListener('mousedown', function(e) {
       e.stopPropagation();
-      isDraggingHs = true;
       draggingHsId = hs.id;
       hsDragStart = { x: e.clientX, y: e.clientY };
       document.body.style.userSelect = 'none';
     });
-    handle.addEventListener('touchstart', function(e) {
+    div.addEventListener('touchstart', function(e) {
       e.stopPropagation();
-      isDraggingHs = true;
       draggingHsId = hs.id;
     }, { passive: true });
   } else {
@@ -1450,11 +1422,9 @@ function refreshNewSceneFolderPicker() {
 ge('add-scene-btn').addEventListener('click', function() {
   var name = ge('new-scene-name').value.trim();
   var url = ge('new-scene-img-url').value.trim() || ge('new-scene-url').value.trim();
-  var tileUrl = ge('new-scene-tile-url') ? ge('new-scene-tile-url').value.trim() : '';
   if (!name) { toast('請輸入場景名稱', 1); return; }
-  if (!url && !tileUrl) { toast('請上傳圖片或貼上圖片網址', 1); return; }
+  if (!url) { toast('請上傳圖片或貼上圖片網址', 1); return; }
   var sc = { id: uid(), name: name, imageUrl: url, hotspots: [], folder: _newSceneFolder || '' };
-  if (tileUrl) sc.tileBaseUrl = tileUrl;
   config.scenes.push(sc);
   if (!config.startScene) config.startScene = sc.id;
   saveConfig();
@@ -1462,7 +1432,6 @@ ge('add-scene-btn').addEventListener('click', function() {
   updateSceneDots();
   ge('new-scene-name').value = '';
   ge('new-scene-url').value = '';
-  if (ge('new-scene-tile-url')) ge('new-scene-tile-url').value = '';
   _newSceneFolder = '';
   resetSceneUpload();
   refreshNewSceneFolderPicker();
@@ -1527,10 +1496,6 @@ function makeSceneCard(sc, idx, allIdx) {
     ? '<img class="sc-thumb" src="'+sc.imageUrl+'" alt="" onerror="this.style.display=\'none\'">'
     : '<div class="sc-thumb" style="display:flex;align-items:center;justify-content:center;font-size:11px;color:#4a5448">未設定圖片</div>';
 
-  var tileBadge = sc.tileBaseUrl
-    ? '<div style="font-size:10px;color:#c4a35a;background:rgba(196,163,90,.1);border:1px solid rgba(196,163,90,.25);border-radius:10px;padding:1px 7px;margin-top:4px;display:inline-block;">⚡ 切片模式</div>'
-    : '';
-
   d.innerHTML =
     '<div class="sc-row1">'+
       '<span class="drag-handle" title="拖曳排序">⠿</span>'+
@@ -1545,7 +1510,6 @@ function makeSceneCard(sc, idx, allIdx) {
     (sc.imageUrl
       ? '<img class="sc-thumb-sm" src="'+sc.imageUrl+'" alt="" onerror="this.style.display=\'none\'">'
       : '<div class="sc-no-img">未設定圖片</div>')+
-    (tileBadge ? '<div style="padding:0 8px 6px;">'+tileBadge+'</div>' : '')+
     '<div class="sc-load-row">'+
       '<button class="btn-green sc-load" style="flex:1;padding:6px 0;font-size:12px;">▶ 載入場景</button>'+
     '</div>';
@@ -1718,89 +1682,7 @@ function makeSceneCard(sc, idx, allIdx) {
   return d;
 }
 
-function renderFolderMgmt() {
-  var el = ge('folder-mgmt-area');
-  if (!el) return;
-  var folders = config.folders || [];
-  if (!folders.length) { el.innerHTML = ''; return; }
-
-  el.innerHTML = '';
-  var title = document.createElement('div');
-  title.style.cssText = 'font-size:11px;color:#8a9088;text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px;';
-  title.textContent = '已建立的資料夾';
-  el.appendChild(title);
-
-  folders.forEach(function(folder, fi) {
-    var row = document.createElement('div');
-    row.style.cssText = 'background:rgba(196,163,90,.06);border:1px solid rgba(196,163,90,.18);border-radius:8px;padding:8px 10px;margin-bottom:6px;';
-
-    var nameInput = document.createElement('input');
-    nameInput.className = 'fi';
-    nameInput.value = folder.name;
-    nameInput.style.cssText = 'font-size:13px;margin:0 0 7px 0;padding:5px 10px;';
-
-    var btnRow = document.createElement('div');
-    btnRow.style.cssText = 'display:flex;gap:6px;';
-
-    var saveBtn = document.createElement('button');
-    saveBtn.className = 'btn-green';
-    saveBtn.style.cssText = 'flex:1;padding:6px;font-size:12px;';
-    saveBtn.textContent = '💾 儲存名稱';
-
-    var delBtn = document.createElement('button');
-    delBtn.className = 'btn-red';
-    delBtn.style.cssText = 'padding:6px 12px;font-size:12px;';
-    delBtn.textContent = '🗑 刪除';
-    delBtn.dataset.confirmed = '';
-
-    saveBtn.addEventListener('click', function(e) {
-      e.stopPropagation();
-      var newName = nameInput.value.trim();
-      if (!newName) return;
-      folder.name = newName;
-      saveConfig(); renderAdminSceneList();
-      saveBtn.textContent = '✅ 已儲存'; saveBtn.style.color = '#7eb87a';
-      setTimeout(function() { saveBtn.textContent = '💾 儲存名稱'; saveBtn.style.color = ''; }, 1500);
-    });
-
-    delBtn.addEventListener('click', function(e) {
-      e.stopPropagation();
-      if (delBtn.dataset.confirmed !== 'yes') {
-        delBtn.textContent = '確定刪除？';
-        delBtn.dataset.confirmed = 'yes';
-        setTimeout(function() {
-          if (delBtn.dataset.confirmed === 'yes') {
-            delBtn.textContent = '🗑 刪除'; delBtn.dataset.confirmed = '';
-          }
-        }, 2500);
-        return;
-      }
-      // 清除所有場景的這個資料夾
-      config.scenes.forEach(function(sc) { if (sc.folder === folder.id) sc.folder = ''; });
-      config.folders.splice(fi, 1);
-      saveConfig(); renderAdminSceneList();
-    });
-
-    var scCount = config.scenes.filter(function(sc) { return sc.folder === folder.id; }).length;
-    var info = document.createElement('div');
-    info.style.cssText = 'font-size:11px;color:#8a9088;margin-bottom:6px;';
-    info.textContent = '📁 ' + folder.name + '　含 ' + scCount + ' 個場景';
-
-    btnRow.appendChild(saveBtn);
-    btnRow.appendChild(delBtn);
-    row.appendChild(info);
-    row.appendChild(nameInput);
-    row.appendChild(btnRow);
-    el.appendChild(row);
-  });
-
-  var divEl = document.createElement('div');
-  divEl.style.cssText = 'height:1px;background:rgba(255,255,255,.05);margin:10px 0 8px;';
-  el.appendChild(divEl);
-}
-
 function renderAdminSceneList() {
-  renderFolderMgmt();
   var el = ge('scenes-list');
   if (!config.scenes.length) {
     el.innerHTML = '<div class="empty"><div class="empty-icon">🗺</div>尚無場景，請在上方新增</div>';
@@ -1881,6 +1763,9 @@ ge('hs-place-btn').addEventListener('click', function() {
   populateHsTargets();
   ge('hs-form').classList.add('show');
   editingHsId = null;
+  var reposRow = ge('hs-repos-row');
+  if (reposRow) reposRow.remove();
+  exitEditMode();
   ge('hs-phi').value = ''; ge('hs-theta').value = '';
   ge('hs-save-btn').disabled = true;
   ge('admin').classList.remove('open');
@@ -1892,6 +1777,9 @@ ge('hs-cancel-btn').addEventListener('click', function() {
   ge('hs-form').classList.remove('show');
   ge('place-banner').style.display = 'none';
   editingHsId = null;
+  var reposRow = ge('hs-repos-row');
+  if (reposRow) reposRow.remove();
+  exitEditMode();
 });
 ge('hs-save-btn').addEventListener('click', function() {
   var phi = parseFloat(ge('hs-phi').value);
@@ -1924,6 +1812,8 @@ ge('hs-save-btn').addEventListener('click', function() {
   ge('hs-form').classList.remove('show');
   editingHsId = null;
   ge('hs-label').value = '';
+  var reposRow = ge('hs-repos-row');
+  if (reposRow) reposRow.remove();
   exitEditMode();
   ge('admin').classList.add('open');
   ge('btn-admin').classList.add('active');
@@ -1990,21 +1880,9 @@ function renderAdminHotspotList() {
         reposRow = document.createElement('div');
         reposRow.id = 'hs-repos-row';
         reposRow.style.cssText = 'margin-bottom:8px;';
-        var reposBtn = document.createElement('button');
-        reposBtn.className = 'btn-add';
-        reposBtn.style.cssText = 'width:100%;padding:9px;border-color:rgba(196,163,90,.4);color:#c4a35a;font-size:12px;';
-        reposBtn.textContent = '🎯 重新點擊畫面設定位置';
-        reposBtn.addEventListener('click', function() {
-          ge('hs-form').classList.remove('show');
-          exitEditMode();
-          startPlacing();
-          ge('admin').classList.remove('open');
-          ge('btn-admin').classList.remove('active');
-        });
         var dragHint = document.createElement('div');
-        dragHint.style.cssText = 'font-size:11px;color:#c4a35a;text-align:center;margin-top:5px;padding:4px;background:rgba(196,163,90,.06);border-radius:6px;';
-        dragHint.textContent = '✥ 或直接在 360° 畫面拖曳點位調整位置';
-        reposRow.appendChild(reposBtn);
+        dragHint.style.cssText = 'font-size:12px;color:#c4a35a;text-align:center;padding:8px;background:rgba(196,163,90,.06);border:1px solid rgba(196,163,90,.18);border-radius:8px;';
+        dragHint.textContent = '直接拖曳畫面上的傳送點即可調整位置';
         reposRow.appendChild(dragHint);
         ge('hs-form').insertBefore(reposRow, ge('hs-form').children[1]);
       }
