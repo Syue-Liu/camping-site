@@ -104,7 +104,7 @@
     .cmodal-divider{height:1px;background:var(--border);margin-bottom:1.25rem;}
     .desc-block{margin-bottom:1.1rem;}
     .desc-title{font-size:13px;font-weight:600;letter-spacing:0.05em;margin-bottom:0.4rem;}
-    .desc-text{font-size:14px;color:var(--muted);line-height:1.8;}
+    .desc-text{font-size:14px;color:var(--muted);line-height:1.8;white-space:pre-line;}
     /* Inline 360° viewer */
     .pano-wrap{position:relative;width:100%;border-radius:8px;overflow:hidden;background:#0a0f0a;margin-top:1.25rem;user-select:none;}
     .pano-wrap canvas{display:block;width:100% !important;height:100% !important;cursor:grab;touch-action:none;}
@@ -1155,6 +1155,20 @@
         return desc.split('|||').map(function(p){
           try{var o=JSON.parse(p);return'<div class="desc-block">'+(o.title?'<div class="desc-title" style="color:'+ac+'">'+hl(o.title,kw,g)+'</div>':'')+(o.text?'<div class="desc-text">'+hl(o.text,kw,g)+'</div>':'')+'</div>';}
           catch(e){return p.trim()?'<div class="desc-block"><div class="desc-text">'+hl(p,kw,g)+'</div></div>':'';}
+        }).join('');
+      }
+      if(desc.indexOf('\n') >= 0 || desc.indexOf('【') >= 0){
+        return desc.split(/\n{2,}/).map(function(block){
+          block = block.trim();
+          if(!block) return '';
+          var lines = block.split('\n');
+          var first = lines[0].trim();
+          var isTitle = /^【[^】]+】$/.test(first);
+          if(isTitle){
+            var body = lines.slice(1).join('\n').trim();
+            return '<div class="desc-block"><div class="desc-title" style="color:'+ac+'">'+hl(first,kw,g)+'</div>'+(body?'<div class="desc-text">'+hl(body,kw,g)+'</div>':'')+'</div>';
+          }
+          return '<div class="desc-block"><div class="desc-text">'+hl(block,kw,g)+'</div></div>';
         }).join('');
       }
       var hasEmoji=/\ud83c[\ud000-\udfff]|\ud83d[\ud000-\udfff]|\ud83e[\ud000-\udfff]|[\u2600-\u27ff]/.test(desc);

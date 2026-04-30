@@ -122,6 +122,11 @@ textarea.form-input{resize:vertical;min-height:90px;}
 .desc-block-editor input,.desc-block-editor textarea{width:100%;padding:7px 10px;background:var(--bg);border:1px solid var(--border);border-radius:8px;font-size:13px;color:var(--text);font-family:inherit;margin-bottom:6px;box-sizing:border-box;}
 .desc-block-editor input:focus,.desc-block-editor textarea:focus{outline:none;border-color:var(--accent);}
 .desc-block-editor textarea{resize:vertical;min-height:70px;margin-bottom:0;}
+.desc-editor-text{min-height:220px;resize:vertical;line-height:1.75;font-size:15px;}
+.desc-helper{font-size:12px;color:var(--muted);line-height:1.7;margin-top:6px;}
+.desc-toolbar{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;}
+.desc-tool-btn{padding:7px 12px;border:1px solid var(--border);border-radius:8px;background:var(--surface2);color:var(--muted);font-size:12px;cursor:pointer;font-family:inherit;}
+.desc-tool-btn:hover{border-color:var(--accent);color:var(--accent);}
 .btn-add-block{width:100%;margin-top:8px;padding:8px;border:1px dashed var(--border);border-radius:var(--radius);background:transparent;color:var(--muted);cursor:pointer;font-size:13px;font-family:inherit;}
 .btn-add-block:hover{border-color:var(--accent);color:var(--accent);}
 .settings-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:1.5rem;margin-bottom:1.5rem;}
@@ -361,9 +366,15 @@ textarea.form-input{resize:vertical;min-height:90px;}
     </div>
     <div class="form-group"><label class="form-label">標籤（逗號分隔）</label><input class="form-input" type="text" id="f-tags" placeholder="例：山景,親子,需預約"></div>
     <div class="form-group">
-      <label class="form-label">介紹文字（分段編輯）</label>
-      <div id="desc-blocks"></div>
-      <button type="button" class="btn-add-block" id="add-block-btn">+ 新增區塊</button>
+      <label class="form-label">介紹文字</label>
+      <textarea class="form-input desc-editor-text" id="f-desc-text" placeholder="直接輸入整篇介紹。&#10;&#10;空一行會分段。&#10;小標題可以寫成：【交通建議】、【住宿】、【心得】"></textarea>
+      <div class="desc-helper">可直接像寫筆記一樣編輯；空一行會分段，使用【小標題】開頭會在前台顯示成段落標題。</div>
+      <div class="desc-toolbar">
+        <button type="button" class="desc-tool-btn" id="desc-format-btn">整理空行</button>
+        <button type="button" class="desc-tool-btn" id="desc-heading-btn">插入小標題</button>
+      </div>
+      <div id="desc-blocks" style="display:none;"></div>
+      <button type="button" class="btn-add-block" id="add-block-btn" style="display:none;">+ 新增區塊</button>
       <input type="hidden" id="f-desc">
     </div>
 
@@ -631,6 +642,12 @@ function updateStats() {
   ge('s-360').textContent = campingData.concat(motoData, domesticData, overseasData).filter(function(p) { return p.pano360; }).length;
 }
 
+function descPreview(desc) {
+  if (!desc) return '';
+  var text = descToEditableText(desc).replace(/\s+/g, ' ').trim();
+  return text ? text.substring(0, 80) + (text.length > 80 ? '...' : '') : '';
+}
+
 // ── 清單渲染（使用 data-* 屬性避免引號衝突）─────────────
 function renderList(type) {
   var dataMap = {camping:campingData, moto:motoData, domestic:domesticData, overseas:overseasData};
@@ -647,7 +664,7 @@ function renderList(type) {
     var tags = p.tags ? p.tags.split(',').map(function(t) {
       return '<span class="badge-tag' + (g ? ' gold' : '') + '">' + t.trim() + '</span>';
     }).join('') : '';
-    var desc = p.desc ? p.desc.substring(0, 80) + '...' : '';
+    var desc = descPreview(p.desc);
 
     var panoIcon = p.pano360 ? ' · <span style="color:#7eb87a">🌐 360°</span>' : '';
     var ytIcon = imgP.youtube ? ' · <span style="color:#ff4444">▶ YT</span>' : '';
@@ -727,6 +744,7 @@ function resetForm() {
   ['f-name', 'f-loc', 'f-date', 'f-tags', 'f-youtube', 'f-ig', 'f-pano360'].forEach(function(id) {
     ge(id).value = '';
   });
+  ge('f-desc-text').value = '';
   var t = ge('cal-trigger-text');
   t.textContent = '點擊選擇日期或區間';
   t.className = 'cal-placeholder';
@@ -834,6 +852,8 @@ function addBlock(title, text) {
 }
 
 function getDescValue() {
+  var article = ge('f-desc-text') ? ge('f-desc-text').value.trim() : '';
+  if (article) return normalizeDescText(article);
   var blocks = document.querySelectorAll('#desc-blocks .desc-block-editor');
   if (!blocks.length) return '';
   var arr = [];
@@ -848,6 +868,7 @@ function getDescValue() {
 function loadDescBlocks(desc) {
   ge('desc-blocks').innerHTML = '';
   blockCount = 0;
+  if (ge('f-desc-text')) ge('f-desc-text').value = descToEditableText(desc);
   if (!desc) return;
   if (desc.includes('|||') || desc.startsWith('{"')) {
     desc.split('|||').forEach(function(p) {
@@ -857,6 +878,37 @@ function loadDescBlocks(desc) {
   } else {
     addBlock('', desc);
   }
+}
+
+function descToEditableText(desc) {
+  if (!desc) return '';
+  if (desc.includes('|||') || desc.startsWith('{')) {
+    return desc.split('|||').map(function(p) {
+      try {
+        var o = JSON.parse(p);
+        return (o.title ? o.title + '\n' : '') + (o.text || '');
+      } catch(e) {
+        return p.trim();
+      }
+    }).filter(Boolean).join('\n\n');
+  }
+  return desc;
+}
+
+function normalizeDescText(text) {
+  return String(text || '')
+    .replace(/\r\n/g, '\n')
+    .replace(/[ \t]+\n/g, '\n')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+}
+
+function insertAtCursor(el, text) {
+  var start = el.selectionStart || 0;
+  var end = el.selectionEnd || 0;
+  el.value = el.value.slice(0, start) + text + el.value.slice(end);
+  el.focus();
+  el.selectionStart = el.selectionEnd = start + text.length;
 }
 
 // ── img 欄位解包（相容舊資料與新 JSON 格式）────────────
@@ -1293,6 +1345,15 @@ ge('qr-file').addEventListener('change', function() { handleQrImg(this); });
 
 // 分段編輯
 ge('add-block-btn').addEventListener('click', function() { addBlock(); });
+ge('desc-format-btn').addEventListener('click', function() {
+  ge('f-desc-text').value = normalizeDescText(ge('f-desc-text').value);
+  toast('介紹文字已整理');
+});
+ge('desc-heading-btn').addEventListener('click', function() {
+  var el = ge('f-desc-text');
+  var prefix = el.value && el.selectionStart > 0 && el.value.charAt(el.selectionStart - 1) !== '\n' ? '\n\n' : '';
+  insertAtCursor(el, prefix + '【小標題】\n');
+});
 
 // 帳號設定
 ge('save-user-btn').addEventListener('click', saveUser);
