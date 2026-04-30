@@ -805,6 +805,7 @@ async function pushToSheets(type) {
     var _dm2 = {camping:campingData, moto:motoData, domestic:domesticData, overseas:overseasData};
     var data = _dm2[type] || [];
     await fetch(API, { method: 'POST', body: JSON.stringify({ sheet: type, data: data }) });
+    try { localStorage.removeItem('syue_travel_data_v2'); } catch(e) {}
     toast('已儲存！');
   } catch (e) {
     toast('儲存失敗', 1);

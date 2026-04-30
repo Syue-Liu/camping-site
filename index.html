@@ -1528,7 +1528,6 @@
 
     var ALL_TYPES = ['camping','moto','domestic','overseas'];
     var DATA_CACHE_KEY = 'syue_travel_data_v2';
-    var DATA_CACHE_MAX_AGE = 1000 * 60 * 60 * 6;
 
     function getCachedData(){
       try {
@@ -1593,7 +1592,6 @@
 
     async function init(){
       var cached = getCachedData();
-      var hasFreshCache = cached && (Date.now() - (cached.time || 0) < DATA_CACHE_MAX_AGE);
       if (cached) applySiteData(cached.data);
 
       if (!cached) {
@@ -1605,7 +1603,6 @@
         } catch(e) {}
       }
 
-      if (hasFreshCache) return;
       try{
         var fresh = await fetchFreshData();
         saveCachedData(fresh);
