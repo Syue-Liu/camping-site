@@ -407,39 +407,6 @@
   <footer>© SYUE &amp; LYNN · 用 Osmo 360 記錄每一個足跡</footer>
 
   <script>
-    // ── Hamburger Nav ────────────────────────────────────────────────────────
-
-    function closeNav(){
-      document.getElementById('nav-toggle').classList.remove('open');
-      document.getElementById('nav-links').classList.remove('open');
-    }
-    function toggleNav(){
-      var tg=document.getElementById('nav-toggle');
-      var nl=document.getElementById('nav-links');
-      var isOpen=nl.classList.toggle('open');
-      tg.classList.toggle('open');
-      // max-height 做法不需要鎖住 body，選單不會全螢幕
-    }
-    // 點選 nav 連結後自動關閉選單 + 補正 sticky nav 高度
-    document.querySelectorAll('.nav-links a').forEach(function(a){
-      a.addEventListener('click',function(){ closeNav(); });
-    });
-
-    // ── Hamburger Nav ─────────────────────────────────────────────────────
-
-    function closeNav(){
-      document.getElementById('nav-toggle').classList.remove('open');
-      document.getElementById('nav-links').classList.remove('open');
-    }
-    function toggleNav(){
-      var tg=document.getElementById('nav-toggle');
-      var nl=document.getElementById('nav-links');
-      var isOpen=nl.classList.toggle('open');
-      tg.classList.toggle('open');
-      // max-height 做法不需要鎖住 body，選單不會全螢幕
-    }
-
-
     // ── Hero 輪播（命名函式，方便 loadSocial 重新初始化）────────────────────
     var _heroTimer = null, _heroCur = 0;
     function initHeroSlideshow() {
@@ -1085,43 +1052,26 @@
       }
     };
 
-    // Called when user clicks load button
-    function initPano360(id) {
-      var wrap = document.getElementById(id);
-      if (!wrap) return;
-      var configUrl = wrap.dataset.configUrl;
-      var imageUrl = wrap.dataset.imageUrl;
-      var gold = wrap.dataset.gold === 'true';
-      wrap.innerHTML = '<div class="pano-loading"><div class="pano-ring"></div><div class="pano-loading-text">初始化中...</div></div>';
-      wrap.style.height = '340px';
 
-      function startWithConfig(cfg) {
-        if (_panoViewers[id]) _panoViewers[id].destroy();
-        _panoViewers[id] = new InlinePano(id, cfg, gold);
-      }
-
-      if (configUrl) {
-        fetch(configUrl)
-          .then(function(r) { return r.json(); })
-          .then(startWithConfig)
-          .catch(function() {
-            wrap.innerHTML = '<div style="padding:2rem;text-align:center;color:#e05c5c;font-size:13px;">⚠️ 無法載入設定，請確認 GitHub 網址正確且設為 Public</div>';
-          });
-      } else if (imageUrl) {
-        startWithConfig({ scenes: [{ id:'s1', name:'360° 環景', imageUrl: imageUrl, hotspots:[] }] });
-      }
+    // ── HTML escape（防止表單資料中的 HTML 被當成程式碼執行）──
+    function esc(t){
+      return String(t==null?'':t).replace(/[&<>"']/g,function(c){
+        return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+      });
     }
 
-
     function hl(t,kw,g){
-      if(!kw||!t)return String(t||'');
-      return String(t).replace(new RegExp(kw.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'),'gi'),function(m){return'<span class="hl'+(g?' gold':'')+'">'+m+'</span>';});
+      var safe=esc(t);
+      if(!kw||!safe)return safe;
+      var pat=esc(kw).replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+      return safe.replace(new RegExp(pat,'gi'),function(m){return'<span class="hl'+(g?' gold':'')+'">'+m+'</span>';});
     }
 
     function matchKw(p,kw){
       if(!kw)return true;
       const q=kw.toLowerCase();
-      return['name','location','date','tags','desc'].some(function(k){return(p[k]||'').toLowerCase().includes(q);});
+      if(['name','location','date','tags'].some(function(k){return(p[k]||'').toLowerCase().includes(q);}))return true;
+      return plainText(p.desc||'').toLowerCase().includes(q);
     }
 
     function dataFor(type){
@@ -1264,12 +1214,19 @@
     function setLoc(t,loc){state[t].loc=loc;pageState[t]=PAGE_SIZE;buildFilter(t);render(t);}
     function searchId(t){return{camping:'camp-search',moto:'moto-search',domestic:'domestic-search',overseas:'overseas-search'}[t]||t+'-search';}
     function clearId(t){return{camping:'camp-clear',moto:'moto-clear',domestic:'domestic-clear',overseas:'overseas-clear'}[t]||t+'-clear';}
+    var _searchTimers={};
     function onSearch(t){
-      state[t].kw=document.getElementById(searchId(t)).value.trim();
-      document.getElementById(clearId(t)).className='s-clear'+(state[t].kw?' show':'');
-      pageState[t]=PAGE_SIZE;buildFilter(t);render(t);
+      // 即時更新清除按鈕，但列表重繪延遲 180ms（debounce），打字更順
+      var kw=document.getElementById(searchId(t)).value.trim();
+      document.getElementById(clearId(t)).className='s-clear'+(kw?' show':'');
+      clearTimeout(_searchTimers[t]);
+      _searchTimers[t]=setTimeout(function(){
+        state[t].kw=kw;
+        pageState[t]=PAGE_SIZE;buildFilter(t);render(t);
+      },180);
     }
     function clearSearch(t){
+      clearTimeout(_searchTimers[t]);
       document.getElementById(searchId(t)).value='';
       state[t].kw='';
       document.getElementById(clearId(t)).className='s-clear';
@@ -1394,7 +1351,7 @@
         // 標籤
         var tagsHtml=p.tags
           ?'<div class="card-tags">'+p.tags.split(',').map(function(t){
-              return'<span class="badge badge-'+(g?'gold':'green')+'">'+t.trim()+'</span>';
+              return'<span class="badge badge-'+(g?'gold':'green')+'">'+esc(t.trim())+'</span>';
             }).join('')+'</div>'
           :'';
         // 展開內容
@@ -1437,7 +1394,7 @@
           thumbHtml+
           '<div class="card-body">'+
             '<div class="card-title">'+hl(p.name,kw,g)+'</div>'+
-            '<div class="card-meta">'+hl(p.location||'',kw,g)+(p.date?' · '+p.date:'')+'</div>'+
+            '<div class="card-meta">'+hl(p.location||'',kw,g)+(p.date?' · '+esc(p.date):'')+'</div>'+
             tagsHtml+
             (hasExpand?'<div class="card-hint">點擊查看詳情 →</div>':'')+
           '</div>'+
@@ -1616,8 +1573,12 @@
 
       try{
         var fresh = await fetchFreshData();
+        var freshStr = JSON.stringify(fresh);
+        // 資料沒變就不重繪，避免畫面閃一下
+        if (!cached || JSON.stringify(cached.data) !== freshStr) {
+          applySiteData(fresh);
+        }
         saveCachedData(fresh);
-        applySiteData(fresh);
       }catch(e){
         if (!cached) {
           ALL_TYPES.forEach(function(t){

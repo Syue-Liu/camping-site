@@ -438,7 +438,7 @@ canvas.edit-mode{cursor:default;}
         <div style="font-size:11px;color:#7eb87a;font-weight:700;letter-spacing:.1em;margin-bottom:10px;">STEP 1 — GitHub 設定</div>
         <div class="fg"><label class="fl">使用者名稱</label><input class="fi" id="gh-user" placeholder="例：Syue-Liu"></div>
         <div class="fg"><label class="fl">Repository</label><input class="fi" id="gh-repo" placeholder="例：360-images"></div>
-        <div class="fg" style="margin-bottom:6px;"><label class="fl">Personal Access Token</label><input class="fi" type="password" id="gh-token" placeholder="ghp_xxxxxxxx"></div>
+        <div class="fg" style="margin-bottom:6px;"><label class="fl">Personal Access Token</label><input class="fi" type="password" id="gh-token" placeholder="ghp_xxxxxxxx"><div style="font-size:11px;color:#8a9088;margin-top:4px;">建議用 Fine-grained token 只授權此 Repo，並設定到期日</div></div>
         <div style="font-size:11px;color:#4a5448;margin-bottom:8px;">需開啟 repo 權限。<a href="https://github.com/settings/tokens/new" target="_blank" style="color:#7eb87a;">點此建立 ↗</a></div>
         <button class="btn-green" id="gh-save-btn" style="width:100%;padding:8px;border-radius:8px;">💾 儲存設定</button>
         <div id="gh-status" style="margin-top:6px;"></div>
@@ -501,7 +501,7 @@ canvas.edit-mode{cursor:default;}
 (function() {
 'use strict';
 
-// ── 安全防護：確保 loading 最多顯示 8 秒 ────────────────
+// ── 安全防護：確保 loading 最多顯示 4 秒 ────────────────
 var loadingTimeout = setTimeout(function() {
   hideLoading();
 }, 4000);

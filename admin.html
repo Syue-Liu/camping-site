@@ -148,6 +148,14 @@ textarea.form-input{resize:vertical;min-height:90px;}
 .social-preview{display:flex;gap:10px;flex-wrap:wrap;margin-top:0.75rem;}
 .social-preview-tag{font-size:12px;padding:4px 12px;border-radius:20px;background:var(--surface2);color:var(--muted);border:1px solid var(--border);}
 .social-preview-tag.active{border-color:var(--accent);color:var(--accent);}
+.tag-suggest-wrap{margin-top:8px;}
+.tag-suggest-title{font-size:11px;color:var(--muted);margin-bottom:6px;}
+.tag-suggest-list{display:flex;gap:6px;flex-wrap:wrap;}
+.tag-chip{padding:5px 10px;border:1px solid var(--border);border-radius:999px;background:var(--surface2);color:var(--muted);font-size:12px;cursor:pointer;font-family:inherit;line-height:1.2;}
+.tag-chip:hover{border-color:var(--accent);color:var(--accent);}
+.tag-chip.active{background:rgba(126,184,122,.18);border-color:var(--accent);color:var(--accent);font-weight:600;}
+.tag-chip.duplicate{border-color:var(--accent2);color:var(--accent2);}
+.tag-suggest-empty{font-size:12px;color:#4a5448;}
 </style>
 </head>
 <body>
@@ -290,7 +298,7 @@ textarea.form-input{resize:vertical;min-height:90px;}
           <div class="current-info" id="pano-gh-status">尚未設定</div>
           <div class="form-group"><label class="form-label">使用者名稱</label><input class="form-input" type="text" id="p-gh-user" placeholder="例：syuelynn"></div>
           <div class="form-group"><label class="form-label">Repository 名稱</label><input class="form-input" type="text" id="p-gh-repo" placeholder="例：360-images"></div>
-          <div class="form-group"><label class="form-label">Personal Access Token</label><input class="form-input" type="password" id="p-gh-token" placeholder="ghp_xxxxxxxxxxxxxxxx"></div>
+          <div class="form-group"><label class="form-label">Personal Access Token</label><input class="form-input" type="password" id="p-gh-token" placeholder="ghp_xxxxxxxxxxxxxxxx"><div style="font-size:11px;color:var(--muted);margin-top:4px;">建議使用 Fine-grained token，只授權這一個 Repo 的 Contents 讀寫權限，並設定到期日</div></div>
           <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:4px;">
             <button class="btn-save-set" id="p-gh-save-btn">💾 儲存設定</button>
             <button class="btn-save-set" style="background:var(--accent2);" id="p-open-viewer-btn">🔗 開啟 360° 工具</button>
@@ -364,7 +372,14 @@ textarea.form-input{resize:vertical;min-height:90px;}
       <button type="button" class="cal-trigger" id="cal-trigger-btn"><span id="cal-trigger-text" class="cal-placeholder">點擊選擇日期或區間</span><span>📅</span></button>
       <input type="hidden" id="f-date">
     </div>
-    <div class="form-group"><label class="form-label">標籤（逗號分隔）</label><input class="form-input" type="text" id="f-tags" placeholder="例：山景,親子,需預約"></div>
+    <div class="form-group">
+      <label class="form-label">標籤（逗號分隔）</label>
+      <input class="form-input" type="text" id="f-tags" placeholder="例：山景,親子,需預約">
+      <div class="tag-suggest-wrap">
+        <div class="tag-suggest-title">已用過的標籤，點一下加入或移除</div>
+        <div class="tag-suggest-list" id="tag-suggestions"></div>
+      </div>
+    </div>
     <div class="form-group">
       <label class="form-label">介紹文字</label>
       <textarea class="form-input desc-editor-text" id="f-desc-text" placeholder="直接輸入整篇介紹。&#10;&#10;空一行會分段。&#10;小標題可以寫成：【交通建議】、【住宿】、【心得】"></textarea>
@@ -451,6 +466,9 @@ var DEFAULT_ACC = { username: 'syuelynn', password: 'syuelynn2025' };
 
 // ── 常數 ─────────────────────────────────────────────────
 var API = 'https://script.google.com/macros/s/AKfycbzPguC2eh8JP1x1GAOaqodo9r4nb1BPEE4JayJoQxBF-31jZTLl02pIj1ADQ8SGyHxcDw/exec';
+// 寫入保護用的密語：在 Apps Script 的 doPost 中比對相同字串即可阻擋陌生人改資料。
+// 留空 = 不啟用（與現有後端相容）。啟用方式見「優化說明.md」。
+var API_TOKEN = '';
 var CLOUDINARY_CLOUD = 'ddcalhl1s';
 var CLOUDINARY_PRESET = 'g3gyuyoi';
 var RECOVERY_EMAIL = 'brian17084@icloud.com'; // 固定緊急聯絡信箱
@@ -466,30 +484,53 @@ function toast(msg, err) {
 function ge(id) { return document.getElementById(id); }
 
 // ── 帳號管理 ─────────────────────────────────────────────
+// 注意：密碼以 SHA-256 雜湊存在 localStorage，不再保存明文。
+// 但前端登入僅能防「路人誤入」，真正的資料保護要靠 Apps Script 端驗證（見優化說明）。
+async function sha256(str) {
+  if (window.crypto && crypto.subtle) {
+    var buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+    return Array.prototype.map.call(new Uint8Array(buf), function(b) {
+      return ('0' + b.toString(16)).slice(-2);
+    }).join('');
+  }
+  return 'plain:' + str; // 極舊瀏覽器不支援 crypto.subtle 時的退路
+}
+
 function getAcc() {
   try {
     var s = localStorage.getItem('sl_acc');
     if (s) {
       var p = JSON.parse(s);
-      if (p && p.username && p.password) return p;
+      if (p && p.username) return p; // 可能只改了帳號、密碼仍為預設
     }
   } catch (e) {
     localStorage.removeItem('sl_acc');
   }
-  return { username: DEFAULT_ACC.username, password: DEFAULT_ACC.password };
+  return { username: DEFAULT_ACC.username };
 }
 
 function setAcc(obj) {
   localStorage.setItem('sl_acc', JSON.stringify(obj));
 }
 
+// 驗證密碼；若偵測到舊版明文儲存，驗證成功後自動升級為雜湊
+async function verifyPw(acc, pw) {
+  if (acc.pwHash) return (await sha256(pw)) === acc.pwHash;
+  if (acc.password) {
+    if (pw !== acc.password) return false;
+    setAcc({ username: acc.username, pwHash: await sha256(pw) });
+    return true;
+  }
+  return pw === DEFAULT_ACC.password; // 尚未自訂密碼，比對預設值
+}
+
 // ── 登入 / 登出 ──────────────────────────────────────────
-function doLogin() {
+async function doLogin() {
   var acc = getAcc();
   var u = ge('l-user').value.trim();
   var pw = ge('l-pw').value;
   ge('l-err').style.display = 'none';
-  if (u === acc.username && pw === acc.password) {
+  if (u === acc.username && await verifyPw(acc, pw)) {
     _loginFailCount = 0;
     ge('login-screen').style.display = 'none';
     ge('admin-screen').style.display = 'block';
@@ -536,13 +577,12 @@ function doForgotPw() {
   // 重置密碼
   localStorage.removeItem('sl_acc');
   var acc = getAcc();
-  // 開啟 mail app 寄通知
+  // 開啟 mail app 寄通知（不在信件中夾帶密碼明文）
   var sub = encodeURIComponent('Syue & Lynn 後台 — 密碼已重置');
   var body = encodeURIComponent(
-    '您的後台密碼已重置為預設值：\n\n' +
-    '帳號：' + acc.username + '\n' +
-    '密碼：' + acc.password + '\n\n' +
-    '請登入後立即前往「帳號設定」修改密碼。'
+    '您的後台密碼已重置為「預設帳密」。\n\n' +
+    '帳號：' + acc.username + '\n\n' +
+    '請使用預設密碼登入後，立即前往「帳號設定」修改密碼。'
   );
   window.location.href = 'mailto:' + RECOVERY_EMAIL + '?subject=' + sub + '&body=' + body;
   showLoginForm();
@@ -562,16 +602,15 @@ function saveUser() {
   setTimeout(doLogout, 1500);
 }
 
-function savePw() {
+async function savePw() {
   var acc = getAcc();
   var cur = ge('cur-pw').value;
   var nw = ge('new-pw').value;
   var cf = ge('cf-pw').value;
-  if (cur !== acc.password) { toast('目前密碼錯誤', 1); return; }
+  if (!(await verifyPw(acc, cur))) { toast('目前密碼錯誤', 1); return; }
   if (nw.length < 6) { toast('新密碼至少 6 個字元', 1); return; }
   if (nw !== cf) { toast('兩次密碼不一致', 1); return; }
-  acc.password = nw;
-  setAcc(acc);
+  setAcc({ username: acc.username, pwHash: await sha256(nw) });
   ['cur-pw', 'new-pw', 'cf-pw'].forEach(function(id) { ge(id).value = ''; });
   toast('密碼已更新，請重新登入');
   setTimeout(doLogout, 1500);
@@ -646,6 +685,80 @@ function descPreview(desc) {
   if (!desc) return '';
   var text = descToEditableText(desc).replace(/\s+/g, ' ').trim();
   return text ? text.substring(0, 80) + (text.length > 80 ? '...' : '') : '';
+}
+
+function splitTags(value) {
+  return String(value || '')
+    .split(',')
+    .map(function(t) { return t.trim(); })
+    .filter(Boolean);
+}
+
+function getTagPool(type) {
+  var dataMap = {camping:campingData, moto:motoData, domestic:domesticData, overseas:overseasData};
+  var seen = {};
+  function addFrom(list, score) {
+    (list || []).forEach(function(p) {
+      splitTags(p.tags).forEach(function(tag) {
+        var key = tag.toLowerCase();
+        if (!seen[key]) seen[key] = { tag: tag, count: 0, score: 0 };
+        seen[key].count++;
+        seen[key].score += score;
+      });
+    });
+  }
+  addFrom(dataMap[type], 10);
+  ['camping','moto','domestic','overseas'].forEach(function(t) {
+    if (t !== type) addFrom(dataMap[t], 1);
+  });
+  return Object.keys(seen).map(function(k) { return seen[k]; })
+    .sort(function(a,b) { return (b.score - a.score) || (b.count - a.count) || a.tag.localeCompare(b.tag, 'zh-Hant'); });
+}
+
+function setTags(tags) {
+  var unique = [];
+  var seen = {};
+  tags.forEach(function(tag) {
+    var key = tag.trim().toLowerCase();
+    if (!key || seen[key]) return;
+    seen[key] = true;
+    unique.push(tag.trim());
+  });
+  ge('f-tags').value = unique.join(',');
+  renderTagSuggestions();
+}
+
+function toggleTag(tag) {
+  var tags = splitTags(ge('f-tags').value);
+  var key = tag.toLowerCase();
+  var exists = tags.some(function(t) { return t.toLowerCase() === key; });
+  if (exists) tags = tags.filter(function(t) { return t.toLowerCase() !== key; });
+  else tags.push(tag);
+  setTags(tags);
+}
+
+function renderTagSuggestions() {
+  var el = ge('tag-suggestions');
+  if (!el) return;
+  var type = ge('e-type').value || curType;
+  var pool = getTagPool(type);
+  var selected = {};
+  splitTags(ge('f-tags').value).forEach(function(tag) { selected[tag.toLowerCase()] = true; });
+  if (!pool.length) {
+    el.innerHTML = '<div class="tag-suggest-empty">還沒有可建議的標籤</div>';
+    return;
+  }
+  el.innerHTML = '';
+  pool.slice(0, 32).forEach(function(item) {
+    var btn = document.createElement('button');
+    btn.type = 'button';
+    var active = !!selected[item.tag.toLowerCase()];
+    btn.className = 'tag-chip' + (active ? ' active' : '') + (item.count > 1 ? ' duplicate' : '');
+    btn.textContent = item.tag + (item.count > 1 ? ' ' + item.count : '');
+    btn.title = active ? '已加入，點擊移除' : '點擊加入標籤';
+    btn.addEventListener('click', function() { toggleTag(item.tag); });
+    el.appendChild(btn);
+  });
 }
 
 // ── 清單渲染（使用 data-* 屬性避免引號衝突）─────────────
@@ -732,6 +845,7 @@ function openModal(type, idx) {
     if (imgParsed.img) { setImgPreview(imgParsed.img, 'upload-zone', 'upload-replace'); }
     loadDescBlocks(p.desc || '');
   }
+  renderTagSuggestions();
   ge('modal-overlay').classList.add('open');
 }
 
@@ -755,6 +869,7 @@ function resetForm() {
   currentImgUrl = null;
   calR1 = null;
   calR2 = null;
+  renderTagSuggestions();
 }
 
 async function savePlace() {
@@ -773,7 +888,7 @@ async function savePlace() {
     name:     name,
     location: ge('f-loc').value.trim(),
     date:     ge('f-date').value.trim(),
-    tags:     ge('f-tags').value.trim(),
+    tags:     splitTags(ge('f-tags').value).join(','),
     pano360:  pano360Val,
     desc:     getDescValue(),
 
@@ -804,7 +919,7 @@ async function pushToSheets(type) {
   try {
     var _dm2 = {camping:campingData, moto:motoData, domestic:domesticData, overseas:overseasData};
     var data = _dm2[type] || [];
-    await fetch(API, { method: 'POST', body: JSON.stringify({ sheet: type, data: data }) });
+    await fetch(API, { method: 'POST', body: JSON.stringify({ sheet: type, data: data, token: API_TOKEN }) });
     try { localStorage.removeItem('syue_travel_data_v2'); } catch(e) {}
     toast('已儲存！');
   } catch (e) {
@@ -1015,7 +1130,7 @@ async function saveSocial() {
   try {
     var res = await fetch(API, {
       method: 'POST',
-      body: JSON.stringify({ sheet: 'social', data: [{ data: JSON.stringify(obj) }] })
+      body: JSON.stringify({ sheet: 'social', data: [{ data: JSON.stringify(obj) }], token: API_TOKEN })
     });
     // Apps Script POST 成功會回傳 JSON
     var json = await res.json().catch(function(){ return null; });
@@ -1346,6 +1461,8 @@ ge('qr-file').addEventListener('change', function() { handleQrImg(this); });
 
 // 分段編輯
 ge('add-block-btn').addEventListener('click', function() { addBlock(); });
+ge('f-tags').addEventListener('input', renderTagSuggestions);
+ge('f-tags').addEventListener('blur', function() { setTags(splitTags(ge('f-tags').value)); });
 ge('desc-format-btn').addEventListener('click', function() {
   ge('f-desc-text').value = normalizeDescText(ge('f-desc-text').value);
   toast('介紹文字已整理');
