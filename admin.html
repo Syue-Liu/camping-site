@@ -650,8 +650,15 @@ function showPage(name) {
 // ── 資料 ─────────────────────────────────────────────────
 var campingData = [], motoData = [], domesticData = [], overseasData = [];
 var curType = 'camping', editIdx = null, currentImgUrl = null;
+var placesLoaded = false;
+var _sheetSaving = false;
 
-function safeJson(r) { return r.ok ? r.json().catch(function(){return[];}) : []; }
+async function safeJson(r) {
+  if (!r.ok) throw new Error('HTTP ' + r.status);
+  var data = await r.json();
+  if (!Array.isArray(data)) throw new Error('資料格式不正確');
+  return data;
+}
 
 async function loadAll() {
   try {
@@ -665,6 +672,7 @@ async function loadAll() {
     motoData     = Array.isArray(results[1]) ? results[1] : [];
     domesticData = Array.isArray(results[2]) ? results[2] : [];
     overseasData = Array.isArray(results[3]) ? results[3] : [];
+    placesLoaded = true;
     updateStats();
     renderList('camping'); renderList('moto');
     renderList('domestic'); renderList('overseas');
@@ -873,6 +881,8 @@ function resetForm() {
 }
 
 async function savePlace() {
+  if (_sheetSaving) return;
+  if (!placesLoaded) { toast('資料尚未成功載入，請重新登入後再試', 1); return; }
   var name = ge('f-name').value.trim();
   if (!name) { toast('請填寫地點名稱', 1); return; }
   var type = ge('e-type').value || curType;
@@ -895,36 +905,76 @@ async function savePlace() {
     img:      imgField
   };
   var _dm = {camping:campingData, moto:motoData, domestic:domesticData, overseas:overseasData};
-  var arr = _dm[type] || [];
+  var original = _dm[type];
+  if (!original) return;
+  var arr = original.slice();
   if (editIdx !== null) arr[editIdx] = place; else arr.push(place);
-  await pushToSheets(type);
+  if (!await pushToSheets(type, arr)) return;
+  original.splice.apply(original, [0, original.length].concat(arr));
   renderList(type);
   updateStats();
   closeModal();
 }
 
 async function delPlace(type, idx) {
+  if (_sheetSaving) return;
+  if (!placesLoaded) { toast('資料尚未成功載入，請重新登入後再試', 1); return; }
   if (!confirm('確定要刪除？')) return;
-  if (type === 'camping') campingData.splice(idx, 1);
-  else if (type === 'moto') motoData.splice(idx, 1);
-  else if (type === 'domestic') domesticData.splice(idx, 1);
-  else if (type === 'overseas') overseasData.splice(idx, 1);
-  await pushToSheets(type);
+  var dataMap = {camping:campingData, moto:motoData, domestic:domesticData, overseas:overseasData};
+  var original = dataMap[type];
+  if (!original || idx < 0 || idx >= original.length) return;
+  var next = original.slice();
+  next.splice(idx, 1);
+  if (!await pushToSheets(type, next)) return;
+  original.splice(idx, 1);
   renderList(type);
   updateStats();
 }
 
-async function pushToSheets(type) {
+async function writeSheetData(type, data) {
+  var res = await fetch(API, {
+    method: 'POST',
+    body: JSON.stringify({ sheet: type, data: data, token: API_TOKEN })
+  });
+  if (!res.ok) throw new Error('HTTP ' + res.status);
+  var result;
+  try { result = await res.json(); }
+  catch(e) { throw new Error('伺服器回應無法確認，請稍後重試'); }
+  if (!result || typeof result !== 'object' || Array.isArray(result)) {
+    throw new Error('伺服器回應無法確認，請稍後重試');
+  }
+  var status = String(result.status || result.result || '').toLowerCase();
+  if (result.error || result.success === false || result.ok === false ||
+      ['error', 'failed', 'failure', 'unauthorized', 'forbidden'].indexOf(status) !== -1) {
+    throw new Error(typeof result.error === 'string' ? result.error : '伺服器未接受儲存');
+  }
+  var confirmed = result.success === true || result.ok === true || status === 'success' || status === 'ok';
+  if (!confirmed) {
+    // 相容舊版後端：沒有明確成功旗標時，重新讀取並核對實際寫入內容。
+    var saved = await fetch(API + '?sheet=' + encodeURIComponent(type) + '&t=' + Date.now(), { cache: 'no-store' }).then(safeJson);
+    confirmed = saved.length === data.length && data.every(function(row, i) {
+      return saved[i] && Object.keys(row).every(function(key) {
+        return String(saved[i][key] == null ? '' : saved[i][key]) === String(row[key] == null ? '' : row[key]);
+      });
+    });
+  }
+  if (!confirmed) throw new Error('尚未確認資料已儲存，請稍後重試');
+  try { localStorage.removeItem('syue_travel_data_v2'); } catch(e) {}
+}
+
+async function pushToSheets(type, data) {
+  if (_sheetSaving) return false;
+  _sheetSaving = true;
   ge('saving-mask').classList.add('show');
   try {
-    var _dm2 = {camping:campingData, moto:motoData, domestic:domesticData, overseas:overseasData};
-    var data = _dm2[type] || [];
-    await fetch(API, { method: 'POST', body: JSON.stringify({ sheet: type, data: data, token: API_TOKEN }) });
-    try { localStorage.removeItem('syue_travel_data_v2'); } catch(e) {}
+    await writeSheetData(type, data);
     toast('已儲存！');
+    return true;
   } catch (e) {
-    toast('儲存失敗', 1);
+    toast('儲存未確認，已保留原內容：' + e.message, 1);
+    return false;
   } finally {
+    _sheetSaving = false;
     ge('saving-mask').classList.remove('show');
   }
 }
@@ -1119,6 +1169,7 @@ async function loadSocialForm() {
 }
 
 async function saveSocial() {
+  if (_sheetSaving) return false;
   var obj = {
     fb: ge('s-fb').value.trim(),
     ig: ge('s-ig').value.trim(),
@@ -1126,22 +1177,17 @@ async function saveSocial() {
     lineQr: ge('s-lineQr').value.trim(),
     heroImages: getHeroUrls()
   };
+  _sheetSaving = true;
   ge('saving-mask').classList.add('show');
   try {
-    var res = await fetch(API, {
-      method: 'POST',
-      body: JSON.stringify({ sheet: 'social', data: [{ data: JSON.stringify(obj) }], token: API_TOKEN })
-    });
-    // Apps Script POST 成功會回傳 JSON
-    var json = await res.json().catch(function(){ return null; });
-    if (json && json.error) {
-      toast('儲存失敗：' + json.error, 1);
-    } else {
-      toast('✅ 設定已儲存！前台刷新後生效');
-    }
+    await writeSheetData('social', [{ data: JSON.stringify(obj) }]);
+    toast('✅ 設定已儲存！前台刷新後生效');
+    return true;
   } catch (e) {
-    toast('儲存失敗，請確認 Apps Script 已更新並重新部署：' + e.message, 1);
+    toast('儲存未確認，請稍後重試：' + e.message, 1);
+    return false;
   } finally {
+    _sheetSaving = false;
     ge('saving-mask').classList.remove('show');
   }
 }
