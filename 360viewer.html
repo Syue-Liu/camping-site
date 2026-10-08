@@ -14,18 +14,8 @@ canvas{display:block;width:100%;height:100%;cursor:grab;}
 canvas.grabbing{cursor:grabbing;}
 canvas.placing{cursor:crosshair;}
 
-/* ── Fade ── */
-#fade{display:none;}/* fade disabled - using crossfade overlay instead */
-#xfade{position:absolute;inset:0;pointer-events:none;z-index:11;opacity:1;transition:opacity .6s ease;background:#000;}
-#xfade.hidden{opacity:0;}
-
-/* ── Loading ── */
-#loading{position:absolute;inset:0;background:rgba(15,20,16,.92);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:60;gap:16px;transition:opacity .4s;pointer-events:none;}
-#loading.active{pointer-events:auto;}
-#loading.hidden{opacity:0;display:none;}
-.loading-ring{width:48px;height:48px;border:3px solid rgba(126,184,122,0.15);border-top-color:#7eb87a;border-radius:50%;animation:spin .9s linear infinite;}
-.loading-text{font-size:13px;color:#8a9088;letter-spacing:0.1em;}
-@keyframes spin{to{transform:rotate(360deg);}}
+/* 轉場、載入、傳送點與檢視器介面的樣式由 pano-tools.js 注入（與前台一致） */
+#wrap .ptv-loader{z-index:60;}
 
 /* ── Welcome (no scenes) ── */
 #welcome{position:absolute;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;gap:16px;z-index:55;}
@@ -36,36 +26,21 @@ canvas.placing{cursor:crosshair;}
 .welcome-btn{margin-top:8px;padding:12px 28px;background:#7eb87a;color:#0f1410;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;}
 .welcome-btn:hover{opacity:.9;}
 
-/* ── Scene label ── */
-#scene-label{position:absolute;bottom:2.25rem;left:50%;transform:translateX(-50%);color:rgba(255,255,255,.85);font-size:13px;background:rgba(0,0,0,.55);padding:6px 20px;border-radius:20px;backdrop-filter:blur(8px);letter-spacing:.05em;pointer-events:none;z-index:5;white-space:nowrap;}
-
-/* ── Scene dots ── */
-#scene-dots{position:absolute;bottom:2.25rem;right:1.5rem;display:flex;flex-direction:column;gap:8px;z-index:5;}
-.sdot{width:9px;height:9px;border-radius:50%;background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.4);cursor:pointer;transition:all .2s;}
-.sdot.active{background:#7eb87a;border-color:#7eb87a;transform:scale(1.4);}
-
 /* ── Top controls ── */
-#top-ctrl{position:absolute;top:1rem;right:1rem;display:flex;gap:8px;z-index:85;}
-.cb{width:40px;height:40px;border-radius:10px;border:1px solid rgba(255,255,255,.15);background:rgba(0,0,0,.55);color:#fff;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(10px);transition:all .15s;}
-.cb:hover{background:rgba(255,255,255,.18);}
-.cb.active{background:rgba(126,184,122,.3);border-color:#7eb87a;}
+#top-ctrl{position:absolute;top:10px;right:10px;display:flex;gap:6px;z-index:85;transition:opacity .3s;}
+.cb{width:40px;height:40px;border-radius:12px;border:1px solid rgba(255,255,255,.14);background:rgba(12,17,13,.56);color:#f3f0e8;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;-webkit-backdrop-filter:blur(14px) saturate(140%);backdrop-filter:blur(14px) saturate(140%);box-shadow:0 6px 18px rgba(0,0,0,.28);transition:background .18s,border-color .18s,color .18s,transform .18s;}
+.cb svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+.cb:hover{background:rgba(255,255,255,.16);}
+.cb:active{transform:scale(.93);}
+.cb:focus-visible{outline:2px solid #c4a35a;outline-offset:2px;}
+.cb.active,.cb[aria-pressed="true"]{background:#7eb87a;border-color:#7eb87a;color:#0f1410;}
 
 /* ── Place banner ── */
 #place-banner{position:absolute;top:1rem;left:50%;transform:translateX(-50%);background:rgba(126,184,122,.95);color:#0f1410;padding:8px 22px;border-radius:20px;font-size:13px;font-weight:700;z-index:25;display:none;letter-spacing:.03em;white-space:nowrap;}
 
-/* ── Hotspot layer ── */
-#hs-layer{position:absolute;inset:0;pointer-events:none;z-index:8;}
-.hs{position:absolute;transform:translate(-50%,-50%);cursor:pointer;pointer-events:auto;transition:transform .15s;}
-.hs:hover{transform:translate(-50%,-50%) scale(1.18);}
-.hs-inner{border-radius:50%;display:flex;align-items:center;justify-content:center;position:relative;box-shadow:0 3px 14px rgba(0,0,0,.5);}
-.hs-label{position:absolute;bottom:calc(100% + 7px);left:50%;transform:translateX(-50%);white-space:nowrap;background:rgba(0,0,0,.75);color:#fff;font-size:11px;padding:4px 10px;border-radius:12px;pointer-events:none;opacity:0;transition:opacity .2s;}
-.hs:hover .hs-label{opacity:1;}
-.hs-pulse{position:absolute;inset:0;border-radius:50%;animation:pr 1.9s ease-out infinite;}
-.hs-effect-glow .hs-inner{box-shadow:0 0 0 4px var(--hs-soft),0 0 24px var(--hs-color),0 3px 14px rgba(0,0,0,.55);}
-.hs-effect-breathe .hs-inner{animation:hsb 2.4s ease-in-out infinite;}
-.hs-arrow{position:absolute;left:50%;top:calc(100% + 4px);width:0;height:0;border-left:7px solid transparent;border-right:7px solid transparent;border-top:10px solid var(--hs-color);filter:drop-shadow(0 2px 5px rgba(0,0,0,.55));transform:translateX(-50%);}
+/* ── Hotspot layer（外觀由 pano-tools.js 提供，這裡只補編輯模式）── */
+#hs-layer{position:absolute;inset:0;pointer-events:none;z-index:8;overflow:hidden;}
 @keyframes pr{0%{transform:scale(1);opacity:.7;}100%{transform:scale(2.4);opacity:0;}}
-@keyframes hsb{0%,100%{transform:scale(1);}50%{transform:scale(1.12);}}
 
 /* ── Admin Panel ── */
 #admin{position:absolute;top:0;right:0;width:350px;height:100vh;background:rgba(13,18,14,.97);border-left:1px solid rgba(255,255,255,.07);backdrop-filter:blur(18px);z-index:80;display:flex;flex-direction:column;transform:translateX(100%);transition:transform .3s ease;}
@@ -199,10 +174,11 @@ textarea.fi{resize:vertical;min-height:60px;}
 #hs-preview .hs-inner{animation:pr-preview .8s ease-in-out infinite alternate;}
 @keyframes pr-preview{0%{transform:scale(0.9);opacity:0.7;}100%{transform:scale(1.1);opacity:1;}}
 canvas.edit-mode{cursor:default;}
-.hs.editable{cursor:move !important;}
-.hs.editable .hs-inner{border-style:dashed !important;box-shadow:0 0 0 3px rgba(196,163,90,.5);}
-.hs.editable{cursor:grab;}
-.hs.editable:active{cursor:grabbing;}
+.ptv-hs.editable{cursor:grab;touch-action:none;}
+.ptv-hs.editable:active,.ptv-hs.editable.dragging{cursor:grabbing;}
+.ptv-hs.editable .ptv-hs-dot{border-style:dashed;box-shadow:0 0 0 4px rgba(196,163,90,.55),0 8px 22px rgba(0,0,0,.45);animation:none;}
+.ptv-hs.editable .ptv-hs-dot::before,.ptv-hs.editable .ptv-hs-dot::after,.ptv-hs.editable .ptv-hs-arrow{display:none;}
+.ptv-hs.editable.dragging .ptv-hs-dot{scale:1.18;}
 #edit-mode-bar{position:absolute;top:1rem;left:50%;transform:translateX(-50%);background:rgba(196,163,90,.95);color:#0f1410;padding:8px 22px;border-radius:20px;font-size:13px;font-weight:700;z-index:25;display:none;gap:12px;align-items:center;white-space:nowrap;}
 #edit-mode-bar.show{display:flex;}
 #edit-mode-bar button{background:rgba(0,0,0,.15);border:1px solid rgba(0,0,0,.2);color:#0f1410;padding:4px 12px;border-radius:12px;font-size:12px;font-weight:700;cursor:pointer;}
@@ -249,12 +225,20 @@ canvas.edit-mode{cursor:default;}
 /* Keep the panorama visible while editing on phones. */
 #wrap{height:100dvh;}
 #admin{height:100dvh;z-index:90;}
-#view-controls{position:absolute;bottom:calc(env(safe-area-inset-bottom,0px) + 14px);left:14px;right:14px;display:flex;justify-content:center;gap:6px;z-index:20;}
-#view-controls select{min-width:0;max-width:260px;flex:1;background:#152018;color:#fff;border:1px solid #53634f;border-radius:10px;padding:8px;font:inherit;font-size:13px;}
-#view-controls button{flex-shrink:0;width:44px;height:44px;}
-#scene-label{bottom:76px;max-width:85%;overflow:hidden;text-overflow:ellipsis;}
-#scene-dots{display:none!important;}
-#view-controls .cb:focus-visible,canvas:focus-visible{outline:2px solid #c4a35a;outline-offset:-2px;}
+#wrap .ptv-bottom{bottom:calc(env(safe-area-inset-bottom,0px) + 12px);}
+#wrap .ptv-top{right:auto;}
+@media(min-width:601px){body.pano-editing #wrap .ptv-bottom{right:360px;}}
+canvas:focus-visible{outline:2px solid #c4a35a;outline-offset:-2px;}
+/* 說明視窗 */
+#help-modal{display:none;position:fixed;inset:0;z-index:120;align-items:center;justify-content:center;padding:16px;background:rgba(0,0,0,.55);-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);}
+#help-modal.open{display:flex;}
+.help-box{width:min(460px,100%);max-height:85vh;overflow:auto;background:rgba(18,24,19,.96);border:1px solid rgba(255,255,255,.1);border-radius:18px;padding:20px 22px;box-shadow:0 24px 60px rgba(0,0,0,.5);}
+.help-box h3{font-size:16px;color:#e8e4dc;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;}
+.help-box h4{font-size:11px;color:#7eb87a;letter-spacing:.12em;margin:14px 0 8px;}
+.help-row{display:flex;gap:12px;align-items:baseline;padding:6px 0;border-bottom:1px solid rgba(255,255,255,.05);font-size:13px;color:#c9c4b8;line-height:1.6;}
+.help-row b{flex:0 0 112px;color:#e8e4dc;font-weight:600;}
+.help-close{background:none;border:none;color:#8a9088;font-size:22px;cursor:pointer;line-height:1;}
+.help-close:hover{color:#e8e4dc;}
 .adj-actions{display:flex;gap:6px;margin:10px 0;flex-wrap:wrap;}
 .adj-actions button{flex:1;min-height:40px;padding:6px;border-radius:8px;background:#263025;border:1px solid #52604b;color:#e8e4dc;cursor:pointer;}
 .adj-actions button:disabled{opacity:.4;cursor:default;}
@@ -269,10 +253,10 @@ canvas.edit-mode{cursor:default;}
   #admin.open{transform:translateY(0);}
   body.pano-editing #wrap{height:51dvh;}
   #top-ctrl{top:8px;right:8px;gap:5px;}
-  #top-ctrl .cb{width:40px;height:40px;}
-  #view-controls{bottom:8px;left:8px;right:8px;gap:4px;}
-  #view-controls button{width:40px;height:40px;}
-  #scene-label{bottom:58px;}
+  #top-ctrl .cb{width:38px;height:38px;}
+  #wrap .ptv-top{top:8px;left:8px;}
+  #wrap .ptv-title{max-width:34vw;}
+  #wrap .ptv-bottom{bottom:8px;left:8px;right:8px;}
   .ph{padding:10px 16px;}.pb{padding:12px 16px;padding-bottom:calc(16px + env(safe-area-inset-bottom,0px));}
   #place-banner,#edit-mode-bar{top:58px;max-width:95%;white-space:normal;font-size:12px;}
 }
@@ -282,14 +266,7 @@ canvas.edit-mode{cursor:default;}
 <div id="wrap">
   <canvas id="c"></canvas>
   <div id="hs-layer"></div>
-  <div id="fade" style="display:none"></div>
-  <img id="xfade" src="" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;pointer-events:none;z-index:11;opacity:0;display:none;transition:opacity .65s ease;" />
-
-  <!-- Loading -->
-  <div id="loading" class="active">
-    <div class="loading-ring"></div>
-    <div class="loading-text" id="loading-text">初始化中...</div>
-  </div>
+  <!-- 轉場、載入圓環、方位圖、場景切換列由 pano-tools.js 動態加入 -->
 
   <!-- Welcome (no scenes) -->
   <div id="welcome">
@@ -299,25 +276,14 @@ canvas.edit-mode{cursor:default;}
     <button class="welcome-btn" id="welcome-open-btn">⚙ 開啟管理面板</button>
   </div>
 
-  <!-- Scene label -->
-  <div id="scene-label" style="display:none"></div>
-
-  <!-- Scene dots -->
-  <div id="scene-dots"></div>
-
-  <div id="view-controls" aria-label="環景操作">
-    <select id="scene-picker" aria-label="選擇環景場景"></select>
-    <button class="cb" id="view-zoom-out" title="縮小" aria-label="縮小">−</button>
-    <button class="cb" id="view-zoom-in" title="放大" aria-label="放大">＋</button>
-    <button class="cb" id="view-reset" title="回到起始視角" aria-label="回到起始視角">⌂</button>
-    <button class="cb" id="view-retry" title="重新載入場景" aria-label="重新載入場景" hidden>↻</button>
-  </div>
-  <!-- Top controls -->
+  <!-- Top controls（圖示由 PanoTools.icon 產生） -->
   <div id="top-ctrl">
-    <button class="cb" id="btn-preview" title="預覽模式">👁</button>
-    <button class="cb" id="btn-help" title="說明">❓</button>
-    <button class="cb" id="btn-fs" title="全螢幕">⛶</button>
-    <button class="cb" id="btn-admin" title="管理面板">⚙</button>
+    <button class="cb" id="btn-auto" data-icon="auto" title="自動旋轉" aria-label="自動旋轉" aria-pressed="false"></button>
+    <button class="cb" id="btn-gyro" data-icon="gyro" title="陀螺儀：轉動手機環顧" aria-label="陀螺儀" aria-pressed="false" hidden></button>
+    <button class="cb" id="btn-preview" data-icon="eye" title="預覽模式" aria-label="預覽模式"></button>
+    <button class="cb" id="btn-help" data-icon="help" title="操作說明" aria-label="操作說明"></button>
+    <button class="cb" id="btn-fs" data-icon="expand" title="全螢幕" aria-label="全螢幕"></button>
+    <button class="cb" id="btn-admin" data-icon="gear" title="管理面板" aria-label="管理面板"></button>
   </div>
 
   <!-- Hotspot placement preview -->
@@ -529,6 +495,26 @@ canvas.edit-mode{cursor:default;}
   </div>
 </div>
 
+<!-- Help Modal -->
+<div id="help-modal" role="dialog" aria-modal="true" aria-labelledby="help-title">
+  <div class="help-box">
+    <h3><span id="help-title">操作說明</span><button class="help-close" id="help-close" aria-label="關閉">×</button></h3>
+    <h4>環景操作</h4>
+    <div class="help-row"><b>拖曳 / 滑動</b><span>環顧四周，放手後會順勢滑行</span></div>
+    <div class="help-row"><b>滾輪 / 雙指</b><span>平滑縮放</span></div>
+    <div class="help-row"><b>點兩下</b><span>朝該點放大；再點兩下拉回</span></div>
+    <div class="help-row"><b>傳送點</b><span>點擊後會走向該方向並切換場景</span></div>
+    <div class="help-row"><b>左上方位圖</b><span>綠色扇形是目前視野、圓點是傳送點；點擊回到起始視角</span></div>
+    <div class="help-row"><b>下方切換列</b><span>‹ › 上一個／下一個場景，中間可開啟場景列表</span></div>
+    <div class="help-row"><b>鍵盤</b><span>點一下畫面後，方向鍵移動、＋／− 縮放、Home 回到起始視角</span></div>
+    <h4>管理面板</h4>
+    <div class="help-row"><b>場景</b><span>上傳圖片、新增場景、資料夾與排序</span></div>
+    <div class="help-row"><b>傳送點</b><span>點擊畫面放置；編輯時可直接拖曳</span></div>
+    <div class="help-row"><b>調整</b><span>調色預設、原圖對照、復原，以及設定起始視角</span></div>
+    <div class="help-row"><b>圖片 / 嵌入</b><span>查看使用中的圖片、上傳設定並複製網址</span></div>
+  </div>
+</div>
+
 <!-- IO Modal -->
 <div id="io-modal">
   <div class="io-box">
@@ -548,35 +534,28 @@ canvas.edit-mode{cursor:default;}
 (function() {
 'use strict';
 
-// ── 安全防護：確保 loading 最多顯示 4 秒 ────────────────
+// ── 載入指示（與前台同一套圓環進度）─────────────────────
+var loaderUI = new PanoTools.Loader(document.getElementById('wrap'));
+document.querySelectorAll('.cb[data-icon]').forEach(function(b) { b.innerHTML = PanoTools.icon(b.dataset.icon); });
+loaderUI.show('360° 環景', '初始化中…');
+
+// 安全防護：初始化最多顯示 4 秒
 var loadingTimeout = setTimeout(function() {
   hideLoading();
 }, 4000);
 
-function showLoading(text) {
+function showLoading(text, title) {
   clearTimeout(loadingTimeout);
-  var el = document.getElementById('loading');
-  if (!el) return;
-  el.classList.remove('hidden');
-  el.classList.add('active');
-  el.style.display = 'flex';
-  el.style.opacity = '1';
-  if (text) setLoadingText(text);
+  loaderUI.show(title || '360° 環景', text || '', 200);
 }
 
 function hideLoading() {
   clearTimeout(loadingTimeout);
-  var el = document.getElementById('loading');
-  if (!el) return;
-  el.classList.remove('active');
-  el.classList.add('hidden');
-  el.style.display = 'none';
-  el.style.opacity = '0';
+  loaderUI.hide();
 }
 
 function setLoadingText(t) {
-  var el = document.getElementById('loading-text');
-  if (el) el.textContent = t;
+  loaderUI.setText(t);
 }
 
 // ── 檢查 Three.js ────────────────────────────────────────
@@ -638,11 +617,12 @@ function resetSceneUpload() {
 }
 
 // ── Three.js Setup ────────────────────────────────────────
-setLoadingText('初始化 3D 場景...');
+setLoadingText('初始化 3D 場景…');
 var canvas = ge('c');
 var wrap = ge('wrap');
 var renderer, camera, scene3, sphere, mat, cubeMesh, cubeMats;
-var isMobileDevice = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+var isMobileDevice = PanoTools.isMobile;
+var EMPTY_COLOR = 0x020302; // 未載入時的深色球面（輸出經 sRGB 轉換後約為 #191c19）
 var _sceneLoadId = 0;
 var _textureLoadId = 0;
 
@@ -654,7 +634,7 @@ try {
   camera.rotation.order = 'YXZ';
   scene3 = new THREE.Scene();
   var geo = new THREE.SphereGeometry(100, 64, 48);
-  mat = new THREE.MeshBasicMaterial({ side: THREE.BackSide, color: 0x1a2a1a });
+  mat = new THREE.MeshBasicMaterial({ side: THREE.BackSide, color: EMPTY_COLOR });
   sphere = new THREE.Mesh(geo, mat);
   scene3.add(sphere);
 
@@ -663,7 +643,7 @@ try {
   // rotation.y=PI 讓前面（pz）面對相機預設 -Z 視線
   var cubeGeo = new THREE.BoxGeometry(200, 200, 200);
   cubeMats = Array.from({length:6}, function() {
-    return new THREE.MeshBasicMaterial({ side: THREE.BackSide, color: 0x1a2a1a });
+    return new THREE.MeshBasicMaterial({ side: THREE.BackSide, color: EMPTY_COLOR });
   });
   cubeMesh = new THREE.Mesh(cubeGeo, cubeMats);
   cubeMesh.rotation.y = Math.PI;
@@ -676,11 +656,27 @@ try {
   return;
 }
 
+// ── 檢視器元件（與前台共用 pano-tools.js）────────────────
+var xfade = new PanoTools.Transition(wrap);
+var hsLayer = ge('hs-layer');
+var hotspotLayer = new PanoTools.HotspotLayer(hsLayer, {
+  onClick: function(hs, el) { if (!placingMode && hs.targetScene) switchSceneWithZoom(hs.targetScene, hs, el); },
+  decorate: function(el, hs, extra) { if (extra.editable) bindHotspotDrag(el, hs); }
+});
+var viewerUI = new PanoTools.ViewerUI(wrap, {
+  onSelect: function(i) { var sc = config.scenes[i]; if (sc) { switchScene(sc.id); renderAdminSceneList(); } },
+  onReset: function() { resetView(true); },
+  onZoom: function(f) { ctl.zoomBy(f); }
+});
+var compassHotspots = null;
+
 function resize() {
   var w = wrap.clientWidth, h = wrap.clientHeight;
+  if (!w || !h) return;
   renderer.setSize(w, h);
   camera.aspect = w / h;
   camera.updateProjectionMatrix();
+  viewerUI.layout(w, h);
 }
 resize();
 window.addEventListener('resize', resize);
@@ -691,88 +687,97 @@ new MutationObserver(function(){document.body.classList.toggle('pano-editing', g
 var txLoader = new THREE.TextureLoader();
 txLoader.crossOrigin = 'anonymous';
 
+function hasTexture() { return !!mat.map || cubeMats.some(function(m) { return !!m.map; }); }
+function retryCurrent() { if (currentSceneId) switchScene(currentSceneId); }
+
+// 下載（顯示進度與檔案大小）→ 背景解碼 → 貼到球面
 function loadPanoTexture(url, onDone) {
-  var job=++_textureLoadId, sceneJob=_sceneLoadId, finished=false;
+  var job=++_textureLoadId, sceneJob=_sceneLoadId;
   function active(){return job===_textureLoadId && sceneJob===_sceneLoadId;}
-  function finish(ok,message){
-    if(finished || !active())return;finished=true;clearTimeout(timer);hideLoading();
-    if(!ok){ge('scene-label').textContent=message||'圖片載入失敗，請重試';ge('view-retry').hidden=false;}
-    if(onDone)onDone(ok);
-  }
-  showLoading('載入全景圖片...');
-  var timer=setTimeout(function(){finish(false,'圖片載入逾時，請重試');},20000);
-  if(!url){finish(false,'尚未設定圖片');return;}
-  txLoader.load(url,function(tex){
-    if(!active() || finished){tex.dispose();return;}
-    try {
-      var image=tex.image, max=Math.min(renderer.capabilities.maxTextureSize,isMobileDevice?2048:8192);
-      if(image.width>max || image.height>max){var ratio=Math.min(max/image.width,max/image.height);var reduced=document.createElement('canvas');
-        reduced.width=Math.round(image.width*ratio);reduced.height=Math.round(image.height*ratio);reduced.getContext('2d').drawImage(image,0,0,reduced.width,reduced.height);tex.image=reduced;}
-      tex.encoding=THREE.sRGBEncoding;tex.wrapS=THREE.RepeatWrapping;tex.repeat.x=-1;tex.offset.x=1;
-      if(isMobileDevice){tex.minFilter=THREE.LinearFilter;tex.generateMipmaps=false;}
-      tex.needsUpdate=true;if(mat.map)mat.map.dispose();mat.map=tex;mat.color.set(0xffffff);mat.needsUpdate=true;renderer.render(scene3,camera);PanoTools.reveal(canvas);finish(true);
-    }catch(e){tex.dispose();finish(false,'圖片處理失敗，請重試');}
-  },undefined,function(){finish(false,'圖片載入失敗，請重試');});
+  var sc=getScene(currentSceneId);
+  if(!url){loaderUI.error('尚未設定圖片',null,'請在「場景」頁為這個場景上傳圖片');if(onDone)onDone(false);return;}
+  showLoading('準備載入…',(sc && sc.name) || '360° 環景');
+  PanoTools.images.load(url,{
+    maxSize:PanoTools.maxTextureSize(renderer),
+    onProgress:function(loaded,total){if(active())loaderUI.progress(total?loaded/total:null,loaded,total);}
+  }).then(function(source){
+    if(!active())return;
+    var tex=PanoTools.panoTexture(source,renderer);
+    if(mat.map)mat.map.dispose();
+    mat.map=tex;mat.color.set(0xffffff);mat.needsUpdate=true;
+    hideLoading();
+    if(onDone)onDone(true);
+  },function(err){
+    if(!active())return;
+    if(mat.map){mat.map.dispose();mat.map=null;mat.color.set(EMPTY_COLOR);mat.needsUpdate=true;}
+    loaderUI.error(err&&err.message==='timeout'?'圖片下載逾時':'圖片載入失敗',retryCurrent);
+    if(onDone)onDone(false);
+  });
 }
 
 var CUBE_FACES=['px','nx','py','ny','pz','nz'];
 var _tileJobId=0;
-function setProgressBar(percent){
-  var bar=ge('scene-progress');if(!bar){bar=document.createElement('div');bar.id='scene-progress';bar.style.cssText='position:absolute;left:0;top:0;height:3px;background:#7eb87a;z-index:65;';wrap.appendChild(bar);}
-  bar.style.width=percent+'%';
-}
 function loadTiles(sc,onReady){
   var base=sc.tileBaseUrl;if(!base)return;if(!base.endsWith('/'))base+='/';
   var job=++_tileJobId, sceneJob=_sceneLoadId, done=0, failed=0, ready=false, expired=false;
   function active(){return !expired && job===_tileJobId && sceneJob===_sceneLoadId;}
-  function reportFailure(){ge('scene-label').textContent='部分切片未能載入，請重試';ge('view-retry').hidden=false;}
-  var timer=setTimeout(function(){if(!active())return;expired=true;hideLoading();setProgressBar(0);reportFailure();if(!ready && onReady)onReady(false);},20000);
-  cubeMats.forEach(function(m){if(m.map){m.map.dispose();m.map=null;}m.color.set(0x1a2a1a);m.needsUpdate=true;});
-  showLoading('載入切片中...');setProgressBar(5);
+  function reportFailure(){loaderUI.error('部分切片未能載入',retryCurrent);}
+  var timer=setTimeout(function(){if(!active())return;expired=true;reportFailure();if(!ready && onReady)onReady(false);},20000);
+  cubeMats.forEach(function(m){if(m.map){m.map.dispose();m.map=null;}m.color.set(EMPTY_COLOR);m.needsUpdate=true;});
+  showLoading('載入切片中…',sc.name);
   function complete(){
-    done++;setProgressBar(Math.round(done/6*100));
-    if(done===6){clearTimeout(timer);hideLoading();setProgressBar(0);if(failed)reportFailure();if(!ready && onReady)onReady(false);}
+    done++;if(!ready)loaderUI.progress(done/6);
+    if(done===6){clearTimeout(timer);if(failed)reportFailure();else if(!ready)hideLoading();if(!ready && onReady)onReady(false);}
   }
   CUBE_FACES.forEach(function(face,i){txLoader.load(base+face+'.jpg',function(tex){
     if(!active()){tex.dispose();return;}
     tex.encoding=THREE.sRGBEncoding;if(isMobileDevice){tex.minFilter=THREE.LinearFilter;tex.generateMipmaps=false;}
     cubeMats[i].map=tex;cubeMats[i].color.set(0xffffff);cubeMats[i].needsUpdate=true;
-    if(!ready){ready=true;hideLoading();PanoTools.reveal(canvas);if(onReady)onReady(true);}complete();
+    if(!ready){ready=true;hideLoading();if(onReady)onReady(true);}complete();
   },undefined,function(){if(!active())return;failed++;complete();});});
 }
 
-// ── Mouse / Touch Controls ────────────────────────────────
-var isDragging = false, velX = 0, velY = 0, fov = 75;
-PanoTools.bind(canvas, camera, {
-  canDrag:function(){return !placingMode;},
-  onChange:function(){fov=camera.fov;},
-  onReset:resetView,
-  onTap:function(x,y){if(placingMode)handlePlaceClick(x,y);}
+// ── 操作控制：慣性拖曳、平滑縮放、雙擊放大、自動旋轉、陀螺儀 ──
+var embedMode = new URLSearchParams(window.location.search).get('embed') === 'true';
+var ctl = PanoTools.controls(canvas, camera, {
+  autoRotate: embedMode,
+  canDrag: function(){ return !placingMode; },
+  onReset: function(){ resetView(true); },
+  onTap: function(x,y){ if(placingMode)handlePlaceClick(x,y); },
+  onInteract: function(){ viewerUI.hideHint(); }
 });
 window.addEventListener('pointermove',function(e){if(placingMode)updateHsPreview(e.clientX,e.clientY);});
-function resetView(){var sc=getScene(currentSceneId);PanoTools.applyView(camera,sc && sc.initialView);fov=camera.fov;}
-ge('view-reset').addEventListener('click',resetView);
-ge('view-zoom-in').addEventListener('click',function(){PanoTools.zoom(camera,camera.fov-5);fov=camera.fov;});
-ge('view-zoom-out').addEventListener('click',function(){PanoTools.zoom(camera,camera.fov+5);fov=camera.fov;});
-ge('view-retry').addEventListener('click',function(){switchScene(currentSceneId);});
-ge('scene-picker').addEventListener('change',function(){switchScene(this.value);renderAdminSceneList();});
+function resetView(animated){
+  var sc=getScene(currentSceneId), v=PanoTools.view(sc && sc.initialView);
+  if(animated)ctl.animateTo(v,700);else ctl.setView(v);
+}
+function syncAutoButton(){ge('btn-auto').setAttribute('aria-pressed',String(ctl.isAutoRotate()));}
+ge('btn-auto').addEventListener('click',function(){ctl.setAutoRotate(!ctl.isAutoRotate());syncAutoButton();});
+syncAutoButton();
+if(PanoTools.gyroSupported()){
+  ge('btn-gyro').hidden=false;
+  ge('btn-gyro').addEventListener('click',function(){
+    var enable=!ctl.isGyro();
+    ctl.setGyro(enable).then(function(ok){
+      ge('btn-gyro').setAttribute('aria-pressed',String(ok));
+      if(enable && !ok)viewerUI.toast('無法啟用陀螺儀，請允許瀏覽器存取「動作與方向」');
+    });
+  });
+}
 
 // ── Render Loop ───────────────────────────────────────────
-function animate() {
+function animate(t) {
   requestAnimationFrame(animate);
   if (document.hidden) return;
-  if (!isDragging) {
-    velX *= 0.9; velY *= 0.9;
-    if (Math.abs(velX) > 0.01) camera.rotation.y += velX * 0.0005;
-    if (Math.abs(velY) > 0.01) camera.rotation.x = Math.max(-Math.PI/2, Math.min(Math.PI/2, camera.rotation.x + velY * 0.0005));
-  }
-  if (renderer && scene3 && camera) renderer.render(scene3, camera);
+  ctl.update(t);
+  renderer.render(scene3, camera);
   updateHotspotPositions();
+  var hfov = 2 * Math.atan(Math.tan(camera.fov * Math.PI / 360) * camera.aspect);
+  viewerUI.compass(camera.rotation.y, hfov, compassHotspots);
 }
-animate();
+requestAnimationFrame(animate);
 
 // ── Hotspot Layer ─────────────────────────────────────────
-var hsLayer = ge('hs-layer');
 var raycaster = new THREE.Raycaster();
 
 function getSceneHotspots() {
@@ -784,90 +789,54 @@ function effectName(effect) {
   return { pulse:'柔和光環', glow:'固定光暈', breathe:'呼吸放大', arrow:'指標箭頭', none:'無效果' }[effect || 'pulse'] || '柔和光環';
 }
 
-function buildHotspotEl(hs) {
-  var div = document.createElement('div');
-  var effect = hs.effect || (hs.pulse !== false ? 'pulse' : 'none');
-  div.className = 'hs hs-effect-' + effect; div.dataset.id = hs.id;
-  var size = hs.size || 44, color = hs.color || '#7eb87a', icon = hs.icon || '🔵';
-  div.style.setProperty('--hs-color', color);
-  div.style.setProperty('--hs-soft', color + '33');
-  var inner = document.createElement('div');
-  inner.className = 'hs-inner';
-  inner.style.cssText = 'width:'+size+'px;height:'+size+'px;background:'+color+'22;border:2.5px solid '+color+';font-size:'+Math.round(size*.42)+'px;';
-  if (effect === 'pulse') {
-    var pulse = document.createElement('div');
-    pulse.className = 'hs-pulse';
-    pulse.style.background = color + '55';
-    inner.appendChild(pulse);
-  }
-  inner.appendChild(document.createTextNode(icon));
-  if (effect === 'arrow') {
-    var arrow = document.createElement('div');
-    arrow.className = 'hs-arrow';
-    inner.appendChild(arrow);
-  }
-  var label = document.createElement('div');
-  label.className = 'hs-label';
-  label.textContent = hs.label || '前往';
-  div.appendChild(inner); div.appendChild(label);
-  div.addEventListener('click', function(e) {
-    e.stopPropagation();
-    if (placingMode) return;
-    if (hs.targetScene) switchSceneWithZoom(hs.targetScene);
-  });
-  hsLayer.appendChild(div);
-  return div;
+function rebuildHotspotEls(animateIn) {
+  var prev = ge('hs-placed-preview');
+  if (prev) prev.remove();
+  var list = getSceneHotspots();
+  hotspotLayer.set(list, { editable: editModeActive, animate: !!animateIn });
+  compassHotspots = list.slice();
 }
 
-function rebuildHotspotEls() {
-  hsLayer.innerHTML = '';
-  getSceneHotspots().forEach(buildHotspotEl);
-}
-
-function sphericalToVec(phi, theta) {
-  return new THREE.Vector3(Math.sin(phi)*Math.sin(theta), Math.cos(phi), Math.sin(phi)*Math.cos(theta));
-}
-
+var _pv = new THREE.Vector3(), _pf = new THREE.Vector3();
 function updateHotspotPositions() {
-  var hots = getSceneHotspots();
   var w = canvas.clientWidth, h = canvas.clientHeight;
-  hots.forEach(function(hs) {
-    var el = hsLayer.querySelector('[data-id="'+hs.id+'"]');
-    if (!el) return;
-    if (hs.id === draggingHsId) { el.style.display = 'block'; el.style.opacity = '1'; return; }
-    var pos = sphericalToVec(hs.phi, hs.theta);
-    var fwd = new THREE.Vector3(0, 0, -1).applyEuler(camera.rotation);
-    var dot = fwd.dot(pos.clone().normalize());
-    if (dot < 0.1) { el.style.display = 'none'; return; }
-    var proj = pos.clone().project(camera);
-    var sx = (proj.x + 1) / 2 * w, sy = -(proj.y - 1) / 2 * h;
-    if (sx < -60 || sx > w+60 || sy < -60 || sy > h+60) { el.style.display = 'none'; return; }
-    el.style.display = 'block';
-    el.style.left = sx + 'px'; el.style.top = sy + 'px';
-    el.style.opacity = Math.min(1, (dot - 0.1) / 0.25);
-  });
+  hotspotLayer.update(camera, w, h, draggingHsId);
   // 更新放置預覽點
   var prev = ge('hs-placed-preview');
   if (prev && prev._phi !== undefined) {
-    var pos2 = sphericalToVec(prev._phi, prev._theta);
-    var fwd2 = new THREE.Vector3(0, 0, -1).applyEuler(camera.rotation);
-    var dot2 = fwd2.dot(pos2.clone().normalize());
-    if (dot2 < 0.1) { prev.style.display = 'none'; }
+    var d = PanoTools.dir(prev._phi, prev._theta);
+    _pf.set(0, 0, -1).applyQuaternion(camera.quaternion);
+    var dot = _pf.x * d.x + _pf.y * d.y + _pf.z * d.z;
+    if (dot < 0.1) { prev.style.display = 'none'; }
     else {
-      var proj2 = pos2.clone().project(camera);
+      _pv.set(d.x * 50, d.y * 50, d.z * 50).project(camera);
       prev.style.display = 'block';
-      prev.style.left = (proj2.x + 1) / 2 * w + 'px';
-      prev.style.top = -(proj2.y - 1) / 2 * h + 'px';
-      prev.style.opacity = Math.min(1, (dot2 - 0.1) / 0.25);
+      prev.style.left = (_pv.x + 1) / 2 * w + 'px';
+      prev.style.top = (1 - _pv.y) / 2 * h + 'px';
+      prev.style.opacity = Math.min(1, (dot - 0.1) / 0.25);
     }
   }
 }
 
 // ── Scene Switch ──────────────────────────────────────────
-// 使用同一條切換流程，避免快速切換時殘留舊場景遮罩。
-function switchSceneWithZoom(id) {
-  if (!id || id === currentSceneId) return;
-  switchScene(id);
+// 點傳送點：先轉向並靠近，再以「向前推進」的轉場切換，抵達時面向前進方向。
+var _walking = false;
+function switchSceneWithZoom(id, hs, el) {
+  if (!id || id === currentSceneId || _walking) return;
+  var target = getScene(id); if (!target) return;
+  var fromId = currentSceneId;
+  if (target.imageUrl) PanoTools.images.prefetch(target.imageUrl, true);
+  if (el) el.classList.add('ptv-hs-go');
+  _walking = true;
+  var walk = hs ? ctl.animateTo({
+    yaw: PanoTools.yawToward(hs.theta),
+    pitch: PanoTools.pitchToward(hs.phi) * 0.5,
+    fov: Math.max(30, ctl.getView().fov * 0.7)
+  }, 560) : Promise.resolve();
+  walk.then(function() {
+    _walking = false;
+    switchScene(id, null, { mode: 'hotspot', arrive: true, view: PanoTools.arrivalView(target, fromId) });
+  });
 }
 
 function applySceneFilter(sc) {
@@ -876,65 +845,80 @@ function applySceneFilter(sc) {
   canvasEl.style.filter = adjToFilter(sc && sc.adjust);
 }
 
-function switchScene(id, onReady) {
+function prefetchNeighbors(sc) {
+  var seen = {}, count = 0, max = isMobileDevice ? 1 : 3;
+  (sc.hotspots || []).forEach(function(h) {
+    var t = getScene(h.targetScene);
+    if (count >= max || !t || !t.imageUrl || seen[t.imageUrl]) return;
+    seen[t.imageUrl] = true; count++;
+    PanoTools.images.prefetch(t.imageUrl);
+  });
+}
+
+// opts.mode：預設淡入淡出；'hotspot' 向前推進；opts.view 指定抵達視角
+function switchScene(id, onReady, opts) {
   var sc = getScene(id); if (!sc) return;
-  var canvasEl = ge('c');
-  // crossfade 模式：不用黑色 fade，直接切換場景
+  opts = opts || {};
+  // 先擷取目前畫面當轉場底圖，避免切換時閃黑
+  if (currentSceneId && hasTexture()) { renderer.render(scene3, camera); xfade.capture(canvas); }
   var sceneJob = ++_sceneLoadId;
   ++_tileJobId; ++_textureLoadId;
-  ge('view-retry').hidden = true;
   currentSceneId = id;
-  ge('scene-label').style.display = 'block';
-  ge('scene-label').textContent = sc.name || id;
   ge('welcome').classList.remove('show');
-  rebuildHotspotEls();
+  hotspotLayer.clear(); compassHotspots = null;
   updateSceneDots();
-  resetView();
+  var view = opts.view || PanoTools.view(sc.initialView);
+  if (opts.arrive) ctl.setView({ yaw: view.yaw, pitch: view.pitch, fov: Math.min(100, view.fov * 0.8) }, view);
+  else ctl.setView(view);
   loadSceneAdj();
+  var waitTimer = setTimeout(function() { if (sceneJob === _sceneLoadId) xfade.wait(); }, 280);
+  function done(ok) {
+    clearTimeout(waitTimer);
+    if (sceneJob !== _sceneLoadId) return;
+    rebuildHotspotEls(true);
+    if (ok === false) { xfade.clear(); if (opts.arrive) ctl.setView(view); }
+    else {
+      xfade.leave(opts.mode === 'hotspot' ? 'forward' : 'fade');
+      if (opts.arrive) ctl.animateTo({ fov: view.fov }, 1000, PanoTools.ease.out);
+      prefetchNeighbors(sc);
+    }
+    if (onReady) onReady();
+  }
   if (sc.tileBaseUrl) {
     if(mat.map){mat.map.dispose();mat.map=null;mat.needsUpdate=true;}
     // ── 切片模式 ──────────────────────────────────────────
     sphere.visible = false;
     cubeMesh.visible = true;
-    loadTiles(sc, function() {
+    loadTiles(sc, function(ok) {
       if(sceneJob !== _sceneLoadId)return;
       applyAdjPreview();
-      if (onReady) onReady();
+      done(ok);
     });
   } else if (sc.imageUrl) {
-    cubeMats.forEach(function(m){if(m.map){m.map.dispose();m.map=null;m.needsUpdate=true;}});
     // ── 等距柱狀全景模式 ──────────────────────────────────
-    sphere.visible = true;
-    cubeMesh.visible = false;
-    loadPanoTexture(sc.imageUrl, function() {
+    loadPanoTexture(sc.imageUrl, function(ok) {
       if(sceneJob !== _sceneLoadId)return;
+      cubeMats.forEach(function(m){if(m.map){m.map.dispose();m.map=null;m.needsUpdate=true;}});
+      sphere.visible = true;
+      cubeMesh.visible = false;
       applyAdjPreview();
-      if (onReady) onReady();
+      done(ok);
     });
   } else {
     sphere.visible = true;
     cubeMesh.visible = false;
     if(mat.map)mat.map.dispose();
-    mat.map = null; mat.color.set(0x1a2a1a); mat.needsUpdate = true;
+    mat.map = null; mat.color.set(EMPTY_COLOR); mat.needsUpdate = true;
     hideLoading();
     applySceneFilter(sc);
-    if (onReady) onReady();
+    done(false);
   }
   renderAdminHotspotList(); updateHsSceneHint();
 }
 
 function updateSceneDots() {
-  var picker=ge('scene-picker');picker.innerHTML='';
-  config.scenes.forEach(function(sc){var option=document.createElement('option');option.value=sc.id;option.textContent=sc.name||'未命名場景';picker.appendChild(option);});
-  picker.value=currentSceneId||'';picker.disabled=!config.scenes.length;
-  var el = ge('scene-dots'); el.innerHTML = '';
-  config.scenes.forEach(function(sc) {
-    var d = document.createElement('div');
-    d.className = 'sdot' + (sc.id === currentSceneId ? ' active' : '');
-    d.title = sc.name || sc.id;
-    d.addEventListener('click', function() { switchScene(sc.id); renderAdminSceneList(); });
-    el.appendChild(d);
-  });
+  var idx = config.scenes.findIndex(function(s) { return s.id === currentSceneId; });
+  viewerUI.setScenes(config.scenes, idx);
 }
 
 // ── Placing Mode ──────────────────────────────────────────
@@ -1017,7 +1001,6 @@ function syncPreviewStyle() {
 // ── Hotspot Drag-to-Move ──────────────────────────────────
 var editModeActive = false;
 var draggingHsId = null;
-var hsDragStart = null;
 var _editingHsDragEnabled = false; // 編輯表單中允許直接拖曳
 
 function enterEditMode(forHsId) {
@@ -1039,59 +1022,18 @@ function exitEditMode() {
 }
 ge('edit-mode-done') && ge('edit-mode-done').addEventListener('click', exitEditMode);
 
-// Override buildHotspotEl to support drag when in editMode
-var _origBuildHotspotEl = buildHotspotEl;
-buildHotspotEl = function(hs) {
-  var div = document.createElement('div');
-  var effect = hs.effect || (hs.pulse !== false ? 'pulse' : 'none');
-  div.className = 'hs hs-effect-' + effect + (editModeActive ? ' editable' : '');
-  div.dataset.id = hs.id;
-  var size = hs.size || 44, color = hs.color || '#7eb87a', icon = hs.icon || '🔵';
-  div.style.setProperty('--hs-color', color);
-  div.style.setProperty('--hs-soft', color + '33');
-  var inner = document.createElement('div');
-  inner.className = 'hs-inner';
-  inner.style.cssText = 'width:'+size+'px;height:'+size+'px;background:'+color+'22;border:2.5px solid '+color+';font-size:'+Math.round(size*.42)+'px;';
-  if (effect === 'pulse' && !editModeActive) {
-    var pulse = document.createElement('div');
-    pulse.className = 'hs-pulse';
-    pulse.style.background = color + '55';
-    inner.appendChild(pulse);
-  }
-  inner.appendChild(document.createTextNode(icon));
-  if (effect === 'arrow') {
-    var arrow = document.createElement('div');
-    arrow.className = 'hs-arrow';
-    inner.appendChild(arrow);
-  }
-  var label = document.createElement('div');
-  label.className = 'hs-label';
-  label.textContent = hs.label || '前往';
-
-  if (editModeActive) {
-    div.title = '拖曳調整位置';
-    div.addEventListener('mousedown', function(e) {
-      e.stopPropagation();
-      draggingHsId = hs.id;
-      hsDragStart = { x: e.clientX, y: e.clientY };
-      document.body.style.userSelect = 'none';
-    });
-    div.addEventListener('touchstart', function(e) {
-      e.stopPropagation();
-      draggingHsId = hs.id;
-    }, { passive: true });
-  } else {
-    div.addEventListener('click', function(e) {
-      e.stopPropagation();
-      if (placingMode) return;
-      if (hs.targetScene) switchSceneWithZoom(hs.targetScene);
-    });
-  }
-
-  div.appendChild(inner); div.appendChild(label);
-  hsLayer.appendChild(div);
-  return div;
-};
+// 編輯模式下，傳送點可直接拖曳到新位置（樣式見 .ptv-hs.editable）
+function bindHotspotDrag(el, hs) {
+  el.addEventListener('mousedown', function(e) {
+    e.stopPropagation(); e.preventDefault();
+    draggingHsId = hs.id; el.classList.add('dragging');
+    document.body.style.userSelect = 'none';
+  });
+  el.addEventListener('touchstart', function(e) {
+    e.stopPropagation();
+    draggingHsId = hs.id; el.classList.add('dragging');
+  }, { passive: true });
+}
 
 // Global mouse/touch move for dragging hotspot
 window.addEventListener('mousemove', function(e) {
@@ -1114,13 +1056,16 @@ window.addEventListener('touchend', function(e) {
 });
 
 function moveHsDrag(cx, cy) {
-  var el = hsLayer.querySelector('[data-id="'+draggingHsId+'"]');
+  var el = hotspotLayer.element(draggingHsId);
   if (!el) return;
-  el.style.left = cx + 'px';
-  el.style.top = cy + 'px';
+  var r = hsLayer.getBoundingClientRect();
+  el.style.transform = 'translate3d(' + (cx - r.left) + 'px,' + (cy - r.top) + 'px,0)';
+  el.style.opacity = 1;
 }
 
 function finishHsDrag(cx, cy) {
+  var el = hotspotLayer.element(draggingHsId);
+  if (el) el.classList.remove('dragging');
   var rect=canvas.getBoundingClientRect();
   var ndc = { x: ((cx-rect.left)/rect.width)*2-1, y: -((cy-rect.top)/rect.height)*2+1 };
   raycaster.setFromCamera(ndc, camera);
@@ -1133,6 +1078,7 @@ function finishHsDrag(cx, cy) {
   var hsDef = sc.hotspots.find(function(h) { return h.id === draggingHsId; });
   if (hsDef) {
     hsDef.phi = phi; hsDef.theta = theta; saveConfig();
+    compassHotspots = sc.hotspots.slice();
     // 如果正在編輯這個點，同步更新表單座標
     if (_editingHsDragEnabled && editingHsId === draggingHsId) {
       ge('hs-phi').value = phi.toFixed(4);
@@ -1148,7 +1094,8 @@ function finishHsDrag(cx, cy) {
 }
 
 // ── Preview Mode ──────────────────────────────────────────
-var previewActive = false;
+// 預覽：收起管理介面、開啟自動旋轉，模擬訪客看到的樣子
+var previewActive = false, _autoBeforePreview = false;
 ge('btn-preview').addEventListener('click', function() {
   previewActive = !previewActive;
   ge('btn-preview').classList.toggle('active', previewActive);
@@ -1157,19 +1104,20 @@ ge('btn-preview').addEventListener('click', function() {
     ge('btn-admin').classList.remove('active');
     ge('top-ctrl').style.opacity = '0';
     ge('top-ctrl').style.pointerEvents = 'none';
-    ge('scene-dots').style.display = 'flex';
     setTimeout(function() {
+      if (!previewActive) return;
       ge('top-ctrl').style.opacity = '0.35';
       ge('top-ctrl').style.pointerEvents = 'auto';
     }, 1500);
-    ge('btn-preview').style.opacity = '1';
-    ge('btn-preview').style.pointerEvents = 'auto';
-    ge('btn-preview').textContent = '✕';
+    _autoBeforePreview = ctl.isAutoRotate();
+    ctl.setAutoRotate(true); syncAutoButton();
+    ge('btn-preview').innerHTML = PanoTools.icon('close');
     ge('btn-preview').title = '退出預覽';
   } else {
     ge('top-ctrl').style.opacity = '1';
     ge('top-ctrl').style.pointerEvents = 'auto';
-    ge('btn-preview').textContent = '👁';
+    ctl.setAutoRotate(_autoBeforePreview); syncAutoButton();
+    ge('btn-preview').innerHTML = PanoTools.icon('eye');
     ge('btn-preview').title = '預覽模式';
   }
 });
@@ -1453,7 +1401,7 @@ function makeSceneCard(sc, idx, allIdx) {
       '</div>'+
     '</div>'+
     (sc.imageUrl
-      ? '<img class="sc-thumb-sm" src="'+sc.imageUrl+'" alt="" onerror="this.style.display=\'none\'">'
+      ? '<img class="sc-thumb-sm" src="'+sc.imageUrl+'" alt="" loading="lazy" decoding="async" onerror="this.style.display=\'none\'">'
       : '<div class="sc-no-img">未設定圖片</div>')+
     '<div class="sc-load-row">'+
       '<button class="btn-green sc-load" style="flex:1;padding:6px 0;font-size:12px;">▶ 載入場景</button>'+
@@ -1949,7 +1897,7 @@ ge('adj-sync-all-btn').addEventListener('click',function(){
 });
 ge('view-save').addEventListener('click',function(){
   var sc=getScene(currentSceneId);if(!sc){toast('請先選擇場景',1);return;}
-  var previous=sc.initialView;sc.initialView=PanoTools.view({yaw:camera.rotation.y,pitch:camera.rotation.x,fov:camera.fov});
+  var previous=sc.initialView;sc.initialView=PanoTools.view(ctl.getView());
   if(!saveConfig()){sc.initialView=previous;return;}
   toast('已儲存起始視角；上傳設定後網站生效');
 });
@@ -1969,7 +1917,7 @@ function renderMediaGrid() {
   var html = '<div class="media-grid">';
   used.forEach(function(url) {
     var fname = url.split('/').pop().split('?')[0].substring(0, 24);
-    html += '<div class="media-item"><img src="'+url+'" alt="" onerror="this.style.display=\'none\'"><div class="media-badge badge-used">使用中</div><div class="media-name">'+fname+'</div></div>';
+    html += '<div class="media-item"><img src="'+url+'" alt="" loading="lazy" decoding="async" onerror="this.style.display=\'none\'"><div class="media-badge badge-used">使用中</div><div class="media-name">'+fname+'</div></div>';
   });
   html += '</div>';
   el.innerHTML = html;
@@ -2154,60 +2102,56 @@ ge('admin-close').addEventListener('click', function() {
 // 全螢幕：iOS 不支援 requestFullscreen，改用 pseudo-fullscreen
 var _pseudoFs = false;
 var _wrapOrigStyle = '';
+function setFsIcon(on) {
+  var b = ge('btn-fs'), label = on ? '退出全螢幕' : '全螢幕';
+  b.innerHTML = PanoTools.icon(on ? 'collapse' : 'expand');
+  b.title = label; b.setAttribute('aria-label', label);
+  wrap.classList.toggle('is-fs', !!on);
+}
 ge('btn-fs').addEventListener('click', function() {
-  var isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-  if (isMobile || !document.documentElement.requestFullscreen) {
+  if (isMobileDevice || !document.documentElement.requestFullscreen) {
     // Pseudo fullscreen
     if (!_pseudoFs) {
       _wrapOrigStyle = wrap.getAttribute('style') || '';
       ge('admin').classList.remove('open');ge('btn-admin').classList.remove('active');
       wrap.style.cssText = 'position:fixed;top:0;left:0;width:100vw;height:100dvh;z-index:80;';
-      ge('btn-fs').textContent = '✕';
-      ge('btn-fs').title = '退出全螢幕';
+      setFsIcon(true);
       _pseudoFs = true;
-      // 強制 resize
-      renderer.setSize(window.innerWidth, window.innerHeight);
-      camera.aspect = window.innerWidth / window.innerHeight;
-      camera.updateProjectionMatrix();
+      resize();
     } else {
       wrap.setAttribute('style', _wrapOrigStyle);
-      ge('btn-fs').textContent = '⛶';
-      ge('btn-fs').title = '全螢幕';
+      setFsIcon(false);
       _pseudoFs = false;
       resize();
     }
   } else {
     if (!document.fullscreenElement) {
       document.documentElement.requestFullscreen().catch(function(){});
-      ge('btn-fs').textContent = '✕';
+      setFsIcon(true);
     } else {
       document.exitFullscreen();
-      ge('btn-fs').textContent = '⛶';
+      setFsIcon(false);
     }
   }
 });
 document.addEventListener('fullscreenchange', function() {
   if (!document.fullscreenElement) {
-    ge('btn-fs').textContent = '⛶';
+    setFsIcon(false);
     resize();
   }
 });
-ge('btn-help').addEventListener('click', function() {
-  alert('🕹 操作說明\n\n'+
-    '【基本操作】\n'+
-    '• 滑鼠拖曳 / 手指滑動：旋轉視角\n'+
-    '• 滾輪 / 雙指縮放：放大縮小\n'+
-    '• 點擊傳送點（圓形圖示）：跳到對應場景\n'+
-    '• 下方選單：依名稱切換場景\n'+
-    '• ＋／−：縮放；⌂：回到起始視角\n'+
-    '• 點一下環景後，可用方向鍵、加減鍵及 Home 操作\n\n'+
-    '【管理面板】\n'+
-    '• ⚙ 按鈕：開啟/關閉管理面板\n'+
-    '• 場景頁：上傳圖片，新增場景\n'+
-    '• 傳送點頁：放置跳轉點位\n'+
-    '• 調整頁：預設風格、原圖對照、復原與起始視角\n'+
-    '• 圖片頁：查看上傳的圖片與使用狀況\n'+
-    '• 嵌入頁：複製代碼嵌入網站');
+// 操作說明（取代原本的 alert 視窗）
+function setHelp(open) {
+  ge('help-modal').classList.toggle('open', open);
+  if (open) ge('help-close').focus(); else ge('btn-help').focus();
+}
+ge('btn-help').addEventListener('click', function() { setHelp(true); });
+ge('help-close').addEventListener('click', function() { setHelp(false); });
+ge('help-modal').addEventListener('click', function(e) { if (e.target === this) setHelp(false); });
+document.addEventListener('keydown', function(e) {
+  if (e.key !== 'Escape') return;
+  if (ge('help-modal').classList.contains('open')) setHelp(false);
+  else if (_pseudoFs) ge('btn-fs').click();
 });
 ge('welcome-open-btn').addEventListener('click', function() {
   adminPanel.classList.add('open');
@@ -2216,17 +2160,19 @@ ge('welcome-open-btn').addEventListener('click', function() {
 
 // ── Init ──────────────────────────────────────────────────
 function init() {
-  var urlParams = new URLSearchParams(window.location.search);
-  if (urlParams.get('embed') === 'true') {
+  if (embedMode) {
     ge('btn-admin').style.display = 'none';
     ge('btn-help').style.display = 'none';
+    ge('btn-preview').style.display = 'none';
   }
   updateSceneDots();
-  renderAdminSceneList();
+  // 嵌入模式沒有管理面板：不建立場景卡片，避免訪客下載每張全景圖當縮圖
+  if (!embedMode) renderAdminSceneList();
 
   if (config.scenes.length > 0) {
     var startId = config.startScene || config.scenes[0].id;
     switchScene(startId);
+    if (embedMode) viewerUI.showHint(PanoTools.isTouch ? '手指滑動，環顧四周' : '按住拖曳，環顧四周', '雙指或滾輪縮放・點圓形箭頭走到下一區', 5000);
   } else {
     hideLoading();
     ge('welcome').classList.add('show');
@@ -2240,8 +2186,8 @@ if (configData) {
   try { config = JSON.parse(decodeURIComponent(configData)); } catch(e) {}
   init();
 } else if (configUrl) {
-  setLoadingText('讀取設定中...');
-  fetch(configUrl)
+  setLoadingText('讀取設定中…');
+  fetch(configUrl, { cache: 'no-cache' })
     .then(function(r) { return r.json(); })
     .then(function(data) { config = data; init(); })
     .catch(function() { init(); });

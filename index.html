@@ -105,48 +105,30 @@
     .desc-block{margin-bottom:1.1rem;}
     .desc-title{font-size:13px;font-weight:600;letter-spacing:0.05em;margin-bottom:0.4rem;}
     .desc-text{font-size:14px;color:var(--muted);line-height:1.8;white-space:pre-line;}
-    /* Inline 360° viewer */
-    .pano-wrap{position:relative;width:100%;border-radius:8px;overflow:hidden;background:#0a0f0a;margin-top:1.25rem;user-select:none;}
-    .pano-wrap canvas{display:block;width:100% !important;height:100% !important;cursor:grab;touch-action:none;}
-    .pano-wrap canvas.grabbing{cursor:grabbing;}
-    .pano-btn-bar{position:absolute;top:8px;right:8px;display:flex;gap:6px;z-index:40;}
-    .pano-btn{width:36px;height:36px;border-radius:10px;background:rgba(0,0,0,.62);border:1px solid rgba(255,255,255,.18);color:#fff;font-size:17px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(8px);transition:background .15s,transform .15s;}
-    .pano-btn:hover{background:rgba(255,255,255,.2);}
-    .pano-wrap.pano-fs .pano-btn-bar,
-    .pano-wrap:fullscreen .pano-btn-bar,
-    .pano-wrap:-webkit-full-screen .pano-btn-bar{top:calc(env(safe-area-inset-top,0px) + 28px);right:calc(env(safe-area-inset-right,0px) + 36px);}
-    .pano-wrap.pano-fs .pano-btn,
-    .pano-wrap:fullscreen .pano-btn,
-    .pano-wrap:-webkit-full-screen .pano-btn{width:52px;height:52px;border-radius:50%;font-size:24px;background:rgba(0,0,0,.68);border-color:rgba(255,255,255,.28);box-shadow:0 4px 18px rgba(0,0,0,.38);}
-    .pano-wrap:-webkit-full-screen{width:100vw;height:100vh;}
-    .pano-wrap:fullscreen{width:100vw !important;height:100vh !important;}
-    .pano-wrap:fullscreen canvas{height:100% !important;}
-    .pano-ring{width:36px;height:36px;border:3px solid rgba(126,184,122,.15);border-top-color:#7eb87a;border-radius:50%;animation:spin .9s linear infinite;}
-    @keyframes spin{to{transform:rotate(360deg);}}
-    .pano-loading-text{font-size:12px;color:#8a9088;}
-    .pano-progress-bar{position:absolute;bottom:0;left:0;height:3px;background:#7eb87a;width:0%;transition:width .2s ease;border-radius:0 2px 2px 0;z-index:12;}
-    .pano-progress-pct{font-size:11px;color:#7eb87a;margin-top:4px;}
-    .pano-placeholder{width:100%;height:340px;background:var(--surface2);border-radius:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;cursor:pointer;transition:background .15s;margin-top:1.25rem;}
-    .pano-placeholder:hover{background:rgba(126,184,122,.08);}
-    .pano-placeholder-icon{font-size:38px;}
-    .pano-placeholder-text{font-size:13px;color:var(--muted);}
-    .pano-placeholder-btn{padding:8px 22px;background:rgba(126,184,122,.12);border:1px solid rgba(126,184,122,.3);border-radius:20px;color:var(--accent);font-size:13px;cursor:pointer;font-family:inherit;}
-    .pano-label{position:absolute;bottom:10px;left:50%;transform:translateX(-50%);color:rgba(255,255,255,.8);font-size:11px;background:rgba(0,0,0,.5);padding:4px 14px;border-radius:14px;pointer-events:none;white-space:nowrap;}
-    .pano-dots{position:absolute;bottom:10px;right:10px;display:flex;flex-direction:column;gap:6px;}
-    .pano-dot{width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.4);cursor:pointer;transition:all .2s;}
-    .pano-dot.active{background:#7eb87a;border-color:#7eb87a;}
-    .pano-hs-layer{position:absolute;inset:0;pointer-events:none;}
-    .pano-hs{position:absolute;transform:translate(-50%,-50%);cursor:pointer;pointer-events:auto;transition:transform .15s;}
-    .pano-hs:hover{transform:translate(-50%,-50%) scale(1.2);}
-    .pano-hs-inner{border-radius:50%;display:flex;align-items:center;justify-content:center;position:relative;box-shadow:0 2px 10px rgba(0,0,0,.5);}
-    .pano-hs-label{position:absolute;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%);white-space:nowrap;background:rgba(0,0,0,.75);color:#fff;font-size:11px;padding:3px 9px;border-radius:10px;opacity:0;transition:opacity .2s;pointer-events:none;}
-    .pano-hs:hover .pano-hs-label{opacity:1;}
-    .pano-hs-pulse{position:absolute;inset:0;border-radius:50%;animation:pr 1.9s ease-out infinite;}
-    .pano-hs-effect-glow .pano-hs-inner{box-shadow:0 0 0 4px var(--hs-soft),0 0 24px var(--hs-color),0 2px 10px rgba(0,0,0,.55);}
-    .pano-hs-effect-breathe .pano-hs-inner{animation:hsb 2.4s ease-in-out infinite;}
-    .pano-hs-arrow{position:absolute;left:50%;top:calc(100% + 4px);width:0;height:0;border-left:7px solid transparent;border-right:7px solid transparent;border-top:10px solid var(--hs-color);filter:drop-shadow(0 2px 5px rgba(0,0,0,.55));transform:translateX(-50%);}
-    @keyframes pr{0%{transform:scale(1);opacity:.65;}100%{transform:scale(2.3);opacity:0;}}
-    @keyframes hsb{0%,100%{transform:scale(1);}50%{transform:scale(1.12);}}
+    /* Inline 360° viewer（操作介面與傳送點樣式由 pano-tools.js 注入）*/
+    .pano-wrap{position:relative;width:100%;aspect-ratio:16/10;min-height:280px;max-height:72vh;margin-top:1.25rem;border-radius:12px;overflow:hidden;background:#0a0f0a;isolation:isolate;box-shadow:0 10px 30px rgba(0,0,0,.25);}
+    @supports not (aspect-ratio:1){.pano-wrap,.pano-placeholder{height:380px;}}
+    .pano-wrap.pano-fs{position:fixed;inset:0;width:100vw;height:100vh;height:100dvh;max-height:none;min-height:0;aspect-ratio:auto;margin:0;border-radius:0;z-index:9999;box-shadow:none;}
+    .pano-wrap:fullscreen{width:100vw;height:100vh;max-height:none;aspect-ratio:auto;margin:0;border-radius:0;}
+    .pano-wrap:-webkit-full-screen{width:100vw;height:100vh;max-height:none;margin:0;border-radius:0;}
+    .pano-error{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:2rem;text-align:center;color:#c9c4b8;font-size:13px;line-height:1.7;}
+    /* 360° 封面：點擊後才載入 3D，節省流量 */
+    .pano-placeholder{position:relative;width:100%;aspect-ratio:16/10;min-height:280px;max-height:72vh;margin-top:1.25rem;border-radius:12px;overflow:hidden;isolation:isolate;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:#fff;background:#121812;border:1px solid var(--border);transition:border-color .25s,box-shadow .25s;outline:none;}
+    .pano-placeholder:hover,.pano-placeholder:focus-visible{border-color:var(--accent);box-shadow:0 0 0 3px rgba(126,184,122,.18);}
+    .pano-placeholder.gold:hover,.pano-placeholder.gold:focus-visible{border-color:var(--accent2);box-shadow:0 0 0 3px rgba(196,163,90,.18);}
+    .pano-ph-bg{position:absolute;inset:-6%;z-index:-2;background:radial-gradient(120% 90% at 50% 40%,#22301f,#0b100c 75%) center/cover no-repeat;filter:brightness(.55) saturate(1.1);animation:pano-drift 24s ease-in-out infinite alternate;}
+    .pano-placeholder::after{content:'';position:absolute;inset:0;z-index:-1;background:radial-gradient(ellipse at center,rgba(0,0,0,0) 30%,rgba(0,0,0,.55) 100%);}
+    .pano-ph-badge{position:absolute;top:12px;left:12px;padding:5px 10px;border-radius:999px;font:700 11px/1 -apple-system,BlinkMacSystemFont,sans-serif;letter-spacing:.14em;background:rgba(0,0,0,.42);border:1px solid rgba(255,255,255,.22);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);}
+    .pano-ph-orb{position:relative;width:72px;height:72px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.4);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);box-shadow:0 12px 34px rgba(0,0,0,.45);transition:transform .3s cubic-bezier(.3,1.4,.5,1),background .3s;}
+    .pano-ph-orb::before{content:'';position:absolute;inset:-7px;border-radius:50%;border:1.5px solid rgba(255,255,255,.35);animation:pano-ring 2.4s ease-out infinite;}
+    .pano-ph-orb svg{width:34px;height:34px;fill:none;stroke:#fff;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;}
+    .pano-placeholder:hover .pano-ph-orb{transform:scale(1.08);background:rgba(126,184,122,.35);}
+    .pano-placeholder.gold:hover .pano-ph-orb{background:rgba(196,163,90,.35);}
+    .pano-ph-title{font-size:16px;font-weight:500;letter-spacing:.08em;text-shadow:0 2px 12px rgba(0,0,0,.6);}
+    .pano-ph-sub{font-size:12px;color:rgba(255,255,255,.75);letter-spacing:.05em;text-shadow:0 1px 8px rgba(0,0,0,.6);}
+    @keyframes pano-drift{from{transform:translateX(-3%) scale(1.04);}to{transform:translateX(3%) scale(1.04);}}
+    @keyframes pano-ring{0%{transform:scale(.92);opacity:.8;}100%{transform:scale(1.35);opacity:0;}}
+    @media(prefers-reduced-motion:reduce){.pano-ph-bg,.pano-ph-orb::before{animation:none;}}
     .yt-wrap{border-radius:8px;overflow:hidden;margin-top:1.25rem;margin-bottom:0.25rem;position:relative;padding-bottom:56.25%;height:0;}
     .yt-wrap iframe{position:absolute;top:0;left:0;width:100%;height:100%;border:none;display:block;}
     .yt-caption{font-size:11px;color:var(--muted);text-align:center;letter-spacing:0.08em;margin-bottom:0.5rem;}
@@ -239,14 +221,6 @@
       .filter-bar{gap:6px;}
       .filter-tag{font-size:11px;padding:4px 10px;}
     }
-    .pano-loading{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;background:rgba(10,15,10,.7);z-index:25;pointer-events:none;}
-    .pano-controls{position:absolute;bottom:8px;left:8px;right:8px;z-index:40;display:flex;gap:5px;justify-content:center;}
-    .pano-controls select{flex:1;min-width:0;max-width:260px;border:1px solid #62705c;border-radius:9px;background:#172017;color:#fff;padding:6px;font-size:12px;}
-    .pano-controls button{width:40px;height:40px;flex-shrink:0;}
-    .pano-label{bottom:58px;max-width:90%;overflow:hidden;text-overflow:ellipsis;}
-    .pano-dots{display:none;}
-    .pano-wrap [hidden]{display:none!important;}
-    .pano-wrap canvas:focus-visible{outline:2px solid #c4a35a;outline-offset:-2px;}
   </style>
 </head>
 <body>
@@ -453,28 +427,26 @@
     const PAGE_SIZE = 6; // 首頁每次顯示幾筆
     var pageState = { camping: PAGE_SIZE, moto: PAGE_SIZE, domestic: PAGE_SIZE, overseas: PAGE_SIZE };
 
-    // ── 360° inline viewer ─────────────────────────────────
+    // ── 360° inline viewer（操作、轉場、傳送點與介面由 pano-tools.js 提供）──
     var _panoViewers = {}; // id → InlinePano instance
 
     function InlinePano(containerId, cfg, gold) {
-      var me = this;
-      me.containerId = containerId;
-      me.cfg = cfg; // {scenes:[{name,imageUrl,hotspots:[]}], startScene}
-      me.gold = gold;
-      me.currentIdx = 0;
-      me.renderer = null; me.camera = null; me.scene = null;
-      me.sphere = null; me.mat = null; me.cubeMesh = null; me.cubeMats = null;
-      me.isDrag = false; me.prevX = 0; me.prevY = 0;
-      me.velX = 0; me.velY = 0; me.fov = 75;
-      me.loader = null; me.raf = null;
-      me.isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-      me.isPseudoFs = false;
-      me.tileJobId = 0;
-      me.loadJobId = 0;
-      me.handlers = [];
-      me.observer = null;
-      me.destroyed = false;
-      me.init();
+      this.containerId = containerId;
+      this.cfg = cfg || {};
+      this.scenes = (this.cfg.scenes || []).filter(function(sc) { return sc && (sc.imageUrl || sc.tileBaseUrl); });
+      this.gold = gold;
+      this.currentIdx = -1;
+      this.handlers = [];
+      this.job = 0;
+      this.w = 0; this.h = 0;
+      this.dirty = true;
+      this.visible = true;
+      this.raf = null;
+      this.isPseudoFs = false;
+      this.hasTexture = false;
+      this.walking = false;
+      this.destroyed = false;
+      this.init();
     }
 
     InlinePano.prototype.addHandler = function(target, type, fn, opts) {
@@ -484,443 +456,399 @@
 
     InlinePano.prototype.init = function() {
       var me = this;
-      var wrap = document.getElementById(me.containerId);
+      var wrap = me.wrap = document.getElementById(me.containerId);
       if (!wrap) return;
+      wrap.className = 'pano-wrap' + (me.gold ? ' gold' : '');
+      wrap.removeAttribute('style');
+      wrap.innerHTML = '';
+      if (!me.scenes.length) {
+        wrap.innerHTML = '<div class="pano-error">⚠️ 這個環景還沒有可顯示的場景</div>';
+        return;
+      }
 
-      // Canvas
-      var canvas = document.createElement('canvas');
-      var _isMob = me.isMobile;
-      var _cvH = _isMob ? 300 : 340;
-      canvas.style.cssText = 'width:100%;height:'+_cvH+'px;display:block;';
-      wrap.innerHTML = '<div class="pano-loading"><div class="pano-ring"></div><div class="pano-loading-text">載入中...</div><div class="pano-progress-pct" id="pct-'+me.containerId+'"></div></div><div class="pano-progress-bar" id="bar-'+me.containerId+'"></div>';
+      var canvas = me.canvas = document.createElement('canvas');
+      canvas.className = 'ptv-canvas';
       wrap.appendChild(canvas);
-      var loadEl = wrap.querySelector('.pano-loading');
+      var layer = document.createElement('div');
+      wrap.appendChild(layer);
 
-      // Btn bar (fullscreen)
-      var btnBar = document.createElement('div');
-      btnBar.className = 'pano-btn-bar';
-      var fsBtn = document.createElement('button');
-      fsBtn.className = 'pano-btn';
-      fsBtn.textContent = '⛶';
-      fsBtn.title = '全螢幕';
-      var _inPseudoFs = false, _origWrapStyle = '';
-      me.addHandler(fsBtn, 'click', function() {
-        var isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
-        if (isIOS || !wrap.requestFullscreen) {
-          // iOS pseudo-fullscreen
-          if (!_inPseudoFs) {
-            _origWrapStyle = wrap.getAttribute('style') || '';
-            document.body.classList.add('pano-fullscreen-active');
-            wrap.style.cssText = 'position:fixed;top:0;left:0;width:100vw;height:100dvh;z-index:9999;border-radius:0;overflow:hidden;background:#0a0f0a;';
-            wrap.classList.add('pano-fs');
-            fsBtn.textContent = '✕';
-            _inPseudoFs = true; me.isPseudoFs = true;
-            setTimeout(function() { me.resize(); }, 60);
-          } else {
-            if (_origWrapStyle) wrap.setAttribute('style', _origWrapStyle);
-            else wrap.removeAttribute('style');
-            wrap.classList.remove('pano-fs');
-            document.body.classList.remove('pano-fullscreen-active');
-            fsBtn.textContent = '⛶';
-            _inPseudoFs = false; me.isPseudoFs = false;
-            setTimeout(function() { me.resize(); }, 60);
-          }
-        } else {
-          if (!document.fullscreenElement) {
-            wrap.requestFullscreen();
-            fsBtn.textContent = '✕';
-          } else {
-            document.exitFullscreen();
-            fsBtn.textContent = '⛶';
-          }
-        }
-      });
-      me.addHandler(document, 'fullscreenchange', function() {
-        var inFs = document.fullscreenElement === wrap;
-        wrap.classList.toggle('pano-fs', inFs);
-        document.body.classList.toggle('pano-fullscreen-active', inFs || me.isPseudoFs);
-        fsBtn.textContent = inFs ? '✕' : '⛶';
-        setTimeout(function() { me.resize(); }, 50);
-        if (inFs) setTimeout(function() { me.resize(); }, 300);
-      });
-      btnBar.appendChild(fsBtn);
-      wrap.appendChild(btnBar);
-
-      // HS layer
-      var hsLayer = document.createElement('div');
-      hsLayer.className = 'pano-hs-layer';
-      wrap.appendChild(hsLayer);
-      me.hsLayer = hsLayer;
-
-      // Label
-      var label = document.createElement('div');
-      label.className = 'pano-label';
-      wrap.appendChild(label);
-      me.labelEl = label;
-
-      // Dots
-      var dots = document.createElement('div');
-      dots.className = 'pano-dots';
-      wrap.appendChild(dots);
-      me.dotsEl = dots;
-      var controls=document.createElement('div');controls.className='pano-controls';
-      var picker=document.createElement('select');picker.setAttribute('aria-label','選擇環景場景');controls.appendChild(picker);me.scenePicker=picker;
-      me.addHandler(picker,'change',function(){me.goScene(Number(picker.value));});
-      function control(text,label,fn){var button=document.createElement('button');button.type='button';button.className='pano-btn';button.textContent=text;button.title=label;button.setAttribute('aria-label',label);me.addHandler(button,'click',fn);controls.appendChild(button);return button;}
-      control('−','縮小',function(){PanoTools.zoom(me.camera,me.camera.fov+5);me.fov=me.camera.fov;});
-      control('＋','放大',function(){PanoTools.zoom(me.camera,me.camera.fov-5);me.fov=me.camera.fov;});
-      control('⌂','回到起始視角',function(){me.resetView();});
-      me.retryButton=control('↻','重新載入場景',function(){me.goScene(me.currentIdx);});me.retryButton.hidden=true;
-      wrap.appendChild(controls);
-
-
-      // Three.js init — 行動裝置使用低功耗設定避免閃退
-      var isMobile = me.isMobile;
+      // Three.js — 行動裝置使用低功耗設定避免閃退
+      var isMobile = PanoTools.isMobile;
       try {
         me.renderer = new THREE.WebGLRenderer({
           canvas: canvas,
           antialias: !isMobile,
           powerPreference: isMobile ? 'low-power' : 'default',
-          preserveDrawingBuffer: false // 不保留截圖 buffer，降低記憶體壓力
+          preserveDrawingBuffer: false
         });
         me.renderer.outputEncoding = THREE.sRGBEncoding;
-        me.renderer.setPixelRatio(isMobile ? 1 : Math.min(window.devicePixelRatio, 2)); // 手機固定1倍，省記憶體
+        me.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, isMobile ? 1.5 : 2));
         me.camera = new THREE.PerspectiveCamera(75, 1, 0.1, 200);
         me.camera.rotation.order = 'YXZ';
         me.scene = new THREE.Scene();
-        var segments = isMobile ? 32 : 56; // 手機降低球體精細度
-        var geo = new THREE.SphereGeometry(100, segments, segments * 2 / 3);
-        me.mat = new THREE.MeshBasicMaterial({ side: THREE.BackSide, color: 0x111811 });
-        me.sphere = new THREE.Mesh(geo, me.mat);
+        var seg = isMobile ? 48 : 64;
+        me.mat = new THREE.MeshBasicMaterial({ side: THREE.BackSide, color: 0x020302 });
+        me.sphere = new THREE.Mesh(new THREE.SphereGeometry(100, seg, Math.round(seg * 2 / 3)), me.mat);
         me.scene.add(me.sphere);
-        var cubeGeo = new THREE.BoxGeometry(200, 200, 200);
+        // 切片模式：立方體 6 面各自貼圖（scale.x=-1 配合 BackSide 讓方向正確）
         me.cubeMats = Array.from({length:6}, function() {
-          return new THREE.MeshBasicMaterial({ side: THREE.BackSide, color: 0x111811 });
+          return new THREE.MeshBasicMaterial({ side: THREE.BackSide, color: 0x020302 });
         });
-        me.cubeMesh = new THREE.Mesh(cubeGeo, me.cubeMats);
+        me.cubeMesh = new THREE.Mesh(new THREE.BoxGeometry(200, 200, 200), me.cubeMats);
         me.cubeMesh.rotation.y = Math.PI;
         me.cubeMesh.scale.x = -1;
         me.cubeMesh.visible = false;
         me.scene.add(me.cubeMesh);
-        me.loader = new THREE.TextureLoader();
-        me.loader.crossOrigin = 'anonymous';
-        // Handle context loss on mobile
-        me.addHandler(canvas, 'webglcontextlost', function(e) {
-          e.preventDefault();
-          cancelAnimationFrame(me.raf);
-          me.raf = null;
-        });
-        me.addHandler(canvas, 'webglcontextrestored', function() {
-          me.goScene(me.currentIdx);
-          loop();
-        });
+        me.texLoader = new THREE.TextureLoader();
+        me.texLoader.crossOrigin = 'anonymous';
       } catch(e) {
-        wrap.innerHTML = '<div style="padding:2rem;text-align:center;color:#8a9088;font-size:13px;">⚠️ WebGL 不支援</div>';
+        me.renderer = null;
+        wrap.innerHTML = '<div class="pano-error">⚠️ 此瀏覽器不支援 WebGL，無法顯示 360° 環景</div>';
         return;
       }
 
-      // Resize — 正確處理全螢幕
+      me.xfade = new PanoTools.Transition(wrap);
+      me.loader = new PanoTools.Loader(wrap);
+      me.ctl = PanoTools.controls(canvas, me.camera, {
+        autoRotate: true,
+        onInteract: function() { me.ui.hideHint(); },
+        onReset: function() { me.resetView(true); }
+      });
+      me.hotspots = new PanoTools.HotspotLayer(layer, {
+        onClick: function(hs, el) { me.followHotspot(hs, el); }
+      });
+      me.ui = new PanoTools.ViewerUI(wrap, {
+        onSelect: function(i) { me.goScene(i, { mode: 'pick' }); },
+        onReset: function() { me.resetView(true); },
+        onZoom: function(f) { me.ctl.zoomBy(f); },
+        autoRotate: true,
+        onAuto: function() { var on = !me.ctl.isAutoRotate(); me.ctl.setAutoRotate(on); me.ui.setAuto(on); },
+        gyro: PanoTools.gyroSupported(),
+        onGyro: function() { me.toggleGyro(); },
+        fullscreen: true,
+        onFullscreen: function() { me.toggleFullscreen(); }
+      });
+      me.ui.setAuto(me.ctl.isAutoRotate());
+      me.ui.setScenes(me.scenes, -1);
+
+      // 行動裝置記憶體吃緊時 WebGL 可能被回收：恢復後重新載入目前場景
+      me.addHandler(canvas, 'webglcontextlost', function(e) { e.preventDefault(); me.hasTexture = false; });
+      me.addHandler(canvas, 'webglcontextrestored', function() { me.goScene(me.currentIdx, { mode: 'initial' }); });
+
       me.resize = function() {
         if (me.destroyed) return;
-        var inFs = document.fullscreenElement === wrap || me.isPseudoFs;
-        var w = inFs ? window.innerWidth : wrap.clientWidth;
-        var h = inFs ? window.innerHeight : (_cvH || 340);
-        if(!inFs)wrap.style.height=h+'px';
-        canvas.style.height = h + 'px';
+        var w = wrap.clientWidth, h = wrap.clientHeight;
+        if (!w || !h || (w === me.w && h === me.h)) return;
+        me.w = w; me.h = h;
         me.renderer.setSize(w, h, false);
         me.camera.aspect = w / h;
         me.camera.updateProjectionMatrix();
+        me.ui.layout(w, h);
+        me.dirty = true;
+        me.wake();
       };
-      me.resize();
+      if (window.ResizeObserver) { me.ro = new ResizeObserver(function() { me.resize(); }); me.ro.observe(wrap); }
       me.addHandler(window, 'resize', me.resize);
+      me.addHandler(document, 'fullscreenchange', function() { me.syncFs(); });
+      me.addHandler(document, 'webkitfullscreenchange', function() { me.syncFs(); });
+      me.addHandler(document, 'keydown', function(e) { if (e.key === 'Escape' && me.isPseudoFs) me.setPseudoFs(false); });
 
-      // Shared pointer controls handle drag, pinch, keyboard and cancellation.
-      me.releaseControls=PanoTools.bind(canvas,me.camera,{
-        onChange:function(){me.fov=me.camera.fov;},onReset:function(){me.resetView();}
-      });
+      // 不在畫面內時暫停繪製（避免 iOS 多個 WebGL 同時運作而崩潰）
+      me.frameFn = function(t) { me.frame(t); };
+      me.observer = new IntersectionObserver(function(entries) {
+        me.visible = entries[0].isIntersecting;
+        if (me.visible) { me.dirty = true; me.wake(); }
+      }, { threshold: 0.05 });
+      me.observer.observe(wrap);
+      me.resize();
+      me.wake();
 
-      // Render loop — 不在畫面內時自動暫停（避免 iOS 多 WebGL context 崩潰）
-      me._isVisible = false;
-      me.raycaster = new THREE.Raycaster();
-      var observer = new IntersectionObserver(function(entries) {
-        me._isVisible = entries[0].isIntersecting;
-        if (me._isVisible && !me.raf) loop();
-      }, { threshold: 0.1 });
-      observer.observe(wrap);
-      me.observer = observer;
-
-      function loop() {
-        if (me.destroyed || !me._isVisible) { me.raf = null; return; } // 不在畫面內就停止
-        me.raf = requestAnimationFrame(loop);
-        if (!me.isDrag) {
-          me.velX *= 0.9; me.velY *= 0.9;
-          if (Math.abs(me.velX) > 0.01) me.camera.rotation.y += me.velX * 0.0006;
-          if (Math.abs(me.velY) > 0.01) me.camera.rotation.x = Math.max(-Math.PI/2, Math.min(Math.PI/2, me.camera.rotation.x + me.velY * 0.0006));
-        }
-        me.renderer.render(me.scene, me.camera);
-        me.updateHs();
-      }
-      loop();
-
-      // Load first scene
-      me.buildDots();
-      var start=(me.cfg.scenes||[]).findIndex(function(sc){return sc.id===me.cfg.startScene;});
-      me.goScene(start<0?0:start, loadEl);
+      var start = me.scenes.findIndex(function(sc) { return sc.id === me.cfg.startScene; });
+      me.goScene(start < 0 ? 0 : start, { mode: 'initial' });
     };
 
-    InlinePano.prototype.resetView = function(){
-      var sc=(this.cfg.scenes||[])[this.currentIdx];PanoTools.applyView(this.camera,sc && sc.initialView);this.fov=this.camera.fov;this.velX=0;this.velY=0;
+    InlinePano.prototype.wake = function() {
+      if (!this.destroyed && this.visible && !this.raf) this.raf = requestAnimationFrame(this.frameFn);
     };
 
-    InlinePano.prototype.goScene = function(idx, loadEl, onReady) {
+    // 只有視角變動時才重新繪製，省電也更順
+    InlinePano.prototype.frame = function(t) {
       var me = this;
-      var scenes = me.cfg.scenes || [];
-      if (!scenes.length) return;
-      idx = Math.max(0, Math.min(scenes.length - 1, idx));
-      ++me.loadJobId;++me.tileJobId;
-      if(me.xhr){try{me.xhr.abort();}catch(e){}}
-      me.retryButton.hidden=true;
-      me.currentIdx = idx;
-      var sc = scenes[idx];
-      me.labelEl.textContent = sc.name || '';
-      me.resetView();
-      me.buildDots();
-      me.buildHs(sc.hotspots || []);
-      me.applyAdjust(sc.adjust);
+      me.raf = null;
+      if (me.destroyed || !me.visible) return;
+      me.raf = requestAnimationFrame(me.frameFn);
+      if (me.ctl.update(t) || me.dirty) me.draw();
+    };
 
-      if (sc.tileBaseUrl) {
-        me.sphere.visible = false;
-        me.cubeMesh.visible = true;
-        me.loadTiles(sc, onReady);
+    InlinePano.prototype.draw = function() {
+      var me = this, cam = me.camera;
+      me.dirty = false;
+      me.renderer.render(me.scene, cam);
+      me.hotspots.update(cam, me.w, me.h);
+      var hfov = 2 * Math.atan(Math.tan(cam.fov * Math.PI / 360) * cam.aspect);
+      me.ui.compass(cam.rotation.y, hfov, me.currentHotspots);
+    };
+
+    // mode：initial（首次載入）、pick（選單切換：淡入淡出）、hotspot（走向傳送點：向前推進）
+    InlinePano.prototype.goScene = function(idx, opts) {
+      var me = this;
+      opts = opts || {};
+      if (me.destroyed || !me.renderer || !me.scenes.length) return Promise.resolve(false);
+      idx = Math.max(0, Math.min(me.scenes.length - 1, idx));
+      var sc = me.scenes[idx], job = ++me.job;
+      var target = opts.view || PanoTools.view(sc.initialView);
+      if (me.hasTexture && opts.mode !== 'initial') {
+        me.renderer.render(me.scene, me.camera);
+        me.xfade.capture(me.canvas);
+      }
+      me.currentIdx = idx;
+      me.ui.setCurrent(idx);
+      me.hotspots.clear();
+      me.currentHotspots = null;
+      me.loader.show(sc.name || '360° 環景', '準備載入…', me.xfade.active ? 300 : 0);
+      var waitTimer = setTimeout(function() { if (job === me.job) me.xfade.wait(); }, 280);
+      var loading = sc.tileBaseUrl ? me.loadTiles(sc, job) : me.loadImage(sc, job);
+      return loading.then(function(apply) {
+        clearTimeout(waitTimer);
+        if (job !== me.job || me.destroyed) return false;
+        apply();
+        me.hasTexture = true;
+        me.canvas.style.filter = PanoTools.filter(sc.adjust);
+        if (opts.arrive) {
+          // 從稍微放大的畫面拉開，搭配舊畫面向前推進，營造「走過去」的感覺
+          me.ctl.setView({ yaw: target.yaw, pitch: target.pitch, fov: Math.min(100, target.fov * 0.8) }, target);
+          me.ctl.animateTo({ fov: target.fov }, 1000, PanoTools.ease.out);
+        } else {
+          me.ctl.setView(target);
+        }
+        me.ctl.update();
+        me.currentHotspots = sc.hotspots || [];
+        me.hotspots.set(me.currentHotspots);
+        me.draw();
+        me.loader.hide();
+        me.xfade.leave(opts.mode === 'hotspot' ? 'forward' : 'fade');
+        me.prefetchNeighbors(sc);
+        if (opts.mode === 'initial') me.showHint();
+        return true;
+      }, function(err) {
+        clearTimeout(waitTimer);
+        if (job !== me.job || me.destroyed) return false;
+        me.xfade.clear();
+        me.clearTextures();
+        me.dirty = true;
+        var timeout = err && err.message === 'timeout';
+        me.loader.error(timeout ? '圖片下載逾時' : '圖片載入失敗', function() { me.goScene(idx, { mode: 'pick' }); });
+        return false;
+      });
+    };
+
+    // 下載（含進度）→ 背景解碼 → 回傳「套用貼圖」的函式，讓轉場時機可控
+    InlinePano.prototype.loadImage = function(sc, job) {
+      var me = this;
+      return PanoTools.images.load(sc.imageUrl, {
+        maxSize: PanoTools.maxTextureSize(me.renderer),
+        onProgress: function(loaded, total) {
+          if (job === me.job) me.loader.progress(total ? loaded / total : null, loaded, total);
+        }
+      }).then(function(source) {
+        return function() {
+          var tex = PanoTools.panoTexture(source, me.renderer);
+          me.clearCubeTextures();
+          me.cubeMesh.visible = false;
+          me.sphere.visible = true;
+          if (me.mat.map) me.mat.map.dispose();
+          me.mat.map = tex;
+          me.mat.color.set(0xffffff);
+          me.mat.needsUpdate = true;
+        };
+      });
+    };
+
+    InlinePano.prototype.loadTiles = function(sc, job) {
+      var me = this, base = sc.tileBaseUrl.replace(/\/?$/, '/'), tex = [], done = 0, failed = 0, settled = false;
+      return new Promise(function(resolve, reject) {
+        var timer = setTimeout(function() { finish(new Error('timeout')); }, 30000);
+        function finish(err, apply) {
+          if (settled) return;
+          settled = true; clearTimeout(timer);
+          if (err) { tex.forEach(function(t) { if (t) t.dispose(); }); reject(err); }
+          else resolve(apply);
+        }
+        function next() {
+          done++;
+          if (job === me.job) me.loader.progress(done / 6);
+          if (done < 6) return;
+          if (job !== me.job) return finish(new Error('stale'));
+          if (failed === 6) return finish(new Error('tiles'));
+          finish(null, function() {
+            if (me.mat.map) { me.mat.map.dispose(); me.mat.map = null; me.mat.needsUpdate = true; }
+            me.sphere.visible = false;
+            me.cubeMesh.visible = true;
+            me.cubeMats.forEach(function(m, i) {
+              var t = tex[i];
+              if (m.map) m.map.dispose();
+              if (t) {
+                t.encoding = THREE.sRGBEncoding;
+                if (PanoTools.isMobile) { t.minFilter = THREE.LinearFilter; t.generateMipmaps = false; }
+              }
+              m.map = t || null;
+              m.color.set(t ? 0xffffff : 0x020302);
+              m.needsUpdate = true;
+            });
+          });
+        }
+        ['px','nx','py','ny','pz','nz'].forEach(function(face, i) {
+          me.texLoader.load(base + face + '.jpg', function(t) {
+            if (settled) { t.dispose(); return; }
+            tex[i] = t; next();
+          }, undefined, function() { if (!settled) { failed++; next(); } });
+        });
+      });
+    };
+
+    // 點傳送點：先轉向並靠近，再切到下一個場景
+    InlinePano.prototype.followHotspot = function(hs, el) {
+      var me = this;
+      if (me.walking) return;
+      var idx = me.scenes.findIndex(function(s) { return s.id === hs.targetScene; });
+      if (idx < 0 || idx === me.currentIdx) return;
+      var target = me.scenes[idx], from = me.scenes[me.currentIdx];
+      if (target.imageUrl) PanoTools.images.prefetch(target.imageUrl, true);
+      if (el) el.classList.add('ptv-hs-go');
+      me.walking = true;
+      var fov = me.ctl.getView().fov;
+      me.ctl.animateTo({
+        yaw: PanoTools.yawToward(hs.theta),
+        pitch: PanoTools.pitchToward(hs.phi) * 0.5,
+        fov: Math.max(30, fov * 0.7)
+      }, 560).then(function() {
+        return me.goScene(idx, { mode: 'hotspot', arrive: true, view: PanoTools.arrivalView(target, from && from.id) });
+      }).then(function() { me.walking = false; }, function() { me.walking = false; });
+    };
+
+    // 背景預載相鄰場景，點下一個傳送點時幾乎不用等
+    InlinePano.prototype.prefetchNeighbors = function(sc) {
+      var me = this, seen = {}, count = 0, max = PanoTools.isMobile ? 1 : 3;
+      (sc.hotspots || []).forEach(function(h) {
+        if (count >= max) return;
+        var t = me.scenes.find(function(s) { return s.id === h.targetScene; });
+        if (!t || !t.imageUrl || seen[t.imageUrl]) return;
+        seen[t.imageUrl] = true; count++;
+        PanoTools.images.prefetch(t.imageUrl);
+      });
+    };
+
+    InlinePano.prototype.resetView = function(animated) {
+      var sc = this.scenes[this.currentIdx];
+      if (!sc || !this.ctl) return;
+      var v = PanoTools.view(sc.initialView);
+      if (animated) this.ctl.animateTo(v, 700); else this.ctl.setView(v);
+    };
+
+    InlinePano.prototype.showHint = function() {
+      try { if (sessionStorage.getItem('ptv-hint-seen')) return; sessionStorage.setItem('ptv-hint-seen', '1'); } catch(e) {}
+      var touch = PanoTools.isTouch;
+      var hasHs = this.scenes.some(function(s) { return s.hotspots && s.hotspots.length; });
+      this.ui.showHint(touch ? '手指滑動，環顧四周' : '按住拖曳，環顧四周',
+        (touch ? '雙指縮放・點兩下放大' : '滾輪縮放・點兩下放大') + (hasHs ? '・點圓形箭頭走到下一區' : ''), 5000);
+    };
+
+    InlinePano.prototype.toggleGyro = function() {
+      var me = this, enable = !me.ctl.isGyro();
+      me.ctl.setGyro(enable).then(function(ok) {
+        if (me.destroyed) return;
+        me.ui.setGyro(ok);
+        if (enable && !ok) me.ui.toast('無法啟用陀螺儀，請允許瀏覽器存取「動作與方向」');
+        else if (ok) me.ui.toast('轉動手機即可環顧四周');
+      });
+    };
+
+    // 全螢幕：iPhone 不支援元素全螢幕，改用固定定位的「偽全螢幕」
+    InlinePano.prototype.toggleFullscreen = function() {
+      var me = this, wrap = me.wrap;
+      var fsEl = document.fullscreenElement || document.webkitFullscreenElement;
+      if (me.isPseudoFs) { me.setPseudoFs(false); return; }
+      if (fsEl) {
+        var exit = document.exitFullscreen || document.webkitExitFullscreen;
+        if (exit) exit.call(document);
         return;
       }
-      if (!sc.imageUrl) return;
-      me.sphere.visible = true;
-      me.cubeMesh.visible = false;
-      me.clearCubeTextures();
-      var wrap = document.getElementById(me.containerId);
-      var ld = wrap && wrap.querySelector('.pano-loading');
-      var bar = document.getElementById('bar-' + me.containerId);
-      var pct = document.getElementById('pct-' + me.containerId);
-      if (ld) { ld.style.display = 'flex'; ld.innerHTML='<div class="pano-ring"></div><div class="pano-loading-text">下載圖片中...</div>'; }
-      if (bar) bar.style.width = '0%';
-
-      var isMobile = me.isMobile;
-      var maxPx = Math.min(me.renderer.capabilities.maxTextureSize, isMobile ? 2048 : 4096); // 兼顧手機細節與貼圖記憶體
-
-      // XHR 下載以取得進度百分比
-      var jobId = ++me.loadJobId;
-      if (me.xhr) { try { me.xhr.abort(); } catch(e) {} }
-      var xhr = new XMLHttpRequest();
-      me.xhr = xhr;
-      xhr.open('GET', sc.imageUrl, true);
-      xhr.responseType = 'blob';xhr.timeout=20000;
-      function fail(message){if(me.destroyed||jobId!==me.loadJobId)return;if(ld)ld.style.display='none';if(bar)bar.style.width='0%';me.labelEl.textContent=message;me.retryButton.hidden=false;if(onReady)onReady(false);}
-      xhr.onprogress = function(e) {
-        if (e.lengthComputable) {
-          var p = Math.round(e.loaded / e.total * 90);
-          if (bar) bar.style.width = p + '%';
-          if (pct) pct.textContent = p + '%';
-          var ltxt = ld && ld.querySelector('.pano-loading-text');
-          if (ltxt) ltxt.textContent = '下載中 ' + p + '%';
-        }
-      };
-      xhr.onload = function() {
-        if (me.destroyed || jobId !== me.loadJobId) return;
-        if(xhr.status<200||xhr.status>=300){fail('圖片載入失敗，請重試');return;}
-        if (bar) bar.style.width = '95%';
-        var blobUrl = URL.createObjectURL(xhr.response);
-        var img = new Image();
-        img.crossOrigin = 'anonymous';
-        img.onload = function() {
-          if (me.destroyed || jobId !== me.loadJobId) { URL.revokeObjectURL(blobUrl); return; }
-          try {
-            var w = img.naturalWidth, h = img.naturalHeight;
-            if (w > maxPx || h > maxPx) {
-              var r = Math.min(maxPx/w, maxPx/h);
-              w = Math.round(w*r); h = Math.round(h*r);
-            }
-          var c = document.createElement('canvas');
-          c.width = w; c.height = h;
-          c.getContext('2d').drawImage(img, 0, 0, w, h);
-          var tex = new THREE.CanvasTexture(c);
-          tex.encoding = THREE.sRGBEncoding;
-          tex.wrapS = THREE.RepeatWrapping; tex.repeat.x = -1; tex.offset.x = 1;
-          if (me.mat.map) { me.mat.map.dispose(); }
-          me.mat.map = tex; me.mat.color.set(0xffffff); me.mat.needsUpdate = true;
-          var wrap2 = document.getElementById(me.containerId);
-          var ld2 = wrap2 && wrap2.querySelector('.pano-loading');
-          var bar2 = document.getElementById('bar-' + me.containerId);
-          var pct2 = document.getElementById('pct-' + me.containerId);
-          if (ld2) ld2.style.display = 'none';
-          if (bar2) { bar2.style.width = '100%'; setTimeout(function(){ bar2.style.width='0%'; }, 400); }
-          if (pct2) pct2.textContent = '';
-          URL.revokeObjectURL(blobUrl);
-          me.applyAdjust(sc.adjust);
-          me.renderer.render(me.scene,me.camera);PanoTools.reveal(me.renderer.domElement);
-          if (onReady) onReady(); // 通知轉場：新場景已 ready
-        } catch(e) {
-          URL.revokeObjectURL(blobUrl);fail('圖片處理失敗，請重試');
-        }
-        };
-        img.onerror = function() {
-          URL.revokeObjectURL(blobUrl);
-          fail('圖片載入失敗，請重試');
-        };
-        img.src = blobUrl;
-      };
-      xhr.onerror = function() {
-        if (me.destroyed || jobId !== me.loadJobId) return;
-        fail('下載失敗，請重試');
-      };
-      xhr.ontimeout=function(){fail('下載逾時，請重試');};
-      xhr.send();
+      var req = wrap.requestFullscreen || wrap.webkitRequestFullscreen;
+      if (!req || /iPhone|iPod/i.test(navigator.userAgent)) { me.setPseudoFs(true); return; }
+      try {
+        var r = req.call(wrap);
+        if (r && r.catch) r.catch(function() { me.setPseudoFs(true); });
+      } catch(e) { me.setPseudoFs(true); }
     };
 
-    InlinePano.prototype.applyAdjust = function(adj) {
+    InlinePano.prototype.setPseudoFs = function(on) {
+      this.isPseudoFs = !!on;
+      this.syncFs();
+    };
+
+    InlinePano.prototype.syncFs = function() {
       var me = this;
-      if (!me.renderer || !me.renderer.domElement) return;
-      me.renderer.domElement.style.filter = PanoTools.filter(adj);
+      if (me.destroyed || !me.ui) return;
+      var fsEl = document.fullscreenElement || document.webkitFullscreenElement;
+      var inFs = fsEl === me.wrap || me.isPseudoFs;
+      me.wrap.classList.toggle('pano-fs', me.isPseudoFs);
+      me.wrap.classList.toggle('is-fs', inFs);
+      document.body.classList.toggle('pano-fullscreen-active', inFs);
+      me.ui.setFullscreen(inFs);
+      setTimeout(function() { me.resize(); }, 80);
     };
 
     InlinePano.prototype.clearCubeTextures = function() {
-      var me = this;
-      if (!me.cubeMats) return;
-      me.cubeMats.forEach(function(m) {
+      (this.cubeMats || []).forEach(function(m) {
         if (m.map) { m.map.dispose(); m.map = null; }
-        m.color.set(0x111811);
+        m.color.set(0x020302);
         m.needsUpdate = true;
       });
     };
 
-    InlinePano.prototype.loadTiles = function(sc, onReady) {
-      var me=this;if(!sc.tileBaseUrl||!me.cubeMats)return;
-      if(me.mat.map){me.mat.map.dispose();me.mat.map=null;me.mat.needsUpdate=true;}
-      me.clearCubeTextures();me.applyAdjust(sc.adjust);
-      var wrap=document.getElementById(me.containerId),ld=wrap.querySelector('.pano-loading'),bar=document.getElementById('bar-'+me.containerId);
-      if(ld){ld.style.display='flex';ld.innerHTML='<div class="pano-ring"></div><div class="pano-loading-text">載入切片中...</div>';}
-      var base=sc.tileBaseUrl.replace(/\/?$/,'/'),job=++me.tileJobId,done=0,failed=0,ready=false,expired=false;
-      function active(){return !me.destroyed&&!expired&&job===me.tileJobId;}
-      function failure(){me.labelEl.textContent='部分切片未能載入，請重試';me.retryButton.hidden=false;}
-      var timer=setTimeout(function(){if(!active())return;expired=true;if(ld)ld.style.display='none';if(bar)bar.style.width='0%';failure();if(!ready&&onReady)onReady(false);},20000);
-      function complete(){done++;if(bar)bar.style.width=Math.round(done/6*100)+'%';if(done===6){clearTimeout(timer);if(ld)ld.style.display='none';if(bar)bar.style.width='0%';if(failed)failure();if(!ready&&onReady)onReady(false);}}
-      ['px','nx','py','ny','pz','nz'].forEach(function(face,i){
-        me.loader.load(base+face+'.jpg',function(tex){
-          if(!active()){tex.dispose();return;}
-          tex.encoding=THREE.sRGBEncoding;if(me.isMobile){tex.minFilter=THREE.LinearFilter;tex.generateMipmaps=false;}
-          me.cubeMats[i].map=tex;me.cubeMats[i].color.set(0xffffff);me.cubeMats[i].needsUpdate=true;
-          if(!ready){ready=true;if(ld)ld.style.display='none';PanoTools.reveal(me.renderer.domElement);if(onReady)onReady(true);}complete();
-        },undefined,function(){if(!active())return;failed++;complete();});
-      });
-    };
-
-    InlinePano.prototype.buildDots = function() {
-      var me=this;me.scenePicker.innerHTML='';
-      (me.cfg.scenes||[]).forEach(function(sc,i){var opt=document.createElement('option');opt.value=i;opt.textContent=sc.name||('場景 '+(i+1));me.scenePicker.appendChild(opt);});
-      me.scenePicker.value=me.currentIdx;
-    };
-
-    InlinePano.prototype.buildHs = function(hotspots) {
-      var me = this;
-      me.hotspots = hotspots;
-      me.hsLayer.innerHTML = '';
-      hotspots.forEach(function(hs) {
-        var div = document.createElement('div');
-        var effect = hs.effect || (hs.pulse !== false ? 'pulse' : 'none');
-        div.className = 'pano-hs pano-hs-effect-' + effect; div.dataset.hsid = hs.id;
-        var size = hs.size || 40, color = hs.color || '#7eb87a';
-        div.style.setProperty('--hs-color', color);
-        div.style.setProperty('--hs-soft', color + '33');
-        var inner = document.createElement('div');
-        inner.className = 'pano-hs-inner';
-        inner.style.cssText = 'width:'+size+'px;height:'+size+'px;background:'+color+'22;border:2.5px solid '+color+';font-size:'+Math.round(size*.42)+'px;';
-        if (effect === 'pulse') {
-          var pulse = document.createElement('div');
-          pulse.className = 'pano-hs-pulse';
-          pulse.style.background = color + '55';
-          inner.appendChild(pulse);
-        }
-        inner.appendChild(document.createTextNode(hs.icon || '🔵'));
-        if (effect === 'arrow') {
-          var arrow = document.createElement('div');
-          arrow.className = 'pano-hs-arrow';
-          inner.appendChild(arrow);
-        }
-        var lbl = document.createElement('div');
-        lbl.className = 'pano-hs-label';
-        lbl.textContent = hs.label || '前往';
-        div.appendChild(inner); div.appendChild(lbl);
-        div.addEventListener('click', function(e) {
-          e.stopPropagation();
-          if (hs.targetScene) {
-            var tidx = (me.cfg.scenes || []).findIndex(function(s) { return s.id === hs.targetScene; });
-            if (tidx >= 0) {
-              me.goScene(tidx);
-            }
-          }
-        });
-        me.hsLayer.appendChild(div);
-      });
-    };
-
-    InlinePano.prototype.updateHs = function() {
-      var me = this;
-      var hots = me.hotspots || [];
-      // 全螢幕時用視窗大小，否則用 canvas 實際大小
-      var inFs = document.fullscreenElement === document.getElementById(me.containerId) || me.isPseudoFs;
-      var w = inFs ? window.innerWidth : me.renderer.domElement.clientWidth;
-      var h = inFs ? window.innerHeight : me.renderer.domElement.clientHeight;
-      hots.forEach(function(hs) {
-        var el = me.hsLayer.querySelector('[data-hsid="'+hs.id+'"]');
-        if (!el) return;
-        var pos = new THREE.Vector3(
-          Math.sin(hs.phi)*Math.sin(hs.theta),
-          Math.cos(hs.phi),
-          Math.sin(hs.phi)*Math.cos(hs.theta)
-        );
-        var fwd = new THREE.Vector3(0, 0, -1).applyEuler(me.camera.rotation);
-        var dot = fwd.dot(pos.clone().normalize());
-        if (dot < 0.1) { el.style.display = 'none'; return; }
-        var proj = pos.clone().project(me.camera);
-        var sx = (proj.x + 1) / 2 * w, sy = -(proj.y - 1) / 2 * h;
-        if (sx < -50 || sx > w+50 || sy < -50 || sy > h+50) { el.style.display = 'none'; return; }
-        el.style.display = 'block';
-        el.style.left = sx + 'px'; el.style.top = sy + 'px';
-        el.style.opacity = Math.min(1, (dot - 0.1) / 0.25);
-      });
+    InlinePano.prototype.clearTextures = function() {
+      if (this.mat && this.mat.map) {
+        this.mat.map.dispose(); this.mat.map = null;
+        this.mat.color.set(0x020302); this.mat.needsUpdate = true;
+      }
+      this.clearCubeTextures();
+      this.hasTexture = false;
     };
 
     InlinePano.prototype.destroy = function() {
       var me = this;
       if (me.destroyed) return;
       me.destroyed = true;
-      if(me.releaseControls)me.releaseControls();
-      if (me.xhr) { try { me.xhr.abort(); } catch(e) {} me.xhr = null; }
+      me.job++;
       if (me.raf) { cancelAnimationFrame(me.raf); me.raf = null; }
       if (me.observer) { try { me.observer.disconnect(); } catch(e) {} me.observer = null; }
+      if (me.ro) { try { me.ro.disconnect(); } catch(e) {} me.ro = null; }
+      if (me.ctl) me.ctl.dispose();
+      if (me.ui) me.ui.destroy();
+      PanoTools.images.cancel();
       document.body.classList.remove('pano-fullscreen-active');
+      var fsEl = document.fullscreenElement || document.webkitFullscreenElement;
+      if (fsEl && fsEl === me.wrap) {
+        var exit = document.exitFullscreen || document.webkitExitFullscreen;
+        try { if (exit) exit.call(document); } catch(e) {}
+      }
       me.handlers.forEach(function(h) {
         try { h.target.removeEventListener(h.type, h.fn, h.opts); } catch(e) {}
       });
       me.handlers = [];
-      if (me.mat) {
-        if (me.mat.map) { me.mat.map.dispose(); me.mat.map = null; }
-        me.mat.dispose();
-      }
-      if (me.sphere && me.sphere.geometry) me.sphere.geometry.dispose();
-      me.clearCubeTextures();
+      if (!me.renderer) return;
+      me.clearTextures();
+      if (me.mat) me.mat.dispose();
+      if (me.sphere) me.sphere.geometry.dispose();
       if (me.cubeMats) me.cubeMats.forEach(function(m) { m.dispose(); });
-      if (me.cubeMesh && me.cubeMesh.geometry) me.cubeMesh.geometry.dispose();
-      if (me.renderer) {
-        try { me.renderer.dispose(); } catch(e) {}
-        try {
-          var gl = me.renderer.getContext();
-          var ext = gl && gl.getExtension('WEBGL_lose_context');
-          if (ext) ext.loseContext();
-        } catch(e) {}
-      }
+      if (me.cubeMesh) me.cubeMesh.geometry.dispose();
+      try { me.renderer.dispose(); } catch(e) {}
+      try {
+        var gl = me.renderer.getContext();
+        var ext = gl && gl.getExtension('WEBGL_lose_context');
+        if (ext) ext.loseContext();
+      } catch(e) {}
     };
-
 
     // ── HTML escape（防止表單資料中的 HTML 被當成程式碼執行）──
     function esc(t){
@@ -1232,18 +1160,24 @@
           var panoAttrs=' data-gold="'+g+'"';
           if(panoRaw.endsWith('/')){
             // 切片模式（tileBaseUrl）
-            panoAttrs+=' data-tile-url="'+panoRaw+'"';
+            panoAttrs+=' data-tile-url="'+safeAttr(panoRaw)+'"';
           } else if(panoRaw.endsWith('.json')||panoRaw.includes('raw.githubusercontent.com')){
             // GitHub config.json
-            panoAttrs+=' data-config-url="'+panoRaw+'"';
+            panoAttrs+=' data-config-url="'+safeAttr(panoRaw)+'"';
           } else {
             // 直接圖片網址
-            panoAttrs+=' data-image-url="'+panoRaw+'"';
+            panoAttrs+=' data-image-url="'+safeAttr(panoRaw)+'"';
           }
-          pano360Html='<div class="pano-placeholder" id="'+panoId+'"'+panoAttrs+' onclick="initPano360AndReplace(\''+panoId+'\')">'+
-            '<div class="pano-placeholder-icon">🌐</div>'+
-            '<div class="pano-placeholder-text">360° 互動全景</div>'+
-            '<div class="pano-placeholder-btn">▶ 點擊載入</div>'+
+          // 封面：用這趟旅程的照片當背景，緩慢平移暗示「可以環顧」
+          var poster=cloudinaryImageUrl(imgP.img,1200);
+          var openJs='initPano360AndReplace(\''+panoId+'\')';
+          pano360Html='<div class="pano-placeholder'+(g?' gold':'')+'" id="'+panoId+'"'+panoAttrs+' role="button" tabindex="0" aria-label="載入 360° 互動環景"'+
+            ' onclick="'+openJs+'" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();'+openJs+';}">'+
+            '<div class="pano-ph-bg"'+(poster?' style="background-image:url(\''+safeAttr(poster).replace(/'/g,'%27')+'\')"':'')+'></div>'+
+            '<span class="pano-ph-badge">360°</span>'+
+            '<span class="pano-ph-orb">'+PanoTools.icon('globe')+'</span>'+
+            '<span class="pano-ph-title">進入 360° 環景</span>'+
+            '<span class="pano-ph-sub">拖曳環顧四周・點擊箭頭走訪各區</span>'+
           '</div>';
         }
         var hasExpand=!!(descHtml||pano360Html||ytUrl||igUrl);
@@ -1324,19 +1258,21 @@
       var wrap = document.getElementById(id);
       if (!wrap) return;
       // 先顯示「載入中」，再動態載入 Three.js
-      wrap.className = 'pano-wrap';
-      wrap.style.cssText = 'height:340px;position:relative;border-radius:8px;overflow:hidden;background:#0a0f0a;margin-top:1.25rem;';
+      var gold = wrap.dataset.gold === 'true';
+      wrap.className = 'pano-wrap' + (gold ? ' gold' : '');
+      ['style','onclick','onkeydown','role','tabindex','aria-label'].forEach(function(a){ wrap.removeAttribute(a); });
       wrap.onclick = null;
-      wrap.removeAttribute('onclick');
-      wrap.innerHTML = '<div class="pano-loading"><div class="pano-ring"></div><div class="pano-loading-text">載入 3D 引擎中...</div></div>';
+      wrap.innerHTML = '';
+      var boot = new PanoTools.Loader(wrap);
+      boot.show('360° 環景', '載入 3D 引擎…');
       loadThreeJS(function(err) {
         if(!wrap.isConnected)return;
-        if(err){wrap.textContent='3D 引擎載入失敗，請重試。';var retry=document.createElement('button');retry.textContent='重新載入';retry.className='filter-tag';retry.addEventListener('click',function(){initPano360AndReplace(id);});wrap.appendChild(retry);return;}
-        _doInitPano360(id, wrap);
+        if(err){boot.error('3D 引擎載入失敗',function(){initPano360AndReplace(id);});return;}
+        _doInitPano360(id, wrap, boot);
       });
     }
 
-    function _doInitPano360(id, wrap) {
+    function _doInitPano360(id, wrap, boot) {
       var configUrl = wrap.dataset.configUrl;
       var imageUrl  = wrap.dataset.imageUrl;
       var tileUrl   = wrap.dataset.tileUrl;
@@ -1349,21 +1285,23 @@
         if (_panoViewers[id]) _panoViewers[id].destroy();
         _panoViewers[id] = new InlinePano(id, cfg, gold);
       }
+      function fail(title, text) {
+        if(wrap.isConnected) boot.error(title, function(){ initPano360AndReplace(id); }, text);
+      }
 
       // 切片模式：自動建立單場景 config
       if (tileUrl) {
         startWithConfig({ scenes: [{ id:'s1', name:'360° 環景', tileBaseUrl: tileUrl, hotspots:[] }] });
       } else if (configUrl) {
-        wrap.innerHTML = '<div class="pano-loading"><div class="pano-ring"></div><div class="pano-loading-text">載入設定中...</div></div>';
-        fetch(configUrl)
-          .then(function(r) { return r.json(); })
+        boot.show('360° 環景', '讀取場景設定…');
+        // no-cache：後台更新設定後，前台立即看到新版（GitHub 有 ETag，未變更時很快）
+        fetch(configUrl, { cache: 'no-cache' })
+          .then(function(r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
           .then(startWithConfig)
-          .catch(function() {
-            wrap.innerHTML = '<div style="padding:2rem;text-align:center;color:#e05c5c;font-size:13px;">⚠️ 無法載入設定<br><small>請確認 GitHub URL 正確且 Repo 為 Public</small></div>';
-          });
+          .catch(function() { fail('無法載入環景設定', '請確認 GitHub URL 正確且 Repo 為 Public'); });
       } else if (cfgRaw) {
         try { startWithConfig(JSON.parse(decodeURIComponent(cfgRaw))); }
-        catch(e) { wrap.innerHTML = '<div style="padding:2rem;text-align:center;color:#e05c5c;font-size:13px;">⚠️ 設定解析失敗</div>'; }
+        catch(e) { fail('環景設定格式錯誤'); }
       } else if (imageUrl) {
         startWithConfig({ scenes: [{ id:'s1', name:'360° 環景', imageUrl: imageUrl, hotspots:[] }] });
       }
